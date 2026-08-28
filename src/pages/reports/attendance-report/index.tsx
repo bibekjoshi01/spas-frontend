@@ -1,10 +1,11 @@
-import { useMemo } from "react"
-import { FileDown } from "lucide-react"
+import { useMemo, useRef } from "react"
+import { CalendarDays, FileDown } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { PageHeader } from "@/components/page-header"
 import { ResourceList } from "@/components/resource-list"
 import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
@@ -156,24 +157,18 @@ export default function AttendanceReportPage() {
                 30 days
               </Button>
             </div>
-            <Input
-              type="date"
+            <DatePickerInput
               value={filters.start_date}
               max={filters.end_date}
-              onChange={(event) =>
-                setFilters({ start_date: event.target.value })
-              }
-              className="w-40"
-              aria-label="Report start date"
+              onChange={(start_date) => setFilters({ start_date })}
+              label="Report start date"
             />
-            <Input
-              type="date"
+            <DatePickerInput
               value={filters.end_date}
               min={filters.start_date}
               max={today}
-              onChange={(event) => setFilters({ end_date: event.target.value })}
-              className="w-40"
-              aria-label="Report end date"
+              onChange={(end_date) => setFilters({ end_date })}
+              label="Report end date"
             />
             <Select
               value={filters.program}
@@ -400,4 +395,68 @@ function dateDaysAgo(days: number) {
   const date = new Date()
   date.setDate(date.getDate() - days)
   return localDateKey(date)
+}
+
+function DatePickerInput({
+  value,
+  min,
+  max,
+  label,
+  onChange,
+}: {
+  value: string
+  min?: string
+  max?: string
+  label: string
+  onChange: (value: string) => void
+}) {
+  const picker = useRef<HTMLDetailsElement>(null)
+  const selected = parseLocalDate(value)
+  const before = min ? parseLocalDate(min) : null
+  const after = max ? parseLocalDate(max) : null
+
+  return (
+    <div className="flex w-48 items-center">
+      <Input
+        type="date"
+        value={value}
+        min={min}
+        max={max}
+        onChange={(event) => onChange(event.target.value)}
+        className="rounded-r-none"
+        aria-label={label}
+      />
+      <details ref={picker} className="group relative">
+        <summary
+          className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-r-md border border-l-0 bg-background text-muted-foreground hover:bg-muted hover:text-foreground [&::-webkit-details-marker]:hidden"
+          aria-label={`Open ${label.toLowerCase()} calendar`}
+        >
+          <CalendarDays className="size-4" aria-hidden />
+        </summary>
+        <div className="absolute top-11 right-0 z-[70] border bg-popover shadow-lg">
+          <Calendar
+            mode="single"
+            selected={selected ?? undefined}
+            defaultMonth={selected ?? after ?? new Date()}
+            disabled={[
+              ...(before ? [{ before }] : []),
+              ...(after ? [{ after }] : []),
+            ]}
+            onSelect={(date) => {
+              if (!date) return
+              onChange(localDateKey(date))
+              if (picker.current) picker.current.open = false
+            }}
+          />
+        </div>
+      </details>
+    </div>
+  )
+}
+
+function parseLocalDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
+  const [year, month, day] = value.split("-").map(Number)
+  const date = new Date(year, month - 1, day)
+  return Number.isNaN(date.getTime()) ? null : date
 }
