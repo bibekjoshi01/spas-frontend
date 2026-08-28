@@ -64,6 +64,15 @@ export const NAV_ITEMS: NavItem[] = [
     section: "Reports",
   },
   {
+    label: "Attendance Reports",
+    href: "/reports/attendance",
+    permission: "view_attendance",
+    allowedRoles: ["DEPARTMENT-HEAD", "PROGRAM-COORDINATOR"],
+    breadcrumb: "Attendance Reports",
+    icon: CalendarRange,
+    section: "Reports",
+  },
+  {
     label: "My Classes",
     href: "/classes",
     permission: "view_attendance",

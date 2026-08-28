@@ -9,6 +9,12 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -296,14 +302,21 @@ export function AllocationsSection() {
             cell: (row) => (
               <RowActions>
                 {canViewReport && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`View performance report for ${row.subject.code}`}
-                    onClick={() => setReporting(row)}
-                  >
-                    <Eye className="size-4" aria-hidden />
-                  </Button>
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`View performance report for ${row.subject.code}`}
+                          onClick={() => setReporting(row)}
+                        >
+                          <Eye className="size-4" aria-hidden />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>View report</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
                 {canEdit && (
                   <Button

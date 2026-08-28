@@ -10,6 +10,7 @@ import {
   type ClassStudentDetail,
   type ClassSummary,
   type ManagementStudentReport,
+  type ManagementAttendanceReport,
   eligibilityFor,
   semesterLabel,
 } from "@/lib/api"
@@ -522,4 +523,63 @@ export async function exportBatchSemesterPerformancePdf(
 
 function pdfPercent(value: number | null) {
   return value === null ? "—" : `${value}%`
+}
+
+export async function exportManagementAttendanceReportPdf(
+  data: ManagementAttendanceReport
+) {
+  const { jsPDF, autoTable } = await pdfTools()
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
+  heading(
+    doc,
+    "Attendance report",
+    `${data.range.startDate} to ${data.range.endDate} · ${data.summary.sessions} classes held · ${data.summary.attendancePercentage}% attendance`
+  )
+
+  autoTable(doc, {
+    startY: 33,
+    head: [
+      [
+        "#",
+        "Date",
+        "Class",
+        "Batch",
+        "Teacher",
+        "Marked",
+        "Present",
+        "Absent",
+        "Late",
+        "Excused",
+        "Attendance",
+      ],
+    ],
+    body: data.results.map((row, index) => [
+      index + 1,
+      `${row.date} · P${row.period}`,
+      `${row.subjectCode} — ${row.subjectName}`,
+      `${row.programCode} ${row.batchYear} · S${row.semester}`,
+      row.teacherName,
+      row.marked,
+      row.present,
+      row.absent,
+      row.late,
+      row.excused,
+      `${row.attendancePercentage}%`,
+    ]),
+    styles: { fontSize: 7.5, cellPadding: 2, valign: "middle" },
+    headStyles: { fillColor: [30, 41, 59] },
+    alternateRowStyles: { fillColor: [245, 247, 250] },
+    didParseCell: (hook) => {
+      if (
+        hook.section === "body" &&
+        hook.column.index === 7 &&
+        Number(hook.cell.raw) > 0
+      ) {
+        hook.cell.styles.textColor = [185, 28, 28]
+        hook.cell.styles.fontStyle = "bold"
+      }
+    },
+  })
+
+  doc.save(`attendance-${data.range.startDate}-to-${data.range.endDate}.pdf`)
 }

@@ -18,6 +18,7 @@ import type {
   ExamMark,
   ExamType,
   ManagementStudentReport,
+  ManagementAttendanceReport,
   RosterEntry,
 } from "./domain"
 import type {
@@ -98,6 +99,17 @@ export const teachingApi = rootAPI.injectEndpoints({
         params: { ...params, batch_semester: batchSemester },
       }),
       providesTags: ["Overview"],
+    }),
+
+    getManagementAttendanceReport: build.query<
+      ManagementAttendanceReport,
+      ListParams & { startDate: string; endDate: string }
+    >({
+      query: ({ startDate, endDate, ...params }) => ({
+        url: `${PERFORMANCE}/analytics/management-attendance-report`,
+        params: { ...params, start_date: startDate, end_date: endDate },
+      }),
+      providesTags: ["AttendanceSession"],
     }),
 
     getClasses: build.query<
@@ -409,6 +421,8 @@ export const {
   useGetManagementStudentReportQuery,
   useGetBatchSemesterPerformanceReportQuery,
   useLazyGetBatchSemesterPerformanceReportQuery,
+  useGetManagementAttendanceReportQuery,
+  useLazyGetManagementAttendanceReportQuery,
   useGetClassesQuery,
   useGetClassStudentsQuery,
   useGetClassStudentDetailQuery,

@@ -214,6 +214,42 @@ export interface BatchSemesterPerformanceReport {
   }
 }
 
+export interface ManagementAttendanceReportRow {
+  id: number
+  date: string
+  period: number
+  allocation: number
+  subjectCode: string
+  subjectName: string
+  programCode: string
+  batchYear: number
+  semester: number
+  teacherName: string
+  marked: number
+  present: number
+  absent: number
+  late: number
+  excused: number
+  attendancePercentage: number
+}
+
+export interface ManagementAttendanceReport {
+  count: number
+  next: string | null
+  previous: string | null
+  results: ManagementAttendanceReportRow[]
+  range: { startDate: string; endDate: string }
+  summary: {
+    sessions: number
+    marked: number
+    present: number
+    absent: number
+    late: number
+    excused: number
+    attendancePercentage: number
+  }
+}
+
 /** A roster row, as returned before anything has been marked. */
 export interface RosterEntry {
   enrollment: number
