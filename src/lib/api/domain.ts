@@ -132,6 +132,33 @@ export interface ClassStudentDetail {
   } | null
 }
 
+export interface ManagementStudentReport {
+  student: {
+    id: number
+    rollNumber: string
+    registrationNumber: string
+    fullName: string
+    email: string
+    phoneNo: string
+    alternatePhoneNo: string
+    status: Student["status"]
+    programCode: string
+    programName: string
+    departmentName: string
+    batchYear: number
+  }
+  subjects: Array<{
+    enrollment: number
+    semester: number
+    semesterStatus: SemesterStatus
+    class: ClassSummary
+    attendance: ClassStudentDetail["attendance"]
+    assessments: ClassStudentDetail["assessments"]
+    assignments: ClassStudentDetail["assignments"]
+    classPerformance: ClassStudentDetail["classPerformance"]
+  }>
+}
+
 /** A roster row, as returned before anything has been marked. */
 export interface RosterEntry {
   enrollment: number

@@ -1,4 +1,4 @@
-import { Phone } from "lucide-react"
+import { Mail } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { PageHeader } from "@/components/page-header"
@@ -142,7 +142,8 @@ export default function AttendanceAttentionPage() {
                   {row.subjectCode} · {row.subjectName}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {row.programCode} · Batch {row.batchYear} · Semester {row.semester}
+                  {row.programCode} · Batch {row.batchYear} · Semester{" "}
+                  {row.semester}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {row.teacherName || "Teacher not assigned"}
@@ -157,7 +158,8 @@ export default function AttendanceAttentionPage() {
               <div className="space-y-1">
                 <AttendanceMeter percentage={row.attendancePercentage} />
                 <div className="text-xs text-muted-foreground">
-                  {row.presentCount + row.lateCount} attended of {row.classesHeld}
+                  {row.presentCount + row.lateCount} attended of{" "}
+                  {row.classesHeld}
                 </div>
               </div>
             ),
@@ -177,10 +179,13 @@ export default function AttendanceAttentionPage() {
             header: "",
             className: "w-16 text-right",
             cell: (row) =>
-              row.phoneNo ? (
+              row.email ? (
                 <Button variant="ghost" size="icon" asChild>
-                  <a href={`tel:${row.phoneNo}`} aria-label={`Call ${row.fullName}`}>
-                    <Phone className="size-4" aria-hidden />
+                  <a
+                    href={`mailto:${row.email}`}
+                    aria-label={`Email ${row.fullName}`}
+                  >
+                    <Mail className="size-4" aria-hidden />
                   </a>
                 </Button>
               ) : null,

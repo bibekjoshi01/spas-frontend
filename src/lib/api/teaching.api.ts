@@ -1,4 +1,4 @@
-import { rootAPI } from "@/lib/redux/apiSlice"
+import { rootAPI } from "@/lib/redux/api-slice"
 
 import type {
   Assignment,
@@ -16,6 +16,7 @@ import type {
   Exam,
   ExamMark,
   ExamType,
+  ManagementStudentReport,
   RosterEntry,
 } from "./domain"
 import type {
@@ -76,6 +77,15 @@ export const teachingApi = rootAPI.injectEndpoints({
         params: params || undefined,
       }),
       providesTags: ["Overview"],
+    }),
+
+    getManagementStudentReport: build.query<ManagementStudentReport, number>({
+      query: (studentId) => ({
+        url: `${PERFORMANCE}/analytics/students/${studentId}/report`,
+      }),
+      providesTags: (_result, _error, studentId) => [
+        { type: "Student", id: studentId },
+      ],
     }),
 
     getClasses: build.query<
@@ -384,6 +394,7 @@ export const {
   useUpdatePerformanceWeightsMutation,
   useGetDashboardOverviewQuery,
   useGetAttendanceAttentionQuery,
+  useGetManagementStudentReportQuery,
   useGetClassesQuery,
   useGetClassStudentsQuery,
   useGetClassStudentDetailQuery,

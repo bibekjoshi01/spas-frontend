@@ -7,6 +7,7 @@ import {
   type ClassStudent,
   type ClassStudentDetail,
   type ClassSummary,
+  type ManagementStudentReport,
   eligibilityFor,
   semesterLabel,
 } from "@/lib/api"
@@ -240,4 +241,156 @@ export async function exportStudentDetailPdf(data: ClassStudentDetail) {
   doc.save(
     `${filename(data.student.fullName)}-${filename(data.class.code)}-report.pdf`
   )
+}
+
+export async function exportManagementStudentReportPdf(
+  data: ManagementStudentReport
+) {
+  const { jsPDF, autoTable } = await pdfTools()
+  const doc = new jsPDF({ unit: "mm", format: "a4" })
+  heading(
+    doc,
+    data.student.fullName,
+    `${data.student.programCode} · Batch ${data.student.batchYear} · Roll ${data.student.rollNumber}`
+  )
+
+  autoTable(doc, {
+    startY: 33,
+    head: [["Registration", "Email", "Primary phone", "Alternate phone"]],
+    body: [
+      [
+        data.student.registrationNumber || "—",
+        data.student.email || "—",
+        data.student.phoneNo || "—",
+        data.student.alternatePhoneNo || "—",
+      ],
+    ],
+    styles: { fontSize: 8, cellPadding: 2 },
+    headStyles: { fillColor: [30, 41, 59] },
+  })
+
+  let y = sectionStart(doc, tableEnd(doc, 33) + 8)
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(11)
+  doc.text("Subject overview", 14, y)
+  autoTable(doc, {
+    startY: y + 3,
+    head: [
+      [
+        "Semester",
+        "Subject",
+        "Status",
+        "Attendance",
+        "Assessments",
+        "Assignments",
+        "Rating",
+      ],
+    ],
+    body: data.subjects.length
+      ? data.subjects.map((subject) => [
+          subject.semester,
+          `${subject.class.code} — ${subject.class.name}`,
+          subject.semesterStatus,
+          subject.attendance ? `${subject.attendance.percentage}%` : "—",
+          subject.assessments.length,
+          subject.assignments.length,
+          subject.classPerformance
+            ? `${subject.classPerformance.score}/10`
+            : "—",
+        ])
+      : [["—", "No subject records", "—", "—", "—", "—", "—"]],
+    styles: { fontSize: 7.5, cellPadding: 2 },
+    headStyles: { fillColor: [51, 65, 85] },
+  })
+
+  for (const subject of data.subjects) {
+    y = sectionStart(doc, tableEnd(doc, y) + 10)
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(10)
+    doc.text(
+      `Semester ${subject.semester}: ${subject.class.code} — ${subject.class.name}`,
+      14,
+      y
+    )
+    autoTable(doc, {
+      startY: y + 3,
+      head: [
+        [
+          "Attendance",
+          "Present",
+          "Absent",
+          "Late",
+          "Excused",
+          "Sessions",
+          "Class performance",
+        ],
+      ],
+      body: [
+        [
+          subject.attendance ? `${subject.attendance.percentage}%` : "—",
+          subject.attendance?.present ?? "—",
+          subject.attendance?.absent ?? "—",
+          subject.attendance?.late ?? "—",
+          subject.attendance?.excused ?? "—",
+          subject.attendance?.held ?? "—",
+          subject.classPerformance
+            ? `${subject.classPerformance.score}/10`
+            : "—",
+        ],
+      ],
+      styles: { fontSize: 7.5, cellPadding: 2 },
+      headStyles: { fillColor: [71, 85, 105] },
+    })
+
+    y = sectionStart(doc, tableEnd(doc, y) + 5)
+    autoTable(doc, {
+      startY: y,
+      head: [["Assessment", "Date", "Marks", "Result"]],
+      body: subject.assessments.length
+        ? subject.assessments.map((exam) => {
+            const obtained =
+              exam.marksObtained === null ? null : Number(exam.marksObtained)
+            const result = exam.isAbsent
+              ? "Absent"
+              : obtained === null
+                ? "Not marked"
+                : exam.passMarks !== null && obtained >= exam.passMarks
+                  ? "Passed"
+                  : "Failed"
+            return [
+              exam.title,
+              exam.examDate ?? "—",
+              exam.isAbsent
+                ? "Absent"
+                : obtained === null
+                  ? "—"
+                  : `${obtained}/${exam.fullMarks}`,
+              result,
+            ]
+          })
+        : [["No assessments", "—", "—", "—"]],
+      styles: { fontSize: 7.5, cellPadding: 2 },
+      headStyles: { fillColor: [100, 116, 139] },
+    })
+
+    y = sectionStart(doc, tableEnd(doc, y) + 5)
+    autoTable(doc, {
+      startY: y,
+      head: [["Assignment", "Due", "Status", "Remarks"]],
+      body: subject.assignments.length
+        ? subject.assignments.map((assignment) => [
+            assignment.title,
+            assignment.dueDate ?? "—",
+            assignment.status
+              ? ASSIGNMENT_LABELS[assignment.status]
+              : "Not marked",
+            assignment.remarks || "—",
+          ])
+        : [["No assignments", "—", "—", "—"]],
+      styles: { fontSize: 7.5, cellPadding: 2 },
+      headStyles: { fillColor: [100, 116, 139] },
+    })
+  }
+
+  doc.save(`${filename(data.student.fullName)}-complete-performance-report.pdf`)
 }
