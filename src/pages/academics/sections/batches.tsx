@@ -210,7 +210,7 @@ function BatchRow({
   }
 
   return (
-    <div className="rounded-lg border">
+    <div className="rounded-lg border bg-white dark:bg-slate-950">
       <div className="flex items-center hover:bg-muted/50">
         <button
           type="button"
@@ -278,7 +278,7 @@ function BatchRow({
               {semesters.data?.results.map((semester) => (
                 <li
                   key={semester.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted/40 px-3 py-2"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-white px-3 py-2 dark:bg-slate-950"
                 >
                   <div>
                     <div className="flex items-center gap-2">
