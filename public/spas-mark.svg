@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SPAS">
+  <rect width="64" height="64" rx="12" fill="#17355f"/>
+  <path d="M15 20.5 32 12l17 8.5L32 29l-17-8.5Z" fill="#fff"/>
+  <path d="M21 27v10.5c0 4.3 5 8.5 11 8.5s11-4.2 11-8.5V27l-11 5.5L21 27Z" fill="#fff" opacity=".92"/>
+  <path d="M49 22v14" stroke="#d7aa45" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="49" cy="39" r="2.5" fill="#d7aa45"/>
+</svg>

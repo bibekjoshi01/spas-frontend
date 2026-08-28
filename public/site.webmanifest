@@ -1,0 +1,17 @@
+{
+  "name": "SPAS · Student Performance & Academic System",
+  "short_name": "SPAS",
+  "description": "Student performance and academic operations for colleges.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f6f2",
+  "theme_color": "#17355f",
+  "icons": [
+    {
+      "src": "/spas-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
