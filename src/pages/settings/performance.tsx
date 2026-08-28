@@ -74,14 +74,17 @@ export default function PerformanceSettings() {
       />
 
       <section
-        className="border bg-background"
+        className="border bg-white dark:bg-slate-950"
         aria-labelledby="weight-heading"
       >
-        <div className="border-b bg-muted/60 px-4 py-3">
-          <h1 id="weight-heading" className="text-base font-bold">
+        <div className="border-b bg-blue-50 px-4 py-3 dark:bg-blue-950/40">
+          <h1
+            id="weight-heading"
+            className="text-base font-bold text-blue-950 dark:text-blue-100"
+          >
             Performance weightage
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-blue-900/70 dark:text-blue-200/70">
             Set how much each metric contributes to the overall student
             performance score.
           </p>
@@ -92,7 +95,7 @@ export default function PerformanceSettings() {
             Could not load performance settings.
           </p>
         ) : (
-          <div className="divide-y">
+          <div className="divide-y bg-white dark:bg-slate-950">
             {FIELDS.map(([key, label, description]) => (
               <div
                 key={key}
