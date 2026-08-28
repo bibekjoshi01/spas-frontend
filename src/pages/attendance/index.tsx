@@ -386,8 +386,8 @@ function InlineSessionDetail({
           </Button>
         </div>
       ) : (
-        <div className="overflow-x-auto border bg-background">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto border bg-white dark:bg-slate-950">
+          <table className="w-full bg-white text-sm dark:bg-slate-950">
             <thead className="border-b bg-slate-100 text-left dark:bg-slate-900">
               <tr>
                 <th className="w-14 px-3 py-2 font-semibold">#</th>

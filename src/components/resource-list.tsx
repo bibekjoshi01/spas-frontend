@@ -135,7 +135,7 @@ export function ResourceList<T>({
         emptyAction={emptyAction}
       >
         <div
-          className="overflow-x-auto rounded-lg border bg-background"
+          className="overflow-x-auto rounded-lg border bg-white dark:bg-slate-950"
           aria-busy={isFetching || undefined}
         >
           <Table>

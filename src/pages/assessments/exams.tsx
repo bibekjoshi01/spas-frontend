@@ -643,7 +643,7 @@ function MarksDialog({
             emptyMessage="Register students onto this class first."
           >
             <div className="h-full max-h-[72dvh] overflow-auto rounded-lg border">
-              <table className="w-full min-w-[46rem] border-collapse text-sm">
+              <table className="w-full min-w-[46rem] border-collapse bg-white text-sm dark:bg-slate-950">
                 <thead className="sticky top-0 z-10 bg-muted">
                   <tr className="border-b">
                     <th
