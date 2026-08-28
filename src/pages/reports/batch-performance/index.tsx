@@ -91,14 +91,14 @@ export default function BatchPerformanceReportPage() {
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Summary label="Students" value={data?.summary.students} />
-        <Summary label="With evidence" value={data?.summary.withEvidence} />
+        <Summary label="With Evidence" value={data?.summary.withEvidence} />
         <Summary
-          label="Need attention"
+          label="Need Attention"
           value={data?.summary.needsAttention}
           tone="danger"
         />
         <Summary
-          label="Average performance"
+          label="Average Performance"
           value={
             data?.summary.averagePerformance === null
               ? "—"

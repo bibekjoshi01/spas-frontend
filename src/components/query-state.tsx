@@ -40,7 +40,7 @@ export function QueryState({
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed px-4 py-12 text-center">
+      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed bg-card px-4 py-12 text-center">
         <AlertCircle className="size-8 text-destructive" aria-hidden />
         <div className="space-y-1">
           <p className="font-medium">That didn’t load</p>
@@ -60,7 +60,7 @@ export function QueryState({
 
   if (isEmpty) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed px-4 py-12 text-center">
+      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed bg-card px-4 py-12 text-center">
         <Inbox className="size-8 text-muted-foreground" aria-hidden />
         <div className="space-y-1">
           <p className="font-medium">{emptyTitle}</p>

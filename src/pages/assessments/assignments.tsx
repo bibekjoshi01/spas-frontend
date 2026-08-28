@@ -326,7 +326,7 @@ function EditAssignmentDialog({
               }
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-[5px]">
               <Label htmlFor="edit-assignment-given">Given</Label>
               <Input
@@ -427,7 +427,7 @@ function CreateAssignmentDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-[5px]">
               <Label htmlFor="assignment-given">Given</Label>
               <Input

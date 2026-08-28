@@ -194,7 +194,7 @@ export default function ExamsPage() {
                 </p>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="grid grid-cols-3 divide-x border text-center text-xs">
+                <div className="grid divide-y border text-center text-xs sm:grid-cols-3 sm:divide-x sm:divide-y-0">
                   <ExamMetric label="Marked" value={exam.markedCount} />
                   <ExamMetric label="Passed" value={exam.passedCount} />
                   <ExamMetric
@@ -347,7 +347,7 @@ function EditExamDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-[5px]">
               <Label htmlFor="edit-exam-full">Full marks</Label>
               <Input
@@ -485,7 +485,7 @@ function CreateExamDialog({
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-[5px]">
               <Label htmlFor="exam-full">Full marks</Label>
               <Input

@@ -27,7 +27,7 @@ import {
   useLazyGetManagementAttendanceReportQuery,
 } from "@/lib/api"
 import { exportManagementAttendanceReportPdf } from "@/lib/pdf-reports"
-import { localDateKey } from "@/lib/utils/date"
+import { formatDisplayDate, localDateKey } from "@/lib/utils/date"
 import { notifier } from "@/lib/utils/notifier"
 
 const today = localDateKey()
@@ -120,8 +120,8 @@ export default function AttendanceReportPage() {
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Summary label="Classes held" value={data?.summary.sessions} />
-        <Summary label="Students marked" value={data?.summary.marked} />
+        <Summary label="Classes Held" value={data?.summary.sessions} />
+        <Summary label="Students Marked" value={data?.summary.marked} />
         <Summary label="Absent" value={data?.summary.absent} danger />
         <Summary
           label="Attendance"
@@ -306,7 +306,7 @@ export default function AttendanceReportPage() {
             className: "whitespace-nowrap",
             cell: (row) => (
               <div className="font-medium">
-                {row.date}
+                {formatDisplayDate(row.date)}
                 <div className="text-xs text-muted-foreground">
                   Period {row.period}
                 </div>
@@ -426,7 +426,18 @@ function DatePickerInput({
         className="rounded-r-none"
         aria-label={label}
       />
-      <details ref={picker} className="group relative">
+      <details
+        ref={picker}
+        className="group relative"
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) {
+            event.currentTarget.open = false
+          }
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") event.currentTarget.open = false
+        }}
+      >
         <summary
           className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-r-md border border-l-0 bg-background text-muted-foreground hover:bg-muted hover:text-foreground [&::-webkit-details-marker]:hidden"
           aria-label={`Open ${label.toLowerCase()} calendar`}

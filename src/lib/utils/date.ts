@@ -5,3 +5,18 @@ export function localDateKey(date = new Date()): string {
   const day = String(date.getDate()).padStart(2, "0")
   return `${year}-${month}-${day}`
 }
+
+/** Render an API calendar date without allowing UTC conversion to shift its day. */
+export function formatDisplayDate(
+  value: string,
+  options: Intl.DateTimeFormatOptions = {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }
+): string {
+  const date = new Date(`${value}T00:00:00`)
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString(undefined, options)
+}
