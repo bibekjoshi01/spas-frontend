@@ -474,10 +474,12 @@ function SemesterForm({
     <FormDialog
       open
       onOpenChange={(next) => !next && onClose()}
-      title={`${semester ? "Edit" : "Open"} A Semester For ${batch.program.code} ${batch.year}`}
+      title={`${semester ? "Edit" : "Open"} semester · ${batch.program.code} ${batch.year}`}
+      description="Set the semester tenure and lifecycle. Attendance changes are restricted to running semesters and these dates."
       formError={formErrorFrom(requestState.error)}
       isSubmitting={requestState.isLoading}
       submitLabel={semester ? "Save semester" : "Open semester"}
+      contentClassName="max-h-[90dvh] sm:max-w-2xl"
       onSubmit={async () => {
         try {
           const dates = {

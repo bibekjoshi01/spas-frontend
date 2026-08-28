@@ -15,6 +15,7 @@ import { DatePickerInput } from "@/components/ui/date-time-picker"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -313,7 +314,7 @@ function EditExamDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-h-[90dvh] sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Edit Assessment</DialogTitle>
         </DialogHeader>
@@ -348,7 +349,7 @@ function EditExamDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid items-start gap-3 sm:grid-cols-3">
             <div className="space-y-[5px]">
               <Label htmlFor="edit-exam-full">Full marks</Label>
               <Input
@@ -373,15 +374,15 @@ function EditExamDialog({
                 }
               />
             </div>
-          </div>
-          <div className="space-y-[5px]">
-            <Label htmlFor="edit-exam-date">Exam date</Label>
-            <DatePickerInput
-              id="edit-exam-date"
-              value={form.examDate}
-              onValueChange={(examDate) => setForm({ ...form, examDate })}
-              aria-label="Exam date"
-            />
+            <div className="space-y-[5px]">
+              <Label htmlFor="edit-exam-date">Exam date</Label>
+              <DatePickerInput
+                id="edit-exam-date"
+                value={form.examDate}
+                onValueChange={(examDate) => setForm({ ...form, examDate })}
+                aria-label="Exam date"
+              />
+            </div>
           </div>
         </div>
         <DialogFooter>
@@ -445,7 +446,7 @@ function CreateExamDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90dvh] sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>New Internal Exam</DialogTitle>
         </DialogHeader>
@@ -484,7 +485,7 @@ function CreateExamDialog({
             </Select>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid items-start gap-3 sm:grid-cols-3">
             <div className="space-y-[5px]">
               <Label htmlFor="exam-full">Full marks</Label>
               <Input
@@ -510,16 +511,15 @@ function CreateExamDialog({
                 placeholder="Required"
               />
             </div>
-          </div>
-
-          <div className="space-y-[5px]">
-            <Label htmlFor="exam-date">Exam date</Label>
-            <DatePickerInput
-              id="exam-date"
-              value={form.examDate}
-              onValueChange={(examDate) => setForm({ ...form, examDate })}
-              aria-label="Exam date"
-            />
+            <div className="space-y-[5px]">
+              <Label htmlFor="exam-date">Exam date</Label>
+              <DatePickerInput
+                id="exam-date"
+                value={form.examDate}
+                onValueChange={(examDate) => setForm({ ...form, examDate })}
+                aria-label="Exam date"
+              />
+            </div>
           </div>
         </div>
 
@@ -624,103 +624,137 @@ function MarksDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[94vh] w-[min(96vw,64rem)] max-w-4xl overflow-hidden">
-        <DialogHeader>
-          <DialogTitle>
-            {exam.title}{" "}
-            <span className="text-sm font-normal text-muted-foreground">
-              out of {exam.fullMarks}
-            </span>
-          </DialogTitle>
+      <DialogContent className="grid max-h-[94dvh] w-[calc(100vw-1rem)] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-3 sm:w-[calc(100vw-2rem)] sm:max-w-[80rem] sm:p-6">
+        <DialogHeader className="min-w-0 pr-8">
+          <DialogTitle className="leading-snug">{exam.title}</DialogTitle>
+          <DialogDescription>
+            {readOnly ? "Viewing" : "Enter"} marks out of {exam.fullMarks} for
+            each student. Roll numbers and names remain fully visible.
+          </DialogDescription>
         </DialogHeader>
 
-        <QueryState
-          isLoading={roster.isLoading}
-          error={roster.error}
-          isEmpty={(roster.data?.length ?? 0) === 0}
-          skeleton="table"
-          emptyTitle="No students registered"
-          emptyMessage="Register students onto this class first."
-        >
-          <ul className="max-h-[72vh] divide-y overflow-y-auto rounded-lg border">
-            {roster.data?.map((student) => {
-              const entry = entries[student.enrollment] ?? {
-                marks: "",
-                absent: false,
-              }
-              const tooHigh =
-                entry.marks !== "" && Number(entry.marks) > exam.fullMarks
-
-              return (
-                <li
-                  key={student.enrollment}
-                  className="flex items-center justify-between gap-3 p-2.5"
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="w-9 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
-                      {student.rollNumber}
-                    </span>
-                    <span className="truncate text-sm">{student.fullName}</span>
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-2">
-                    <Input
-                      type="number"
-                      inputMode="decimal"
-                      min={0}
-                      max={exam.fullMarks}
-                      step="0.5"
-                      value={entry.marks}
-                      disabled={readOnly || entry.absent}
-                      aria-label={`Marks for ${student.fullName}`}
-                      aria-invalid={tooHigh}
-                      className={`h-8 w-20 text-right tabular-nums ${
-                        tooHigh ? "border-destructive" : ""
-                      }`}
-                      onChange={(event) =>
-                        setEdits({
-                          ...entries,
-                          [student.enrollment]: {
-                            ...entry,
-                            marks: event.target.value,
-                          },
-                        })
-                      }
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={entry.absent ? "destructive" : "outline"}
-                      className="h-8 px-2 text-xs"
-                      aria-pressed={entry.absent}
-                      disabled={readOnly}
-                      onClick={() =>
-                        setEdits({
-                          ...entries,
-                          [student.enrollment]: {
-                            marks: entry.absent ? entry.marks : "",
-                            absent: !entry.absent,
-                          },
-                        })
-                      }
+        <div className="min-h-0 overflow-hidden">
+          <QueryState
+            isLoading={roster.isLoading}
+            error={roster.error}
+            isEmpty={(roster.data?.length ?? 0) === 0}
+            skeleton="table"
+            emptyTitle="No students registered"
+            emptyMessage="Register students onto this class first."
+          >
+            <div className="h-full max-h-[72dvh] overflow-auto rounded-lg border">
+              <table className="w-full min-w-[46rem] border-collapse text-sm">
+                <thead className="sticky top-0 z-10 bg-muted">
+                  <tr className="border-b">
+                    <th
+                      scope="col"
+                      className="min-w-52 px-3 py-2 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
                     >
-                      Absent
-                    </Button>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        </QueryState>
+                      Roll number
+                    </th>
+                    <th
+                      scope="col"
+                      className="min-w-64 px-3 py-2 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+                    >
+                      Student
+                    </th>
+                    <th
+                      scope="col"
+                      className="w-32 px-3 py-2 text-right text-[11px] font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase"
+                    >
+                      Marks / {exam.fullMarks}
+                    </th>
+                    <th
+                      scope="col"
+                      className="w-28 px-3 py-2 text-center text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+                    >
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {roster.data?.map((student) => {
+                    const entry = entries[student.enrollment] ?? {
+                      marks: "",
+                      absent: false,
+                    }
+                    const tooHigh =
+                      entry.marks !== "" && Number(entry.marks) > exam.fullMarks
 
-        <DialogFooter>
+                    return (
+                      <tr
+                        key={student.enrollment}
+                        className="transition-colors hover:bg-muted/40"
+                      >
+                        <td className="px-3 py-2.5 font-mono text-xs leading-5 break-all text-muted-foreground tabular-nums">
+                          {student.rollNumber}
+                        </td>
+                        <td className="px-3 py-2.5 leading-5 font-medium break-words">
+                          {student.fullName}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <Input
+                            type="number"
+                            inputMode="decimal"
+                            min={0}
+                            max={exam.fullMarks}
+                            step="0.5"
+                            value={entry.marks}
+                            disabled={readOnly || entry.absent}
+                            aria-label={`Marks for ${student.fullName}`}
+                            aria-invalid={tooHigh}
+                            className={`ml-auto h-8 w-28 text-right tabular-nums ${
+                              tooHigh ? "border-destructive" : ""
+                            }`}
+                            onChange={(event) =>
+                              setEdits({
+                                ...entries,
+                                [student.enrollment]: {
+                                  ...entry,
+                                  marks: event.target.value,
+                                },
+                              })
+                            }
+                          />
+                        </td>
+                        <td className="px-3 py-2.5 text-center">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={entry.absent ? "destructive" : "outline"}
+                            className="h-8 min-w-20 px-2 text-xs"
+                            aria-pressed={entry.absent}
+                            disabled={readOnly}
+                            onClick={() =>
+                              setEdits({
+                                ...entries,
+                                [student.enrollment]: {
+                                  marks: entry.absent ? entry.marks : "",
+                                  absent: !entry.absent,
+                                },
+                              })
+                            }
+                          >
+                            Absent
+                          </Button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </QueryState>
+        </div>
+
+        <DialogFooter className="border-t pt-3">
           {invalid && (
             <p className="mr-auto text-xs text-destructive">
               Marks must be between 0 and {exam.fullMarks}.
             </p>
           )}
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            {readOnly ? "Close" : "Cancel"}
           </Button>
           {!readOnly && (
             <Button onClick={submit} disabled={isSaving || invalid}>

@@ -1,5 +1,6 @@
-import { useRef, type ComponentProps } from "react"
+import { useRef, useState, type ComponentProps } from "react"
 import { CalendarDays, Clock3 } from "lucide-react"
+import { Popover as PopoverPrimitive } from "radix-ui"
 
 import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
@@ -24,7 +25,7 @@ export function DatePickerInput({
   onValueChange,
   ...props
 }: PickerInputProps) {
-  const picker = useRef<HTMLDetailsElement>(null)
+  const [open, setOpen] = useState(false)
   const selected = parseLocalDate(value)
   const minimumDate = typeof min === "string" ? parseLocalDate(min) : null
   const maximumDate = typeof max === "string" ? parseLocalDate(max) : null
@@ -42,49 +43,45 @@ export function DatePickerInput({
         className="min-w-0 flex-1 rounded-r-none [&::-webkit-calendar-picker-indicator]:hidden"
         aria-label={ariaLabel}
       />
-      <details
-        ref={picker}
-        className="group relative"
-        onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) {
-            event.currentTarget.open = false
-          }
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") event.currentTarget.open = false
-        }}
-      >
-        <summary
-          className={cn(
-            "flex h-8 w-9 list-none items-center justify-center rounded-r-sm border border-l-0 bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&::-webkit-details-marker]:hidden",
-            disabled && "pointer-events-none opacity-50"
-          )}
-          aria-label={`Open ${ariaLabel.toLowerCase()} calendar`}
-          aria-disabled={disabled || undefined}
-        >
-          <CalendarDays className="size-4" aria-hidden />
-        </summary>
-        <div className="absolute top-10 right-0 z-[80] border bg-popover">
-          <Calendar
-            mode="single"
-            selected={selected ?? undefined}
-            defaultMonth={clampDate(
-              selected ?? new Date(),
-              minimumDate,
-              maximumDate
-            )}
-            disabled={[
-              ...(minimumDate ? [{ before: minimumDate }] : []),
-              ...(maximumDate ? [{ after: maximumDate }] : []),
-            ]}
-            onSelect={(date) => {
-              if (!date) return
-              onValueChange(localDateKey(date))
-              if (picker.current) picker.current.open = false
-            }}
-          />
-        </div>
-      </details>
+      <PopoverPrimitive.Root open={open && !disabled} onOpenChange={setOpen}>
+        <PopoverPrimitive.Trigger asChild>
+          <button
+            type="button"
+            disabled={disabled}
+            className="flex h-8 w-9 shrink-0 items-center justify-center rounded-r-sm border border-l-0 bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+            aria-label={`Open ${ariaLabel.toLowerCase()} calendar`}
+          >
+            <CalendarDays className="size-4" aria-hidden />
+          </button>
+        </PopoverPrimitive.Trigger>
+        <PopoverPrimitive.Portal>
+          <PopoverPrimitive.Content
+            align="end"
+            sideOffset={6}
+            collisionPadding={12}
+            className="z-[120] max-h-[var(--radix-popover-content-available-height)] overflow-y-auto border bg-popover outline-none"
+          >
+            <Calendar
+              mode="single"
+              selected={selected ?? undefined}
+              defaultMonth={clampDate(
+                selected ?? new Date(),
+                minimumDate,
+                maximumDate
+              )}
+              disabled={[
+                ...(minimumDate ? [{ before: minimumDate }] : []),
+                ...(maximumDate ? [{ after: maximumDate }] : []),
+              ]}
+              onSelect={(date) => {
+                if (!date) return
+                onValueChange(localDateKey(date))
+                setOpen(false)
+              }}
+            />
+          </PopoverPrimitive.Content>
+        </PopoverPrimitive.Portal>
+      </PopoverPrimitive.Root>
     </div>
   )
 }
@@ -124,7 +121,7 @@ export function TimePickerInput({
         type="button"
         onClick={openPicker}
         disabled={disabled}
-        className="flex h-8 w-9 items-center justify-center rounded-r-sm border border-l-0 bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+        className="flex h-8 w-9 shrink-0 items-center justify-center rounded-r-sm border border-l-0 bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
         aria-label={`Open ${ariaLabel.toLowerCase()} picker`}
       >
         <Clock3 className="size-4" aria-hidden />
