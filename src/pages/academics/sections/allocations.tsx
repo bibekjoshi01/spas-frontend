@@ -46,7 +46,7 @@ import { notifier } from "@/lib/utils/notifier"
  * students can be registered onto and attendance recorded against. It is also
  * the only place a class is visible to someone who does not teach it.
  */
-export function AllocationsTab() {
+export function AllocationsSection() {
   const teachers = useGetAuthorityCandidatesQuery({ role: "TEACHER" })
   const programs = useGetProgramsQuery(ALL)
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({

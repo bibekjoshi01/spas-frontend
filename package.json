@@ -1,45 +1,52 @@
 {
-  "name": "spas-web",
+  "name": "spas-frontend",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.1",
+  "description": "SPAS web client — student performance and academic operations for colleges.",
+  "license": "UNLICENSED",
   "type": "module",
+  "packageManager": "yarn@1.22.22",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bibekjoshi01/spas-frontend.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify": "yarn typecheck && yarn lint && yarn format:check",
     "prepare": "husky"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "eslint --fix",
       "prettier --write"
+    ],
+    "*.{css,json,md,html,yml,yaml}": [
+      "prettier --write"
     ]
-  },
-  "overrides": {
-    "eslint-plugin-import": {
-      "eslint": "$eslint"
-    }
   },
   "dependencies": {
     "@fontsource-variable/montserrat": "^5.3.0",
     "@fontsource/open-sans": "^5.3.0",
-    "@fontsource/poppins": "^5.3.0",
     "@hookform/resolvers": "^5.4.0",
     "@reduxjs/toolkit": "^2.12.0",
     "@tailwindcss/vite": "^4",
     "axios": "^1.18.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "date-fns": "^4.4.0",
-    "framer-motion": "^12.42.2",
     "js-cookie": "^3.0.8",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "lucide-react": "^1.25.0",
-    "next-themes": "^0.4.6",
     "radix-ui": "^1.6.2",
     "react": "^19.2.6",
     "react-day-picker": "^10.0.1",
@@ -47,6 +54,7 @@
     "react-hook-form": "^7.81.0",
     "react-redux": "^9.3.0",
     "react-router-dom": "^7.18.1",
+    "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
     "shadcn": "^4.13.1",
     "sonner": "^2.0.7",
@@ -64,7 +72,6 @@
     "@vitejs/plugin-react": "^6",
     "eslint": "^10.7.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
     "eslint-plugin-unused-imports": "^4.4.1",

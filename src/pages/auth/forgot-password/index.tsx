@@ -12,7 +12,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ClassmatesLogo } from "@/pages/auth/login/components/classmates-logo"
+import { BrandLogo } from "@/pages/auth/login/components/brand-logo"
 import {
   confirmPasswordReset,
   requestPasswordReset,
@@ -165,7 +165,7 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen w-full flex-col bg-background px-5 py-8 sm:px-8">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
         <div className="bg-card px-6 py-8 sm:px-9 sm:py-10">
-          <ClassmatesLogo className="mb-8" />
+          <BrandLogo className="mb-8" />
 
           {step !== "success" && (
             <div

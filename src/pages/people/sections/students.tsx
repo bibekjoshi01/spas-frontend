@@ -39,7 +39,7 @@ const STATUS_LABEL: Record<Student["status"], string> = {
 }
 
 /** The student directory — everyone admitted, regardless of class. */
-export function StudentsTab() {
+export function StudentsSection() {
   const batches = useGetBatchesQuery(ALL)
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",

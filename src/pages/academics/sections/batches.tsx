@@ -47,7 +47,7 @@ const STATUS_TONE: Record<SemesterStatus, string> = {
  * one. A batch can only have one semester running at a time, which the backend
  * enforces.
  */
-export function BatchesTab() {
+export function BatchesSection() {
   const programs = useGetProgramsQuery(ALL)
   const [program, setProgram] = useState("all")
   const onlyProgram =

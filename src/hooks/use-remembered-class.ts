@@ -1,6 +1,6 @@
 import type { ClassSummary } from "@/lib/api"
 
-const KEY = "classmates:class"
+const KEY = "spas:class"
 
 /**
  * Remembers the chosen class across screens within a session.

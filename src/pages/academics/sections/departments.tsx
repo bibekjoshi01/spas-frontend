@@ -29,7 +29,7 @@ import {
 } from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
 
-export function DepartmentsTab() {
+export function DepartmentsSection() {
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
   })

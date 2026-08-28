@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 import PageImage from "@/components/page-image"
 import { Button } from "@/components/ui/button"
 
-import ServerIssueImage from "@/assets/images/error/500ErrorPage.svg"
+import ServerIssueImage from "@/assets/images/error/500.svg"
 
 import { resetApplication } from "@/lib/utils/reset-app"
 

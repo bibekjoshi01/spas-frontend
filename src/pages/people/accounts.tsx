@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/page-header"
 
-import { UsersTab } from "../people/tabs/staff"
+import { AccountsSection } from "../people/sections/accounts"
 
 export default function Page() {
   return (
@@ -9,7 +9,7 @@ export default function Page() {
         title="Accounts & Roles"
         description="Who can sign in, and what their role lets them do."
       />
-      <UsersTab />
+      <AccountsSection />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/page-header"
 
-import { BatchesTab } from "../academics/tabs/batches"
+import { BatchesSection } from "../academics/sections/batches"
 
 export default function Page() {
   return (
@@ -9,7 +9,7 @@ export default function Page() {
         title="Batches"
         description="Intake cohorts, and the semesters each has sat. Promotion happens here."
       />
-      <BatchesTab />
+      <BatchesSection />
     </div>
   )
 }

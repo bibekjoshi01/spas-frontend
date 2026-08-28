@@ -29,7 +29,7 @@ import {
 } from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
 
-export function ProgramsTab() {
+export function ProgramsSection() {
   const departments = useGetDepartmentsQuery(ALL)
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",

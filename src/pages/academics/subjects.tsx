@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/page-header"
 
-import { SubjectsTab } from "../academics/tabs/subjects"
+import { SubjectsSection } from "../academics/sections/subjects"
 
 export default function Page() {
   return (
@@ -9,7 +9,7 @@ export default function Page() {
         title="Subjects"
         description="The curriculum: what is taught, in which semester of which programme."
       />
-      <SubjectsTab />
+      <SubjectsSection />
     </div>
   )
 }

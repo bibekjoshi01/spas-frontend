@@ -30,7 +30,7 @@ import {
 } from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
 
-export function SubjectsTab() {
+export function SubjectsSection() {
   const programs = useGetProgramsQuery(ALL)
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",

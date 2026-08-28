@@ -1,6 +1,6 @@
 import Logo from "@/assets/logo.png"
 
-export function ClassmatesLogo({ className }: { className?: string }) {
+export function BrandLogo({ className }: { className?: string }) {
   return (
     <div className={className}>
       <div className="flex items-center gap-2.5">
