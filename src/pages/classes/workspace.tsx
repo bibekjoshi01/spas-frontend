@@ -90,7 +90,12 @@ export default function ClassWorkspacePage() {
             : "Loading class context…"
         }
         actions={
-          <Button asChild variant="outline" size="sm">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900"
+          >
             <Link to="/classes">
               <ArrowLeft className="size-4" aria-hidden />
               My Classes
