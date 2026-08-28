@@ -73,46 +73,48 @@ export function BatchesSection() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between gap-2">
-        {programs.data && programs.data.results.length > 1 ? (
-          <div className="flex items-center gap-2">
-            <Select value={program} onValueChange={setProgram}>
-              <SelectTrigger
-                className="w-72 max-w-full"
-                aria-label="Filter by program"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All programs</SelectItem>
-                {programs.data.results.map((row) => (
-                  <SelectItem key={row.id} value={String(row.id)}>
-                    {row.code} — {row.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {program !== "all" && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setProgram("all")}
-                className="text-muted-foreground"
-              >
-                <X className="size-4" aria-hidden />
-                Clear filters
-              </Button>
-            )}
-          </div>
-        ) : (
-          <span />
-        )}
+      <div className="flex flex-wrap items-stretch justify-between gap-3 rounded-sm border bg-white p-2 sm:items-center dark:bg-slate-950">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 [&_[data-slot=select-trigger]]:max-w-full">
+          {programs.data && programs.data.results.length > 1 && (
+            <>
+              <Select value={program} onValueChange={setProgram}>
+                <SelectTrigger
+                  className="w-full sm:w-72"
+                  aria-label="Filter by program"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All programs</SelectItem>
+                  {programs.data.results.map((row) => (
+                    <SelectItem key={row.id} value={String(row.id)}>
+                      {row.code} — {row.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {program !== "all" && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setProgram("all")}
+                  className="text-muted-foreground"
+                >
+                  <X className="size-4" aria-hidden />
+                  Clear filters
+                </Button>
+              )}
+            </>
+          )}
+        </div>
         {canAdd && (
-          <Button size="sm" onClick={() => setIsCreating(true)}>
-            <Plus className="size-4" aria-hidden />
-            New batch
-          </Button>
+          <div className="flex w-full items-center justify-end sm:w-auto">
+            <Button size="sm" onClick={() => setIsCreating(true)}>
+              <Plus className="size-4" aria-hidden />
+              New batch
+            </Button>
+          </div>
         )}
       </div>
 
