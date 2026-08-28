@@ -59,7 +59,7 @@ export function DatePickerInput({
             align="end"
             sideOffset={6}
             collisionPadding={12}
-            className="z-[120] max-h-[var(--radix-popover-content-available-height)] overflow-y-auto border bg-popover outline-none"
+            className="z-[120] max-h-[var(--radix-popover-content-available-height)] overflow-y-auto border bg-white outline-none dark:bg-slate-950"
           >
             <Calendar
               mode="single"
