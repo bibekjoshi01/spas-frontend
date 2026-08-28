@@ -25,11 +25,11 @@ export default defineConfig({
     // Each college is served from its own subdomain, so the dev server has to
     // accept any *.localhost host rather than only "localhost".
     host: true,
-    allowedHosts: [".localhost"],
+    allowedHosts: [".localhost", "192.168.254.33"],
   },
 
   preview: {
     port: 3000,
-    allowedHosts: [".localhost"],
+    allowedHosts: [".localhost", "192.168.254.33"],
   },
 })
