@@ -3,6 +3,7 @@ import type autoTableType from "jspdf-autotable"
 
 import {
   ASSIGNMENT_LABELS,
+  type BatchSemesterPerformanceReport,
   EXAM_TYPE_LABELS,
   type ClassStudent,
   type ClassStudentDetail,
@@ -393,4 +394,67 @@ export async function exportManagementStudentReportPdf(
   }
 
   doc.save(`${filename(data.student.fullName)}-complete-performance-report.pdf`)
+}
+
+export async function exportBatchSemesterPerformancePdf(
+  data: BatchSemesterPerformanceReport
+) {
+  const { jsPDF, autoTable } = await pdfTools()
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
+  const semester = data.semester
+  heading(
+    doc,
+    `${semester.batch.programCode} Batch ${semester.batch.year} — Semester ${semester.semester}`,
+    `${semester.status} · ${data.summary.students} students · ${data.summary.needsAttention} need attention`
+  )
+
+  autoTable(doc, {
+    startY: 33,
+    head: [
+      [
+        "#",
+        "Roll",
+        "Student",
+        "Phone",
+        "Attendance",
+        "Assessment",
+        "Assignment",
+        "Class performance",
+        "Overall",
+        "Standing",
+      ],
+    ],
+    body: data.results.map((row, index) => [
+      index + 1,
+      row.rollNumber,
+      row.fullName,
+      row.phoneNo || "—",
+      pdfPercent(row.attendance.percentage),
+      pdfPercent(row.assessment.percentage),
+      pdfPercent(row.assignment.percentage),
+      pdfPercent(row.classPerformancePercentage),
+      pdfPercent(row.overallPercentage),
+      row.needsAttention ? "Needs attention" : "On track",
+    ]),
+    styles: { fontSize: 7.5, cellPadding: 2 },
+    headStyles: { fillColor: [30, 41, 59] },
+    didParseCell: (hook) => {
+      if (
+        hook.section === "body" &&
+        hook.column.index === 9 &&
+        hook.cell.raw === "Needs attention"
+      ) {
+        hook.cell.styles.textColor = [185, 28, 28]
+        hook.cell.styles.fontStyle = "bold"
+      }
+    },
+  })
+
+  doc.save(
+    `${filename(semester.batch.programCode)}-batch-${semester.batch.year}-semester-${semester.semester}-performance.pdf`
+  )
+}
+
+function pdfPercent(value: number | null) {
+  return value === null ? "—" : `${value}%`
 }

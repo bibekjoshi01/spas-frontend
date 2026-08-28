@@ -3,6 +3,7 @@ import {
   Boxes,
   Building2,
   CalendarRange,
+  ChartNoAxesColumnIncreasing,
   ClipboardCheck,
   ClipboardList,
   GraduationCap,
@@ -32,7 +33,7 @@ export interface NavItem {
   showInSidebar?: boolean
   breadcrumb: string
   icon: React.ElementType
-  section: "Workspace" | "Academics" | "People" | "Administration"
+  section: "Workspace" | "Reports" | "Academics" | "People" | "Administration"
 }
 
 export const NAV_ITEMS: NavItem[] = [
@@ -52,6 +53,15 @@ export const NAV_ITEMS: NavItem[] = [
     breadcrumb: "Attendance Attention",
     icon: TriangleAlert,
     section: "Workspace",
+  },
+  {
+    label: "Batch Performance",
+    href: "/reports/batch-performance",
+    permission: "view_student",
+    allowedRoles: ["DEPARTMENT-HEAD", "PROGRAM-COORDINATOR"],
+    breadcrumb: "Batch Performance",
+    icon: ChartNoAxesColumnIncreasing,
+    section: "Reports",
   },
   {
     label: "My Classes",

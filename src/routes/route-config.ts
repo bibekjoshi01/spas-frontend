@@ -2,6 +2,9 @@ import { lazy, type ComponentType, type LazyExoticComponent } from "react"
 
 const Overview = lazy(() => import("@/pages/overview"))
 const AttendanceAttention = lazy(() => import("@/pages/attention"))
+const BatchPerformanceReport = lazy(
+  () => import("@/pages/reports/batch-performance")
+)
 const Classes = lazy(() => import("@/pages/classes"))
 const ClassWorkspace = lazy(() => import("@/pages/classes/workspace"))
 const AttendanceSession = lazy(() => import("@/pages/attendance-session"))
@@ -54,6 +57,14 @@ export const privateRoutes: AppRoute[] = [
     permission: "view_attendance",
     allowedRoles: ["DEPARTMENT-HEAD", "PROGRAM-COORDINATOR"],
     title: "Attendance Attention",
+    showInSidebar: true,
+  },
+  {
+    path: "/reports/batch-performance",
+    element: BatchPerformanceReport,
+    permission: "view_student",
+    allowedRoles: ["DEPARTMENT-HEAD", "PROGRAM-COORDINATOR"],
+    title: "Batch Performance",
     showInSidebar: true,
   },
   {

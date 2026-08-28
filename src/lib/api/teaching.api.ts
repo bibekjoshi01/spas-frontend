@@ -4,6 +4,7 @@ import type {
   Assignment,
   AssignmentStatus,
   AssignmentSubmission,
+  BatchSemesterPerformanceReport,
   AttendanceSessionDetail,
   AttendanceSessionSummary,
   AttendanceAttention,
@@ -86,6 +87,17 @@ export const teachingApi = rootAPI.injectEndpoints({
       providesTags: (_result, _error, studentId) => [
         { type: "Student", id: studentId },
       ],
+    }),
+
+    getBatchSemesterPerformanceReport: build.query<
+      BatchSemesterPerformanceReport,
+      ListParams & { batchSemester: number }
+    >({
+      query: ({ batchSemester, ...params }) => ({
+        url: `${PERFORMANCE}/analytics/batch-semester-report`,
+        params: { ...params, batch_semester: batchSemester },
+      }),
+      providesTags: ["Overview"],
     }),
 
     getClasses: build.query<
@@ -395,6 +407,8 @@ export const {
   useGetDashboardOverviewQuery,
   useGetAttendanceAttentionQuery,
   useGetManagementStudentReportQuery,
+  useGetBatchSemesterPerformanceReportQuery,
+  useLazyGetBatchSemesterPerformanceReportQuery,
   useGetClassesQuery,
   useGetClassStudentsQuery,
   useGetClassStudentDetailQuery,

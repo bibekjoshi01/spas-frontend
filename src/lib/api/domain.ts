@@ -159,6 +159,61 @@ export interface ManagementStudentReport {
   }>
 }
 
+export interface BatchSemesterPerformanceRow {
+  studentId: number
+  rollNumber: string
+  registrationNumber: string
+  fullName: string
+  email: string
+  phoneNo: string
+  alternatePhoneNo: string
+  subjects: number
+  attendance: {
+    present: number
+    absent: number
+    late: number
+    excused: number
+    held: number
+    percentage: number | null
+  }
+  assessment: {
+    obtained: number
+    total: number
+    recorded: number
+    percentage: number | null
+  }
+  assignment: { recorded: number; percentage: number | null }
+  classPerformancePercentage: number | null
+  overallPercentage: number | null
+  needsAttention: boolean
+}
+
+export interface BatchSemesterPerformanceReport {
+  count: number
+  next: string | null
+  previous: string | null
+  results: BatchSemesterPerformanceRow[]
+  semester: {
+    id: number
+    semester: number
+    status: SemesterStatus
+    startDate: string | null
+    endDate: string | null
+    batch: {
+      id: number
+      year: number
+      programCode: string
+      programName: string
+    }
+  }
+  summary: {
+    students: number
+    withEvidence: number
+    needsAttention: number
+    averagePerformance: number | null
+  }
+}
+
 /** A roster row, as returned before anything has been marked. */
 export interface RosterEntry {
   enrollment: number
