@@ -306,7 +306,7 @@ function ManagementTodayPanel({
         <Badge variant="outline">{data.sessionsRecorded} sessions</Badge>
       </div>
 
-      <div className="grid grid-cols-2 border-b sm:grid-cols-3">
+      <div className="grid grid-cols-2 border-b bg-white sm:grid-cols-3 dark:bg-slate-950">
         <DailyMetric
           icon={Activity}
           label="Attendance rate"
@@ -348,7 +348,7 @@ function ManagementTodayPanel({
             {data.classesToReview.length}
           </Badge>
         </div>
-        <div className="p-3">
+        <div className="bg-white p-3 dark:bg-slate-950">
           {data.classesToReview.length ? (
             <div className="max-h-52 divide-y overflow-y-auto border">
               {data.classesToReview.map((item) => (
