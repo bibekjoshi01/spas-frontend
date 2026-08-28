@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { Pencil, Plus, Trash2, UserPlus } from "lucide-react"
+import { Eye, Pencil, Plus, Trash2, UserPlus } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Field, FormDialog } from "@/components/form-dialog"
@@ -38,6 +38,8 @@ import {
   useUpdateAllocationMutation,
 } from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
+
+import { AllocationReportDialog } from "./allocation-report-dialog"
 
 /**
  * Allocations — who teaches what, to which batch.
@@ -85,12 +87,14 @@ export function AllocationsSection() {
   const [editing, setEditing] = useState<Allocation | null>(null)
   const [enrolling, setEnrolling] = useState<Allocation | null>(null)
   const [archiving, setArchiving] = useState<Allocation | null>(null)
+  const [reporting, setReporting] = useState<Allocation | null>(null)
   const [archive, { isLoading: isArchiving }] = useDeleteAllocationMutation()
 
   const canAdd = useHasPermission("add_subject_allocation")
   const canEdit = useHasPermission("edit_subject_allocation")
   const canDelete = useHasPermission("delete_subject_allocation")
   const canEnrol = useHasPermission("add_subject_enrollment")
+  const canViewReport = useHasPermission("view_attendance")
 
   return (
     <>
@@ -291,6 +295,16 @@ export function AllocationsSection() {
             className: "w-28 text-right",
             cell: (row) => (
               <RowActions>
+                {canViewReport && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`View performance report for ${row.subject.code}`}
+                    onClick={() => setReporting(row)}
+                  >
+                    <Eye className="size-4" aria-hidden />
+                  </Button>
+                )}
                 {canEdit && (
                   <Button
                     variant="ghost"
@@ -338,6 +352,12 @@ export function AllocationsSection() {
         <EnrolStudentsDialog
           allocation={enrolling}
           onClose={() => setEnrolling(null)}
+        />
+      )}
+      {reporting && (
+        <AllocationReportDialog
+          allocation={reporting}
+          onClose={() => setReporting(null)}
         />
       )}
 

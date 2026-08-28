@@ -3,6 +3,7 @@ import type autoTableType from "jspdf-autotable"
 
 import {
   ASSIGNMENT_LABELS,
+  type Allocation,
   type BatchSemesterPerformanceReport,
   EXAM_TYPE_LABELS,
   type ClassStudent,
@@ -122,6 +123,70 @@ export async function exportRosterPdf(
   })
 
   doc.save(`${filename(subject.code)}-class-roster.pdf`)
+}
+
+export async function exportAllocationPerformancePdf(
+  allocation: Allocation,
+  students: ClassStudent[]
+) {
+  const { jsPDF, autoTable } = await pdfTools()
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
+  heading(
+    doc,
+    `${allocation.subject.code} — ${allocation.subject.name}`,
+    `${allocation.batchSemester.batch.program.code} · Batch ${allocation.batchSemester.batch.year} · ${semesterLabel(allocation.batchSemester.semester)} · ${allocation.teacher.fullName}`
+  )
+
+  autoTable(doc, {
+    startY: 33,
+    head: [
+      [
+        "#",
+        "Roll",
+        "Student",
+        "Contact",
+        "Attendance",
+        "Assessment",
+        "Assignments",
+        "Class performance",
+        "Overall",
+        "Standing",
+      ],
+    ],
+    body: students.map((student, index) => [
+      index + 1,
+      student.rollNumber,
+      student.fullName,
+      [student.email, student.phoneNo, student.alternatePhoneNo]
+        .filter(Boolean)
+        .join("\n") || "—",
+      `${student.attendance.attended}/${student.attendance.held} (${student.attendance.percentage}%)`,
+      student.internalMarks.total
+        ? `${student.internalMarks.obtained}/${student.internalMarks.total}`
+        : "—",
+      student.assignments.total
+        ? `${student.assignments.done}/${student.assignments.total}`
+        : "—",
+      student.classPerformance.score === null
+        ? "—"
+        : `${student.classPerformance.score}/10`,
+      student.performancePercentage === null
+        ? "—"
+        : `${student.performancePercentage}%`,
+      (student.attendance.held > 0 && student.attendance.percentage < 75) ||
+      (student.performancePercentage !== null &&
+        eligibilityFor(student.performancePercentage) === "at-risk")
+        ? "Needs attention"
+        : "On track",
+    ]),
+    styles: { fontSize: 7.5, cellPadding: 2, valign: "middle" },
+    headStyles: { fillColor: [30, 41, 59] },
+    alternateRowStyles: { fillColor: [245, 247, 250] },
+  })
+
+  doc.save(
+    `${filename(allocation.subject.code)}-batch-${allocation.batchSemester.batch.year}-performance.pdf`
+  )
 }
 
 export async function exportStudentDetailPdf(data: ClassStudentDetail) {
