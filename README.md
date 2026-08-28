@@ -2,8 +2,6 @@
 
 This repository contains all major screens including attendance tracking, student management, subject overview, assessment entry, and reporting.
 
-![Classmates Dashboard](/public/classmates.png)
-
 ## 🛠️ Tech Stack
 
 | Frontend | Tooling |
