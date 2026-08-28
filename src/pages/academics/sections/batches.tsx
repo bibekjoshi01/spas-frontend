@@ -6,6 +6,7 @@ import { Field, FormDialog } from "@/components/form-dialog"
 import { QueryState } from "@/components/query-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { DatePickerInput } from "@/components/ui/date-time-picker"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -528,14 +529,12 @@ function SemesterForm({
           error={errors.startDate}
           hint="Optional"
         >
-          <Input
+          <DatePickerInput
             id="semester-start-date"
-            type="date"
             value={form.startDate}
             max={form.endDate || undefined}
-            onChange={(event) =>
-              setForm({ ...form, startDate: event.target.value })
-            }
+            onValueChange={(startDate) => setForm({ ...form, startDate })}
+            aria-label="Start date"
           />
         </Field>
         <Field
@@ -544,14 +543,12 @@ function SemesterForm({
           error={errors.endDate}
           hint="Optional"
         >
-          <Input
+          <DatePickerInput
             id="semester-end-date"
-            type="date"
             value={form.endDate}
             min={form.startDate || undefined}
-            onChange={(event) =>
-              setForm({ ...form, endDate: event.target.value })
-            }
+            onValueChange={(endDate) => setForm({ ...form, endDate })}
+            aria-label="End date"
           />
         </Field>
       </div>

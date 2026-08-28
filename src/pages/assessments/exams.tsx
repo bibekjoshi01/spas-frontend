@@ -11,6 +11,7 @@ import { InlineSpinner, QueryState } from "@/components/query-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { DatePickerInput } from "@/components/ui/date-time-picker"
 import {
   Dialog,
   DialogContent,
@@ -375,13 +376,11 @@ function EditExamDialog({
           </div>
           <div className="space-y-[5px]">
             <Label htmlFor="edit-exam-date">Exam date</Label>
-            <Input
+            <DatePickerInput
               id="edit-exam-date"
-              type="date"
               value={form.examDate}
-              onChange={(event) =>
-                setForm({ ...form, examDate: event.target.value })
-              }
+              onValueChange={(examDate) => setForm({ ...form, examDate })}
+              aria-label="Exam date"
             />
           </div>
         </div>
@@ -515,13 +514,11 @@ function CreateExamDialog({
 
           <div className="space-y-[5px]">
             <Label htmlFor="exam-date">Exam date</Label>
-            <Input
+            <DatePickerInput
               id="exam-date"
-              type="date"
               value={form.examDate}
-              onChange={(event) =>
-                setForm({ ...form, examDate: event.target.value })
-              }
+              onValueChange={(examDate) => setForm({ ...form, examDate })}
+              aria-label="Exam date"
             />
           </div>
         </div>

@@ -7,7 +7,7 @@ import { QueryState } from "@/components/query-state"
 import { ResourceList, RowActions } from "@/components/resource-list"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { TimePickerInput } from "@/components/ui/date-time-picker"
 import {
   Tooltip,
   TooltipContent,
@@ -524,13 +524,11 @@ function AllocationForm({ onClose }: { onClose: () => void }) {
           error={errors.startTime}
           hint="Optional"
         >
-          <Input
+          <TimePickerInput
             id="allocation-start-time"
-            type="time"
             value={form.startTime}
-            onChange={(event) =>
-              setForm({ ...form, startTime: event.target.value })
-            }
+            onValueChange={(startTime) => setForm({ ...form, startTime })}
+            aria-label="Start time"
           />
         </Field>
         <Field
@@ -539,13 +537,11 @@ function AllocationForm({ onClose }: { onClose: () => void }) {
           error={errors.endTime}
           hint="Optional"
         >
-          <Input
+          <TimePickerInput
             id="allocation-end-time"
-            type="time"
             value={form.endTime}
-            onChange={(event) =>
-              setForm({ ...form, endTime: event.target.value })
-            }
+            onValueChange={(endTime) => setForm({ ...form, endTime })}
+            aria-label="End time"
           />
         </Field>
       </div>
@@ -682,13 +678,11 @@ function AllocationEditForm({
           error={errors.startTime}
           hint="Optional"
         >
-          <Input
+          <TimePickerInput
             id="edit-allocation-start-time"
-            type="time"
             value={form.startTime}
-            onChange={(event) =>
-              setForm({ ...form, startTime: event.target.value })
-            }
+            onValueChange={(startTime) => setForm({ ...form, startTime })}
+            aria-label="Start time"
           />
         </Field>
         <Field
@@ -697,13 +691,11 @@ function AllocationEditForm({
           error={errors.endTime}
           hint="Optional"
         >
-          <Input
+          <TimePickerInput
             id="edit-allocation-end-time"
-            type="time"
             value={form.endTime}
-            onChange={(event) =>
-              setForm({ ...form, endTime: event.target.value })
-            }
+            onValueChange={(endTime) => setForm({ ...form, endTime })}
+            aria-label="End time"
           />
         </Field>
       </div>

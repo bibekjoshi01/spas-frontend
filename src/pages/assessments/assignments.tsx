@@ -11,6 +11,7 @@ import { InlineSpinner, QueryState } from "@/components/query-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { DatePickerInput } from "@/components/ui/date-time-picker"
 import {
   Dialog,
   DialogContent,
@@ -329,25 +330,23 @@ function EditAssignmentDialog({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-[5px]">
               <Label htmlFor="edit-assignment-given">Given</Label>
-              <Input
+              <DatePickerInput
                 id="edit-assignment-given"
-                type="date"
                 value={form.assignedDate}
-                onChange={(event) =>
-                  setForm({ ...form, assignedDate: event.target.value })
+                onValueChange={(assignedDate) =>
+                  setForm({ ...form, assignedDate })
                 }
+                aria-label="Given date"
               />
             </div>
             <div className="space-y-[5px]">
               <Label htmlFor="edit-assignment-due">Due</Label>
-              <Input
+              <DatePickerInput
                 id="edit-assignment-due"
-                type="date"
                 min={form.assignedDate}
                 value={form.dueDate}
-                onChange={(event) =>
-                  setForm({ ...form, dueDate: event.target.value })
-                }
+                onValueChange={(dueDate) => setForm({ ...form, dueDate })}
+                aria-label="Due date"
               />
             </div>
           </div>
@@ -430,25 +429,23 @@ function CreateAssignmentDialog({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-[5px]">
               <Label htmlFor="assignment-given">Given</Label>
-              <Input
+              <DatePickerInput
                 id="assignment-given"
-                type="date"
                 value={form.assignedDate}
-                onChange={(event) =>
-                  setForm({ ...form, assignedDate: event.target.value })
+                onValueChange={(assignedDate) =>
+                  setForm({ ...form, assignedDate })
                 }
+                aria-label="Given date"
               />
             </div>
             <div className="space-y-[5px]">
               <Label htmlFor="assignment-due">Due</Label>
-              <Input
+              <DatePickerInput
                 id="assignment-due"
-                type="date"
                 min={form.assignedDate}
                 value={form.dueDate}
-                onChange={(event) =>
-                  setForm({ ...form, dueDate: event.target.value })
-                }
+                onValueChange={(dueDate) => setForm({ ...form, dueDate })}
+                aria-label="Due date"
               />
             </div>
           </div>
