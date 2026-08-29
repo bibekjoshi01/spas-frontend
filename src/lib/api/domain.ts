@@ -132,6 +132,124 @@ export interface ClassStudentDetail {
   } | null
 }
 
+export interface ManagementStudentReport {
+  student: {
+    id: number
+    rollNumber: string
+    registrationNumber: string
+    fullName: string
+    email: string
+    phoneNo: string
+    alternatePhoneNo: string
+    status: Student["status"]
+    programCode: string
+    programName: string
+    departmentName: string
+    batchYear: number
+  }
+  subjects: Array<{
+    enrollment: number
+    semester: number
+    semesterStatus: SemesterStatus
+    class: ClassSummary
+    attendance: ClassStudentDetail["attendance"]
+    assessments: ClassStudentDetail["assessments"]
+    assignments: ClassStudentDetail["assignments"]
+    classPerformance: ClassStudentDetail["classPerformance"]
+  }>
+}
+
+export interface BatchSemesterPerformanceRow {
+  studentId: number
+  rollNumber: string
+  registrationNumber: string
+  fullName: string
+  email: string
+  phoneNo: string
+  alternatePhoneNo: string
+  subjects: number
+  attendance: {
+    present: number
+    absent: number
+    late: number
+    excused: number
+    held: number
+    percentage: number | null
+  }
+  assessment: {
+    obtained: number
+    total: number
+    recorded: number
+    percentage: number | null
+  }
+  assignment: { recorded: number; percentage: number | null }
+  classPerformancePercentage: number | null
+  overallPercentage: number | null
+  needsAttention: boolean
+}
+
+export interface BatchSemesterPerformanceReport {
+  count: number
+  next: string | null
+  previous: string | null
+  results: BatchSemesterPerformanceRow[]
+  semester: {
+    id: number
+    semester: number
+    status: SemesterStatus
+    startDate: string | null
+    endDate: string | null
+    batch: {
+      id: number
+      year: number
+      programCode: string
+      programName: string
+    }
+  }
+  summary: {
+    students: number
+    withEvidence: number
+    needsAttention: number
+    averagePerformance: number | null
+  }
+}
+
+export interface ManagementAttendanceReportRow {
+  id: number
+  date: string
+  period: number
+  allocation: number
+  subjectCode: string
+  subjectName: string
+  programCode: string
+  batchYear: number
+  semester: number
+  teacherName: string
+  marked: number
+  present: number
+  absent: number
+  late: number
+  excused: number
+  attendancePercentage: number
+}
+
+export interface ManagementAttendanceReport {
+  count: number
+  next: string | null
+  previous: string | null
+  results: ManagementAttendanceReportRow[]
+  range: { startDate: string; endDate: string }
+  summary: {
+    sessions: number
+    marked: number
+    present: number
+    absent: number
+    late: number
+    excused: number
+    attendancePercentage: number
+  }
+}
+
 /** A roster row, as returned before anything has been marked. */
 export interface RosterEntry {
   enrollment: number

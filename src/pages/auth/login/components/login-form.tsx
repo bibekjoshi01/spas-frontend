@@ -56,7 +56,7 @@ export function LoginForm() {
       )
 
       navigate("/dashboard")
-    } catch (error) {
+    } catch {
       notifier.error("Invalid email or password.")
     }
   }
@@ -126,23 +126,6 @@ export function LoginForm() {
       >
         {isSubmitting ? "Signing in…" : "Sign in"}
       </Button>
-
-      {/*<div className="flex items-center gap-3 py-2">
-        <Separator className="flex-1" />
-        <span className="text-xs text-muted-foreground">or</span>
-        <Separator className="flex-1" />
-      </div>
-
-      <Button type="button" variant="outline" size="lg" className="w-full">
-        Continue with college SSO
-      </Button>
-
-      <p className="text-center text-sm text-muted-foreground">
-        New to Classmates?{" "}
-        <a href="#" className="font-medium text-primary hover:underline">
-          Ask your department admin for access
-        </a>
-      </p>*/}
     </form>
   )
 }

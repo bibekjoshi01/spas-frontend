@@ -29,7 +29,7 @@ import {
 } from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
 
-export function ProgramsTab() {
+export function ProgramsSection() {
   const departments = useGetDepartmentsQuery(ALL)
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
@@ -294,7 +294,7 @@ function ProgramForm({
         />
       </Field>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Code" htmlFor="program-code" error={errors.code}>
           <Input
             id="program-code"

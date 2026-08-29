@@ -1,4 +1,4 @@
-import { rootAPI } from "@/lib/redux/apiSlice"
+import { rootAPI } from "@/lib/redux/api-slice"
 
 import type { Student } from "./domain"
 import type {

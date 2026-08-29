@@ -30,7 +30,7 @@ import {
 } from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
 
-export function SubjectsTab() {
+export function SubjectsSection() {
   const programs = useGetProgramsQuery(ALL)
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
@@ -311,7 +311,7 @@ function SubjectForm({
         </Field>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Code" htmlFor="subject-code" error={errors.code}>
           <Input
             id="subject-code"
@@ -353,7 +353,7 @@ function SubjectForm({
         />
       </Field>
 
-      <div className="grid grid-cols-2 items-end gap-3">
+      <div className="grid gap-3 sm:grid-cols-2 sm:items-end">
         <Field
           label="Credit hours"
           htmlFor="subject-credits"

@@ -1,9 +1,10 @@
-import { rootAPI } from "@/lib/redux/apiSlice"
+import { rootAPI } from "@/lib/redux/api-slice"
 
 import type {
   Assignment,
   AssignmentStatus,
   AssignmentSubmission,
+  BatchSemesterPerformanceReport,
   AttendanceSessionDetail,
   AttendanceSessionSummary,
   AttendanceAttention,
@@ -16,6 +17,8 @@ import type {
   Exam,
   ExamMark,
   ExamType,
+  ManagementStudentReport,
+  ManagementAttendanceReport,
   RosterEntry,
 } from "./domain"
 import type {
@@ -76,6 +79,37 @@ export const teachingApi = rootAPI.injectEndpoints({
         params: params || undefined,
       }),
       providesTags: ["Overview"],
+    }),
+
+    getManagementStudentReport: build.query<ManagementStudentReport, number>({
+      query: (studentId) => ({
+        url: `${PERFORMANCE}/analytics/students/${studentId}/report`,
+      }),
+      providesTags: (_result, _error, studentId) => [
+        { type: "Student", id: studentId },
+      ],
+    }),
+
+    getBatchSemesterPerformanceReport: build.query<
+      BatchSemesterPerformanceReport,
+      ListParams & { batchSemester: number }
+    >({
+      query: ({ batchSemester, ...params }) => ({
+        url: `${PERFORMANCE}/analytics/batch-semester-report`,
+        params: { ...params, batch_semester: batchSemester },
+      }),
+      providesTags: ["Overview"],
+    }),
+
+    getManagementAttendanceReport: build.query<
+      ManagementAttendanceReport,
+      ListParams & { startDate: string; endDate: string }
+    >({
+      query: ({ startDate, endDate, ...params }) => ({
+        url: `${PERFORMANCE}/analytics/management-attendance-report`,
+        params: { ...params, start_date: startDate, end_date: endDate },
+      }),
+      providesTags: ["AttendanceSession"],
     }),
 
     getClasses: build.query<
@@ -384,6 +418,11 @@ export const {
   useUpdatePerformanceWeightsMutation,
   useGetDashboardOverviewQuery,
   useGetAttendanceAttentionQuery,
+  useGetManagementStudentReportQuery,
+  useGetBatchSemesterPerformanceReportQuery,
+  useLazyGetBatchSemesterPerformanceReportQuery,
+  useGetManagementAttendanceReportQuery,
+  useLazyGetManagementAttendanceReportQuery,
   useGetClassesQuery,
   useGetClassStudentsQuery,
   useGetClassStudentDetailQuery,

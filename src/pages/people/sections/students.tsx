@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Pencil, Plus, Trash2 } from "lucide-react"
+import { Eye, Pencil, Plus, Trash2 } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Field, FormDialog } from "@/components/form-dialog"
@@ -29,6 +29,8 @@ import {
 } from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
 
+import { ManagementStudentReportDialog } from "../management-student-report-dialog"
+
 const STATUS_LABEL: Record<Student["status"], string> = {
   STUDYING: "Studying",
   GRADUATED: "Graduated",
@@ -37,7 +39,7 @@ const STATUS_LABEL: Record<Student["status"], string> = {
 }
 
 /** The student directory — everyone admitted, regardless of class. */
-export function StudentsTab() {
+export function StudentsSection() {
   const batches = useGetBatchesQuery(ALL)
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
@@ -50,6 +52,7 @@ export function StudentsTab() {
   const [isCreating, setIsCreating] = useState(false)
   const [editing, setEditing] = useState<Student | null>(null)
   const [archiving, setArchiving] = useState<Student | null>(null)
+  const [reporting, setReporting] = useState<Student | null>(null)
   const [archive, { isLoading: isArchiving }] = useDeleteStudentMutation()
 
   const canAdd = useHasPermission("add_student")
@@ -185,6 +188,14 @@ export function StudentsTab() {
             className: "w-24 text-right",
             cell: (row) => (
               <RowActions>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`View performance report for ${row.fullName}`}
+                  onClick={() => setReporting(row)}
+                >
+                  <Eye className="size-4" aria-hidden />
+                </Button>
                 {canEdit && (
                   <Button
                     variant="ghost"
@@ -214,6 +225,12 @@ export function StudentsTab() {
       {isCreating && <StudentForm onClose={() => setIsCreating(false)} />}
       {editing && (
         <StudentForm student={editing} onClose={() => setEditing(null)} />
+      )}
+      {reporting && (
+        <ManagementStudentReportDialog
+          studentId={reporting.id}
+          onClose={() => setReporting(null)}
+        />
       )}
 
       <ConfirmDialog

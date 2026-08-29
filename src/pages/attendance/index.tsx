@@ -140,7 +140,12 @@ export default function AttendancePage() {
         title="Attendance"
         description="Take today's attendance or review a recorded day."
         actions={
-          <Button asChild variant="outline" size="sm">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900"
+          >
             <Link to="/classes">
               <ArrowLeft className="size-4" aria-hidden />
               My Classes
@@ -386,8 +391,8 @@ function InlineSessionDetail({
           </Button>
         </div>
       ) : (
-        <div className="overflow-x-auto border bg-background">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto border bg-white dark:bg-slate-950">
+          <table className="w-full bg-white text-sm dark:bg-slate-950">
             <thead className="border-b bg-slate-100 text-left dark:bg-slate-900">
               <tr>
                 <th className="w-14 px-3 py-2 font-semibold">#</th>

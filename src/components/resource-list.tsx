@@ -84,8 +84,8 @@ export function ResourceList<T>({
   return (
     <div className="space-y-3">
       {hasToolbar && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm border bg-card p-2">
-          <div className="flex flex-1 flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-stretch justify-between gap-3 rounded-sm border bg-card p-2 sm:items-center">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 [&_[data-slot=select-trigger]]:max-w-full">
             {search && (
               <div className="relative w-full sm:w-72">
                 <Search
@@ -116,7 +116,11 @@ export function ResourceList<T>({
             )}
           </div>
 
-          {action}
+          {action && (
+            <div className="flex w-full items-center justify-end sm:w-auto">
+              {action}
+            </div>
+          )}
         </div>
       )}
 
@@ -130,7 +134,10 @@ export function ResourceList<T>({
         emptyMessage={emptyMessage}
         emptyAction={emptyAction}
       >
-        <div className="overflow-x-auto rounded-lg border bg-background">
+        <div
+          className="overflow-x-auto rounded-lg border bg-white dark:bg-slate-950"
+          aria-busy={isFetching || undefined}
+        >
           <Table>
             <TableHeader>
               <TableRow className="border-b-2 border-slate-300 bg-slate-200 hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-800">
@@ -177,7 +184,7 @@ export function ResourceList<T>({
 /** The action buttons at the end of a row, revealed on hover or focus. */
 export function RowActions({ children }: { children: ReactNode }) {
   return (
-    <div className="flex justify-end gap-0.5 opacity-60 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+    <div className="flex justify-end gap-0.5 opacity-100 transition-opacity focus-within:opacity-100 md:opacity-60 md:group-hover:opacity-100">
       {children}
     </div>
   )

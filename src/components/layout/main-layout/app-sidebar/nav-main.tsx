@@ -19,6 +19,7 @@ export default function NavMain({ items }: Props) {
   const { isMobile, setOpenMobile } = useSidebar()
   const sections = [
     "Workspace",
+    "Reports",
     "Academics",
     "People",
     "Administration",

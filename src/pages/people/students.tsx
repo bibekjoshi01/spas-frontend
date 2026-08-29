@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/page-header"
 
-import { StudentsTab } from "../people/tabs/students"
+import { StudentsSection } from "../people/sections/students"
 
 export default function Page() {
   return (
@@ -9,7 +9,7 @@ export default function Page() {
         title="Students"
         description="Everyone admitted, and which batch they belong to."
       />
-      <StudentsTab />
+      <StudentsSection />
     </div>
   )
 }

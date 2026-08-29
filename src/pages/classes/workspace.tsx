@@ -90,7 +90,12 @@ export default function ClassWorkspacePage() {
             : "Loading class context…"
         }
         actions={
-          <Button asChild variant="outline" size="sm">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900"
+          >
             <Link to="/classes">
               <ArrowLeft className="size-4" aria-hidden />
               My Classes
@@ -118,7 +123,7 @@ export default function ClassWorkspacePage() {
           <div className="space-y-3">
             <ClassWorkspaceNav value={selected} active="Overview" />
 
-            <div className="grid border sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid border bg-white sm:grid-cols-2 lg:grid-cols-5 dark:bg-slate-950">
               <Metric
                 icon={Users}
                 label="Students"
@@ -154,7 +159,7 @@ export default function ClassWorkspacePage() {
             </div>
 
             <div className="grid gap-3 lg:grid-cols-[1fr_1fr]">
-              <section className="border bg-background">
+              <section className="border bg-white dark:bg-slate-950">
                 <div className="border-b bg-muted/60 px-3 py-2">
                   <h2 className="font-semibold">Next actions</h2>
                   <p className="text-xs text-muted-foreground">
@@ -204,7 +209,7 @@ export default function ClassWorkspacePage() {
               </section>
 
               {canViewPerformance && (
-                <section className="border bg-background">
+                <section className="border bg-white dark:bg-slate-950">
                   <div className="flex items-center justify-between border-b bg-muted/60 px-3 py-2">
                     <div>
                       <h2 className="font-semibold">

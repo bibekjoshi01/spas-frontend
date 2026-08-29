@@ -54,9 +54,10 @@ export function Pagination({
           className="h-8"
           disabled={offset === 0}
           onClick={() => onOffsetChange(Math.max(0, offset - pageSize))}
+          aria-label="Previous page"
         >
           <ChevronLeft className="size-4" aria-hidden />
-          Previous
+          <span className="hidden sm:inline">Previous</span>
         </Button>
 
         <span className="px-2 text-xs text-muted-foreground tabular-nums">
@@ -69,8 +70,9 @@ export function Pagination({
           className="h-8"
           disabled={last >= count}
           onClick={() => onOffsetChange(offset + pageSize)}
+          aria-label="Next page"
         >
-          Next
+          <span className="hidden sm:inline">Next</span>
           <ChevronRight className="size-4" aria-hidden />
         </Button>
       </div>

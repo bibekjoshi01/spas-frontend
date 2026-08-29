@@ -6,6 +6,7 @@ import { Field, FormDialog } from "@/components/form-dialog"
 import { QueryState } from "@/components/query-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { DatePickerInput } from "@/components/ui/date-time-picker"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -47,7 +48,7 @@ const STATUS_TONE: Record<SemesterStatus, string> = {
  * one. A batch can only have one semester running at a time, which the backend
  * enforces.
  */
-export function BatchesTab() {
+export function BatchesSection() {
   const programs = useGetProgramsQuery(ALL)
   const [program, setProgram] = useState("all")
   const onlyProgram =
@@ -72,46 +73,48 @@ export function BatchesTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between gap-2">
-        {programs.data && programs.data.results.length > 1 ? (
-          <div className="flex items-center gap-2">
-            <Select value={program} onValueChange={setProgram}>
-              <SelectTrigger
-                className="w-72 max-w-full"
-                aria-label="Filter by program"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All programs</SelectItem>
-                {programs.data.results.map((row) => (
-                  <SelectItem key={row.id} value={String(row.id)}>
-                    {row.code} — {row.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {program !== "all" && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setProgram("all")}
-                className="text-muted-foreground"
-              >
-                <X className="size-4" aria-hidden />
-                Clear filters
-              </Button>
-            )}
-          </div>
-        ) : (
-          <span />
-        )}
+      <div className="flex flex-wrap items-stretch justify-between gap-3 rounded-sm border bg-white p-2 sm:items-center dark:bg-slate-950">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 [&_[data-slot=select-trigger]]:max-w-full">
+          {programs.data && programs.data.results.length > 1 && (
+            <>
+              <Select value={program} onValueChange={setProgram}>
+                <SelectTrigger
+                  className="w-full sm:w-72"
+                  aria-label="Filter by program"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All programs</SelectItem>
+                  {programs.data.results.map((row) => (
+                    <SelectItem key={row.id} value={String(row.id)}>
+                      {row.code} — {row.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {program !== "all" && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setProgram("all")}
+                  className="text-muted-foreground"
+                >
+                  <X className="size-4" aria-hidden />
+                  Clear filters
+                </Button>
+              )}
+            </>
+          )}
+        </div>
         {canAdd && (
-          <Button size="sm" onClick={() => setIsCreating(true)}>
-            <Plus className="size-4" aria-hidden />
-            New batch
-          </Button>
+          <div className="flex w-full items-center justify-end sm:w-auto">
+            <Button size="sm" onClick={() => setIsCreating(true)}>
+              <Plus className="size-4" aria-hidden />
+              New batch
+            </Button>
+          </div>
         )}
       </div>
 
@@ -209,7 +212,7 @@ function BatchRow({
   }
 
   return (
-    <div className="rounded-lg border">
+    <div className="rounded-lg border bg-white dark:bg-slate-950">
       <div className="flex items-center hover:bg-muted/50">
         <button
           type="button"
@@ -277,7 +280,7 @@ function BatchRow({
               {semesters.data?.results.map((semester) => (
                 <li
                   key={semester.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted/40 px-3 py-2"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-white px-3 py-2 dark:bg-slate-950"
                 >
                   <div>
                     <div className="flex items-center gap-2">
@@ -473,10 +476,12 @@ function SemesterForm({
     <FormDialog
       open
       onOpenChange={(next) => !next && onClose()}
-      title={`${semester ? "Edit" : "Open"} A Semester For ${batch.program.code} ${batch.year}`}
+      title={`${semester ? "Edit" : "Open"} semester · ${batch.program.code} ${batch.year}`}
+      description="Set the semester tenure and lifecycle. Attendance changes are restricted to running semesters and these dates."
       formError={formErrorFrom(requestState.error)}
       isSubmitting={requestState.isLoading}
       submitLabel={semester ? "Save semester" : "Open semester"}
+      contentClassName="max-h-[90dvh] sm:max-w-2xl"
       onSubmit={async () => {
         try {
           const dates = {
@@ -528,14 +533,12 @@ function SemesterForm({
           error={errors.startDate}
           hint="Optional"
         >
-          <Input
+          <DatePickerInput
             id="semester-start-date"
-            type="date"
             value={form.startDate}
             max={form.endDate || undefined}
-            onChange={(event) =>
-              setForm({ ...form, startDate: event.target.value })
-            }
+            onValueChange={(startDate) => setForm({ ...form, startDate })}
+            aria-label="Start date"
           />
         </Field>
         <Field
@@ -544,14 +547,12 @@ function SemesterForm({
           error={errors.endDate}
           hint="Optional"
         >
-          <Input
+          <DatePickerInput
             id="semester-end-date"
-            type="date"
             value={form.endDate}
             min={form.startDate || undefined}
-            onChange={(event) =>
-              setForm({ ...form, endDate: event.target.value })
-            }
+            onValueChange={(endDate) => setForm({ ...form, endDate })}
+            aria-label="End date"
           />
         </Field>
       </div>

@@ -306,7 +306,7 @@ function ManagementTodayPanel({
         <Badge variant="outline">{data.sessionsRecorded} sessions</Badge>
       </div>
 
-      <div className="grid grid-cols-2 border-b sm:grid-cols-3">
+      <div className="grid grid-cols-2 border-b bg-white sm:grid-cols-3 dark:bg-slate-950">
         <DailyMetric
           icon={Activity}
           label="Attendance rate"
@@ -332,8 +332,8 @@ function ManagementTodayPanel({
         />
       </div>
 
-      <div className="px-3 py-2.5">
-        <div className="mb-2 flex items-center justify-between gap-2">
+      <div className="mt-3 border-t">
+        <div className="flex items-center justify-between gap-3 border-b bg-amber-50 px-3 py-2.5 dark:bg-amber-950/30">
           <div>
             <h3 className="text-sm font-semibold">Classes to review</h3>
             <p className="text-xs text-muted-foreground">
@@ -341,36 +341,43 @@ function ManagementTodayPanel({
               mean a class was scheduled.
             </p>
           </div>
-          <Badge variant="secondary">{data.classesToReview.length}</Badge>
+          <Badge
+            variant="outline"
+            className="shrink-0 bg-background tabular-nums"
+          >
+            {data.classesToReview.length}
+          </Badge>
         </div>
-        {data.classesToReview.length ? (
-          <div className="max-h-52 divide-y overflow-y-auto border">
-            {data.classesToReview.map((item) => (
-              <div
-                key={item.allocation}
-                className="flex items-center justify-between gap-3 px-2.5 py-2 text-sm"
-              >
-                <span className="min-w-0">
-                  <span className="block truncate font-medium">
-                    {item.name}
+        <div className="bg-white p-3 dark:bg-slate-950">
+          {data.classesToReview.length ? (
+            <div className="max-h-52 divide-y overflow-y-auto border">
+              {data.classesToReview.map((item) => (
+                <div
+                  key={item.allocation}
+                  className="flex items-center justify-between gap-3 px-2.5 py-2 text-sm"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">
+                      {item.name}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {item.code} · {item.programCode} {item.batchYear} ·
+                      Semester {item.semester}
+                    </span>
                   </span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {item.code} · {item.programCode} {item.batchYear} · Semester{" "}
-                    {item.semester}
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {item.teacher.fullName}
                   </span>
-                </span>
-                <span className="shrink-0 text-xs text-muted-foreground">
-                  {item.teacher.fullName}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="flex items-center gap-2 py-3 text-sm text-muted-foreground">
-            <CheckCircle2 className="size-4 text-emerald-600" aria-hidden />
-            Every active class has at least one attendance record today.
-          </p>
-        )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="flex items-center gap-2 py-3 text-sm text-muted-foreground">
+              <CheckCircle2 className="size-4 text-emerald-600" aria-hidden />
+              Every active class has at least one attendance record today.
+            </p>
+          )}
+        </div>
       </div>
     </section>
   )

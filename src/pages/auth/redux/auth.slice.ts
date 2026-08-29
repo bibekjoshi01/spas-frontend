@@ -2,7 +2,7 @@ import Cookies from "js-cookie"
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 
 import type { IAuthState } from "./auth.types"
-import { hydrateProfile } from "./hydrateprofile"
+import { hydrateProfile } from "./hydrate-profile"
 
 const initialState: IAuthState = {
   tokens: null,

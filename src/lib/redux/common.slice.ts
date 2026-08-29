@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
-import type { CommonState } from "./types"
+import type { CommonState } from "./common.types"
 
 const initialState: CommonState = {
   sidebarOpen: true,

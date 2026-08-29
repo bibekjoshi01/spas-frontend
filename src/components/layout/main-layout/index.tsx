@@ -3,7 +3,7 @@ import { Outlet } from "react-router-dom"
 
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks"
-import { setSidebar } from "@/lib/common/redux/common.slice"
+import { setSidebar } from "@/lib/redux/common.slice"
 import { HeaderActionsSlotContext } from "@/components/header-actions-context"
 
 import AppHeader from "./app-header"

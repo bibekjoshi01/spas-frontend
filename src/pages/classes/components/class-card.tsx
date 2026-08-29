@@ -2,7 +2,6 @@ import { Link } from "react-router-dom"
 import {
   CalendarCheck,
   CalendarDays,
-  ClipboardList,
   GraduationCap,
   LayoutDashboard,
   Clock3,

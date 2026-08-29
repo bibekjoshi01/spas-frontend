@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/page-header"
 
-import { DepartmentsTab } from "../academics/tabs/departments"
+import { DepartmentsSection } from "../academics/sections/departments"
 
 export default function Page() {
   return (
@@ -9,7 +9,7 @@ export default function Page() {
         title="Departments"
         description="The divisions that own programmes and teaching staff."
       />
-      <DepartmentsTab />
+      <DepartmentsSection />
     </div>
   )
 }

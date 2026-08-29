@@ -17,7 +17,7 @@ const storage =
   storageModule
 
 import { rootReducer } from "./reducers"
-import { rootAPI } from "./apiSlice"
+import { rootAPI } from "./api-slice"
 
 const persistConfig = {
   key: "root",

@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/page-header"
 
-import { ProgramsTab } from "../academics/tabs/programs"
+import { ProgramsSection } from "../academics/sections/programs"
 
 export default function Page() {
   return (
@@ -9,7 +9,7 @@ export default function Page() {
         title="Programs"
         description="Degrees a department runs, and who coordinates each one."
       />
-      <ProgramsTab />
+      <ProgramsSection />
     </div>
   )
 }

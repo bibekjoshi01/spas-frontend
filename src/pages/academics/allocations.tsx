@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/page-header"
 
-import { AllocationsTab } from "../academics/tabs/allocations"
+import { AllocationsSection } from "../academics/sections/allocations"
 
 export default function Page() {
   return (
@@ -9,7 +9,7 @@ export default function Page() {
         title="Subject Allocations"
         description="Who teaches what, to which batch. Creating one makes a class."
       />
-      <AllocationsTab />
+      <AllocationsSection />
     </div>
   )
 }

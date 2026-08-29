@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { Pencil, Plus, Trash2, UserPlus } from "lucide-react"
+import { Eye, Pencil, Plus, Trash2, UserPlus } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Field, FormDialog } from "@/components/form-dialog"
@@ -7,7 +7,13 @@ import { QueryState } from "@/components/query-state"
 import { ResourceList, RowActions } from "@/components/resource-list"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { TimePickerInput } from "@/components/ui/date-time-picker"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import {
   Select,
   SelectContent,
@@ -39,6 +45,8 @@ import {
 } from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
 
+import { AllocationReportDialog } from "./allocation-report-dialog"
+
 /**
  * Allocations — who teaches what, to which batch.
  *
@@ -46,7 +54,7 @@ import { notifier } from "@/lib/utils/notifier"
  * students can be registered onto and attendance recorded against. It is also
  * the only place a class is visible to someone who does not teach it.
  */
-export function AllocationsTab() {
+export function AllocationsSection() {
   const teachers = useGetAuthorityCandidatesQuery({ role: "TEACHER" })
   const programs = useGetProgramsQuery(ALL)
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
@@ -85,12 +93,14 @@ export function AllocationsTab() {
   const [editing, setEditing] = useState<Allocation | null>(null)
   const [enrolling, setEnrolling] = useState<Allocation | null>(null)
   const [archiving, setArchiving] = useState<Allocation | null>(null)
+  const [reporting, setReporting] = useState<Allocation | null>(null)
   const [archive, { isLoading: isArchiving }] = useDeleteAllocationMutation()
 
   const canAdd = useHasPermission("add_subject_allocation")
   const canEdit = useHasPermission("edit_subject_allocation")
   const canDelete = useHasPermission("delete_subject_allocation")
   const canEnrol = useHasPermission("add_subject_enrollment")
+  const canViewReport = useHasPermission("view_attendance")
 
   return (
     <>
@@ -291,6 +301,23 @@ export function AllocationsTab() {
             className: "w-28 text-right",
             cell: (row) => (
               <RowActions>
+                {canViewReport && (
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`View performance report for ${row.subject.code}`}
+                          onClick={() => setReporting(row)}
+                        >
+                          <Eye className="size-4" aria-hidden />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>View report</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
                 {canEdit && (
                   <Button
                     variant="ghost"
@@ -338,6 +365,12 @@ export function AllocationsTab() {
         <EnrolStudentsDialog
           allocation={enrolling}
           onClose={() => setEnrolling(null)}
+        />
+      )}
+      {reporting && (
+        <AllocationReportDialog
+          allocation={reporting}
+          onClose={() => setReporting(null)}
         />
       )}
 
@@ -403,6 +436,7 @@ function AllocationForm({ onClose }: { onClose: () => void }) {
       isSubmitting={state.isLoading}
       canSubmit={Boolean(form.batchSemester && form.subject && form.teacher)}
       submitLabel="Allocate"
+      contentClassName="max-h-[90dvh] sm:max-w-2xl"
       onSubmit={async () => {
         try {
           await create({
@@ -440,50 +474,52 @@ function AllocationForm({ onClose }: { onClose: () => void }) {
         </Select>
       </Field>
 
-      <Field
-        label="Subject"
-        error={errors.subject}
-        hint={
-          chosenSemester
-            ? `Subjects in ${semesterLabel(chosenSemester.semester)} of ${chosenSemester.batch.program.code}.`
-            : "Choose a batch semester first."
-        }
-      >
-        <Select
-          value={form.subject}
-          onValueChange={(value) => setForm({ ...form, subject: value })}
-          disabled={!chosenSemester}
+      <div className="grid items-start gap-4 sm:grid-cols-2">
+        <Field
+          label="Subject"
+          error={errors.subject}
+          hint={
+            chosenSemester
+              ? `Subjects in ${semesterLabel(chosenSemester.semester)} of ${chosenSemester.batch.program.code}.`
+              : "Choose a batch semester first."
+          }
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Choose a subject" />
-          </SelectTrigger>
-          <SelectContent>
-            {subjects.data?.results.map((row) => (
-              <SelectItem key={row.id} value={String(row.id)}>
-                {row.code} — {row.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
+          <Select
+            value={form.subject}
+            onValueChange={(value) => setForm({ ...form, subject: value })}
+            disabled={!chosenSemester}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Choose a subject" />
+            </SelectTrigger>
+            <SelectContent>
+              {subjects.data?.results.map((row) => (
+                <SelectItem key={row.id} value={String(row.id)}>
+                  {row.code} — {row.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
 
-      <Field label="Teacher" error={errors.teacher}>
-        <Select
-          value={form.teacher}
-          onValueChange={(value) => setForm({ ...form, teacher: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Choose a teacher" />
-          </SelectTrigger>
-          <SelectContent>
-            {teachers.data?.results.map((row) => (
-              <SelectItem key={row.id} value={String(row.id)}>
-                {row.fullName || row.username}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
+        <Field label="Teacher" error={errors.teacher}>
+          <Select
+            value={form.teacher}
+            onValueChange={(value) => setForm({ ...form, teacher: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Choose a teacher" />
+            </SelectTrigger>
+            <SelectContent>
+              {teachers.data?.results.map((row) => (
+                <SelectItem key={row.id} value={String(row.id)}>
+                  {row.fullName || row.username}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           label="Start time"
@@ -491,13 +527,12 @@ function AllocationForm({ onClose }: { onClose: () => void }) {
           error={errors.startTime}
           hint="Optional"
         >
-          <Input
+          <TimePickerInput
             id="allocation-start-time"
-            type="time"
             value={form.startTime}
-            onChange={(event) =>
-              setForm({ ...form, startTime: event.target.value })
-            }
+            max={form.endTime || undefined}
+            onValueChange={(startTime) => setForm({ ...form, startTime })}
+            aria-label="Start time"
           />
         </Field>
         <Field
@@ -506,13 +541,12 @@ function AllocationForm({ onClose }: { onClose: () => void }) {
           error={errors.endTime}
           hint="Optional"
         >
-          <Input
+          <TimePickerInput
             id="allocation-end-time"
-            type="time"
             value={form.endTime}
-            onChange={(event) =>
-              setForm({ ...form, endTime: event.target.value })
-            }
+            min={form.startTime || undefined}
+            onValueChange={(endTime) => setForm({ ...form, endTime })}
+            aria-label="End time"
           />
         </Field>
       </div>
@@ -562,6 +596,7 @@ function AllocationEditForm({
       isSubmitting={state.isLoading}
       canSubmit={Boolean(form.batchSemester && form.subject && form.teacher)}
       submitLabel="Save changes"
+      contentClassName="max-h-[90dvh] sm:max-w-2xl"
       onSubmit={async () => {
         try {
           await update({
@@ -602,46 +637,48 @@ function AllocationEditForm({
         </Select>
       </Field>
 
-      <Field
-        label="Subject"
-        error={errors.subject}
-        hint="Batch semester and subject can change only before roster or performance records exist."
-      >
-        <Select
-          value={form.subject}
-          onValueChange={(value) => setForm({ ...form, subject: value })}
-          disabled={!chosenSemester}
+      <div className="grid items-start gap-4 sm:grid-cols-2">
+        <Field
+          label="Subject"
+          error={errors.subject}
+          hint="Batch semester and subject can change only before roster or performance records exist."
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Choose a subject" />
-          </SelectTrigger>
-          <SelectContent>
-            {subjects.data?.results.map((row) => (
-              <SelectItem key={row.id} value={String(row.id)}>
-                {row.code} — {row.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
+          <Select
+            value={form.subject}
+            onValueChange={(value) => setForm({ ...form, subject: value })}
+            disabled={!chosenSemester}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Choose a subject" />
+            </SelectTrigger>
+            <SelectContent>
+              {subjects.data?.results.map((row) => (
+                <SelectItem key={row.id} value={String(row.id)}>
+                  {row.code} — {row.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
 
-      <Field label="Teacher" error={errors.teacher}>
-        <Select
-          value={form.teacher}
-          onValueChange={(value) => setForm({ ...form, teacher: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Choose a teacher" />
-          </SelectTrigger>
-          <SelectContent>
-            {teachers.data?.results.map((row) => (
-              <SelectItem key={row.id} value={String(row.id)}>
-                {row.fullName || row.username}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
+        <Field label="Teacher" error={errors.teacher}>
+          <Select
+            value={form.teacher}
+            onValueChange={(value) => setForm({ ...form, teacher: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Choose a teacher" />
+            </SelectTrigger>
+            <SelectContent>
+              {teachers.data?.results.map((row) => (
+                <SelectItem key={row.id} value={String(row.id)}>
+                  {row.fullName || row.username}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           label="Start time"
@@ -649,13 +686,12 @@ function AllocationEditForm({
           error={errors.startTime}
           hint="Optional"
         >
-          <Input
+          <TimePickerInput
             id="edit-allocation-start-time"
-            type="time"
             value={form.startTime}
-            onChange={(event) =>
-              setForm({ ...form, startTime: event.target.value })
-            }
+            max={form.endTime || undefined}
+            onValueChange={(startTime) => setForm({ ...form, startTime })}
+            aria-label="Start time"
           />
         </Field>
         <Field
@@ -664,13 +700,12 @@ function AllocationEditForm({
           error={errors.endTime}
           hint="Optional"
         >
-          <Input
+          <TimePickerInput
             id="edit-allocation-end-time"
-            type="time"
             value={form.endTime}
-            onChange={(event) =>
-              setForm({ ...form, endTime: event.target.value })
-            }
+            min={form.startTime || undefined}
+            onValueChange={(endTime) => setForm({ ...form, endTime })}
+            aria-label="End time"
           />
         </Field>
       </div>

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 import PageImage from "@/components/page-image"
 import { Button } from "@/components/ui/button"
 
-import PageNotFoundImage from "@/assets/images/error/404ErrorPage.svg"
+import PageNotFoundImage from "@/assets/images/error/404.svg"
 
 const PageNotFound = () => {
   return (

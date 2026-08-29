@@ -1,4 +1,4 @@
-import { ClassmatesLogo } from "./components/classmates-logo"
+import { BrandLogo } from "./components/brand-logo"
 import { LoginForm } from "./components/login-form"
 
 export default function LoginPage() {
@@ -8,7 +8,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen w-full flex-col bg-background px-5 py-8 sm:px-8">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
         <div className="bg-card px-6 py-8 sm:px-9 sm:py-10">
-          <ClassmatesLogo className="mb-9" />
+          <BrandLogo className="mb-9" />
 
           <div>
             <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">

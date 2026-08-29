@@ -30,7 +30,7 @@ import {
 import { notifier } from "@/lib/utils/notifier"
 
 /** Every account that can sign in, and the roles it holds. */
-export function UsersTab() {
+export function AccountsSection() {
   const roles = useGetRolesQuery({ ...ALL, assignable: true })
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
