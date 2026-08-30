@@ -516,3 +516,29 @@ export type ClassColor = (typeof CLASS_COLORS)[number]
 export function colorForId(id: number): ClassColor {
   return CLASS_COLORS[id % CLASS_COLORS.length]
 }
+
+/** What one sheet row would do, or why it cannot. */
+export type ImportAction = "create" | "update" | "error"
+
+export interface ImportRow {
+  /** The row number in the college's own file, counting the header as row 1. */
+  row: number
+  action: ImportAction
+  identity: string
+  errors: Record<string, string[] | string> | null
+  changes: string[]
+}
+
+export interface ImportSummary {
+  total: number
+  create: number
+  update: number
+  error: number
+}
+
+export interface ImportResult {
+  committed: boolean
+  summary: ImportSummary
+  columns: { recognised: string[]; ignored: string[] }
+  rows: ImportRow[]
+}

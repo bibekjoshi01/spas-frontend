@@ -1,6 +1,6 @@
 import { rootAPI } from "@/lib/redux/api-slice"
 
-import type { SemesterStatus, UserBrief } from "./domain"
+import type { ImportResult, SemesterStatus, UserBrief } from "./domain"
 import type {
   BulkResponse,
   ListParams,
@@ -270,6 +270,26 @@ export const academicsApi = rootAPI.injectEndpoints({
       }),
       providesTags: ["Subject"],
     }),
+    importSubjects: build.mutation<
+      ImportResult,
+      { file: File; program: number; commit: boolean }
+    >({
+      query: ({ file, program, commit }) => {
+        const form = new FormData()
+        form.append("file", file)
+        form.append("program", String(program))
+        form.append("commit", commit ? "true" : "false")
+        return {
+          url: `${ACADEMICS}/subjects/import`,
+          method: "POST",
+          data: form,
+        }
+      },
+      // A preview writes nothing, so it must not invalidate anything either.
+      invalidatesTags: (_result, _error, arg) =>
+        arg.commit ? ["Subject"] : [],
+    }),
+
     createSubject: build.mutation<
       MessageWithIdResponse,
       {
@@ -417,6 +437,7 @@ export const {
   useUpdateBatchSemesterMutation,
   useGetSubjectsQuery,
   useCreateSubjectMutation,
+  useImportSubjectsMutation,
   useUpdateSubjectMutation,
   useDeleteSubjectMutation,
   useGetAllocationsQuery,

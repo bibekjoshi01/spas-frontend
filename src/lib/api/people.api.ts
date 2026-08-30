@@ -1,6 +1,6 @@
 import { rootAPI } from "@/lib/redux/api-slice"
 
-import type { Student } from "./domain"
+import type { ImportResult, Student } from "./domain"
 import type {
   ListParams,
   MessageResponse,
@@ -70,6 +70,26 @@ export const peopleApi = rootAPI.injectEndpoints({
     getStudent: build.query<Student, number>({
       query: (id) => ({ url: `${STUDENTS}/students/${id}` }),
       providesTags: (_result, _error, id) => [{ type: "Student", id }],
+    }),
+
+    importStudents: build.mutation<
+      ImportResult,
+      { file: File; batch: number; commit: boolean }
+    >({
+      query: ({ file, batch, commit }) => {
+        const form = new FormData()
+        form.append("file", file)
+        form.append("batch", String(batch))
+        form.append("commit", commit ? "true" : "false")
+        return {
+          url: `${STUDENTS}/students/import`,
+          method: "POST",
+          data: form,
+        }
+      },
+      // A preview writes nothing, so it must not invalidate anything either.
+      invalidatesTags: (_result, _error, arg) =>
+        arg.commit ? ["Student", "Batch"] : [],
     }),
 
     createStudent: build.mutation<MessageWithIdResponse, NewStudent>({
@@ -161,6 +181,7 @@ export const {
   useGetStudentsQuery,
   useGetStudentQuery,
   useCreateStudentMutation,
+  useImportStudentsMutation,
   useUpdateStudentMutation,
   useDeleteStudentMutation,
   useGetUsersQuery,

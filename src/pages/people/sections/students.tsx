@@ -1,7 +1,8 @@
 import { useState } from "react"
-import { Eye, Pencil, Plus, Trash2 } from "lucide-react"
+import { Eye, Pencil, Plus, Trash2, Upload } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { ImportDialog } from "@/components/import-dialog"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { ResourceList, RowActions } from "@/components/resource-list"
 import { Badge } from "@/components/ui/badge"
@@ -24,6 +25,7 @@ import {
   useCreateStudentMutation,
   useDeleteStudentMutation,
   useGetBatchesQuery,
+  useImportStudentsMutation,
   useGetStudentsQuery,
   useUpdateStudentMutation,
 } from "@/lib/api"
@@ -41,6 +43,7 @@ const STATUS_LABEL: Record<Student["status"], string> = {
 /** The student directory — everyone admitted, regardless of class. */
 export function StudentsSection() {
   const batches = useGetBatchesQuery(ALL)
+  const [importStudents] = useImportStudentsMutation()
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
     batch: "all",
@@ -50,6 +53,8 @@ export function StudentsSection() {
     useGetStudentsQuery(params)
 
   const [isCreating, setIsCreating] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
+  const [importBatch, setImportBatch] = useState("")
   const [editing, setEditing] = useState<Student | null>(null)
   const [archiving, setArchiving] = useState<Student | null>(null)
   const [reporting, setReporting] = useState<Student | null>(null)
@@ -119,10 +124,22 @@ export function StudentsSection() {
         }}
         action={
           canAdd ? (
-            <Button size="sm" onClick={() => setIsCreating(true)}>
-              <Plus className="size-4" aria-hidden />
-              Admit a student
-            </Button>
+            <div className="flex items-center gap-2">
+              {canEdit && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsImporting(true)}
+                >
+                  <Upload className="size-4" aria-hidden />
+                  Import
+                </Button>
+              )}
+              <Button size="sm" onClick={() => setIsCreating(true)}>
+                <Plus className="size-4" aria-hidden />
+                Admit a student
+              </Button>
+            </div>
           ) : null
         }
         emptyTitle={filters.search ? "Nobody matches that" : "No students yet"}
@@ -223,6 +240,55 @@ export function StudentsSection() {
       />
 
       {isCreating && <StudentForm onClose={() => setIsCreating(false)} />}
+
+      <ImportDialog
+        key={importBatch}
+        open={isImporting}
+        onOpenChange={setIsImporting}
+        title="Import students"
+        description="Bring a batch in from the spreadsheet you already keep. Nothing is written until you have seen what it would do."
+        templatePath="students-mod/students/import"
+        templateFilename="student-import-template.csv"
+        noun={{ one: "student", many: "students" }}
+        ready={Boolean(importBatch)}
+        preface={
+          <div className="space-y-1.5">
+            <p className="text-sm font-medium">Import into</p>
+            <Select value={importBatch} onValueChange={setImportBatch}>
+              <SelectTrigger
+                className="w-full"
+                aria-label="Batch to import into"
+              >
+                <SelectValue placeholder="Choose a batch" />
+              </SelectTrigger>
+              <SelectContent>
+                {batches.data?.results.map((row) => (
+                  <SelectItem key={row.id} value={String(row.id)}>
+                    {row.program.code} {row.year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              A roll number already in this batch is updated, not duplicated.
+            </p>
+          </div>
+        }
+        onPreview={(file) =>
+          importStudents({
+            file,
+            batch: Number(importBatch),
+            commit: false,
+          }).unwrap()
+        }
+        onCommit={(file) =>
+          importStudents({
+            file,
+            batch: Number(importBatch),
+            commit: true,
+          }).unwrap()
+        }
+      />
       {editing && (
         <StudentForm student={editing} onClose={() => setEditing(null)} />
       )}

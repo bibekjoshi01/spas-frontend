@@ -1,7 +1,8 @@
 import { useState } from "react"
-import { Pencil, Plus, Trash2 } from "lucide-react"
+import { Pencil, Plus, Trash2, Upload } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { ImportDialog } from "@/components/import-dialog"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { ResourceList, RowActions } from "@/components/resource-list"
 import { Badge } from "@/components/ui/badge"
@@ -25,6 +26,7 @@ import {
   useCreateSubjectMutation,
   useDeleteSubjectMutation,
   useGetProgramsQuery,
+  useImportSubjectsMutation,
   useGetSubjectsQuery,
   useUpdateSubjectMutation,
 } from "@/lib/api"
@@ -32,6 +34,7 @@ import { notifier } from "@/lib/utils/notifier"
 
 export function SubjectsSection() {
   const programs = useGetProgramsQuery(ALL)
+  const [importSubjects] = useImportSubjectsMutation()
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
     program: "all",
@@ -49,6 +52,8 @@ export function SubjectsSection() {
   })
 
   const [isCreating, setIsCreating] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
+  const [importProgram, setImportProgram] = useState("")
   const [editing, setEditing] = useState<Subject | null>(null)
   const [archiving, setArchiving] = useState<Subject | null>(null)
   const [archive, { isLoading: isArchiving }] = useDeleteSubjectMutation()
@@ -121,10 +126,22 @@ export function SubjectsSection() {
         }}
         action={
           canAdd ? (
-            <Button size="sm" onClick={() => setIsCreating(true)}>
-              <Plus className="size-4" aria-hidden />
-              New subject
-            </Button>
+            <div className="flex items-center gap-2">
+              {canEdit && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsImporting(true)}
+                >
+                  <Upload className="size-4" aria-hidden />
+                  Import
+                </Button>
+              )}
+              <Button size="sm" onClick={() => setIsCreating(true)}>
+                <Plus className="size-4" aria-hidden />
+                New subject
+              </Button>
+            </div>
           ) : null
         }
         emptyTitle="No subjects here"
@@ -200,6 +217,55 @@ export function SubjectsSection() {
       />
 
       {isCreating && <SubjectForm onClose={() => setIsCreating(false)} />}
+
+      <ImportDialog
+        key={importProgram}
+        open={isImporting}
+        onOpenChange={setIsImporting}
+        title="Import subjects"
+        description="Bring a program's whole curriculum in from one sheet. Nothing is written until you have seen what it would do."
+        templatePath="academics-mod/subjects/import"
+        templateFilename="subject-import-template.csv"
+        noun={{ one: "subject", many: "subjects" }}
+        ready={Boolean(importProgram)}
+        preface={
+          <div className="space-y-1.5">
+            <p className="text-sm font-medium">Import into</p>
+            <Select value={importProgram} onValueChange={setImportProgram}>
+              <SelectTrigger
+                className="w-full"
+                aria-label="Program to import into"
+              >
+                <SelectValue placeholder="Choose a program" />
+              </SelectTrigger>
+              <SelectContent>
+                {programs.data?.results.map((row) => (
+                  <SelectItem key={row.id} value={String(row.id)}>
+                    {row.code} — {row.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              A code already in the same semester is updated, not duplicated.
+            </p>
+          </div>
+        }
+        onPreview={(file) =>
+          importSubjects({
+            file,
+            program: Number(importProgram),
+            commit: false,
+          }).unwrap()
+        }
+        onCommit={(file) =>
+          importSubjects({
+            file,
+            program: Number(importProgram),
+            commit: true,
+          }).unwrap()
+        }
+      />
       {editing && (
         <SubjectForm subject={editing} onClose={() => setEditing(null)} />
       )}
