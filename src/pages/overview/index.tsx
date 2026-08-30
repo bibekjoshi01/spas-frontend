@@ -428,7 +428,16 @@ function TeacherWorkQueue({ items }: { items: WorkItem[] }) {
             Open records across your active classes that still need attention.
           </p>
         </div>
-        <Badge variant={items.length ? "secondary" : "outline"}>
+        <Badge
+          variant="outline"
+          // The chip sits on the primary bar, so it takes its colours from that
+          // bar rather than from the page behind it.
+          className={
+            items.length
+              ? "border-transparent bg-primary-foreground/15 text-primary-foreground"
+              : "border-primary-foreground/40 text-primary-foreground"
+          }
+        >
           {items.length} open
         </Badge>
       </div>
