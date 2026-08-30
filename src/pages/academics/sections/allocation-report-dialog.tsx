@@ -27,6 +27,7 @@ import {
   semesterLabel,
   useGetClassStudentsQuery,
 } from "@/lib/api"
+import { useEligibilityThreshold } from "@/hooks/use-eligibility-threshold"
 import { exportAllocationPerformancePdf } from "@/lib/pdf-reports"
 import { notifier } from "@/lib/utils/notifier"
 import { StudentDetailDialog } from "@/pages/roster/student-detail-dialog"
@@ -39,6 +40,7 @@ export function AllocationReportDialog({
   onClose: () => void
 }) {
   const students = useGetClassStudentsQuery(allocation.id)
+  const threshold = useEligibilityThreshold()
   const [search, setSearch] = useState("")
   const [attentionOnly, setAttentionOnly] = useState(false)
   const [detailEnrollment, setDetailEnrollment] = useState<number | null>(null)
@@ -59,11 +61,12 @@ export function AllocationReportDialog({
         isAttention(
           row.performancePercentage,
           row.attendance.percentage,
-          row.attendance.held
+          row.attendance.held,
+          threshold
         )
       )
     })
-  }, [attentionOnly, search, students.data])
+  }, [attentionOnly, search, students.data, threshold])
 
   const evidenced = (students.data ?? []).filter(
     (row) => row.performancePercentage !== null
@@ -78,13 +81,14 @@ export function AllocationReportDialog({
     isAttention(
       row.performancePercentage,
       row.attendance.percentage,
-      row.attendance.held
+      row.attendance.held,
+      threshold
     )
   ).length
 
   const exportPdf = async () => {
     try {
-      await exportAllocationPerformancePdf(allocation, rows)
+      await exportAllocationPerformancePdf(allocation, rows, threshold)
     } catch {
       notifier.error("Could not export this subject report.")
     }
@@ -230,7 +234,8 @@ export function AllocationReportDialog({
                           {isAttention(
                             row.performancePercentage,
                             row.attendance.percentage,
-                            row.attendance.held
+                            row.attendance.held,
+                            threshold
                           ) && (
                             <Badge variant="destructive" className="mt-1">
                               Needs attention
@@ -294,10 +299,12 @@ function Metric({
 function isAttention(
   performance: number | null,
   attendance: number,
-  classesHeld: number
+  classesHeld: number,
+  threshold: number
 ) {
   return (
-    (classesHeld > 0 && attendance < 75) ||
-    (performance !== null && eligibilityFor(performance) === "at-risk")
+    (classesHeld > 0 && attendance < threshold) ||
+    (performance !== null &&
+      eligibilityFor(performance, threshold) === "at-risk")
   )
 }

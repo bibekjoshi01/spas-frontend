@@ -13,6 +13,7 @@ import {
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
+import { useEligibilityThreshold } from "@/hooks/use-eligibility-threshold"
 import { useHasPermission } from "@/hooks/use-has-permissions"
 import { useRememberedClass } from "@/hooks/use-remembered-class"
 import { PageHeader } from "@/components/page-header"
@@ -119,6 +120,8 @@ export default function RosterPage() {
     [classes.data, selectedBatch]
   )
 
+  const threshold = useEligibilityThreshold()
+
   const visible = useMemo(() => {
     if (!students.data) return []
     const term = search.trim().toLowerCase()
@@ -132,24 +135,24 @@ export default function RosterPage() {
       const standing =
         row.performancePercentage === null
           ? "no-data"
-          : eligibilityFor(row.performancePercentage)
+          : eligibilityFor(row.performancePercentage, threshold)
       if (standingFilter === "all") return true
       if (standingFilter === "needs-attention") {
         return (
           standing === "at-risk" ||
-          (row.attendance.held > 0 && row.attendance.percentage < 75) ||
+          (row.attendance.held > 0 && row.attendance.percentage < threshold) ||
           row.classPerformance.score === null ||
           row.assignments.done < row.assignments.total
         )
       }
       return standing === standingFilter
     })
-  }, [students.data, search, standingFilter])
+  }, [students.data, search, standingFilter, threshold])
 
   const atRisk = students.data?.filter(
     (row) =>
       row.performancePercentage !== null &&
-      eligibilityFor(row.performancePercentage) === "at-risk"
+      eligibilityFor(row.performancePercentage, threshold) === "at-risk"
   ).length
 
   const choose = (next: number) => {
@@ -235,7 +238,9 @@ export default function RosterPage() {
               variant="outline"
               size="sm"
               disabled={!visible.length || !chosen}
-              onClick={() => chosen && void exportRosterPdf(chosen, visible)}
+              onClick={() =>
+                chosen && void exportRosterPdf(chosen, visible, threshold)
+              }
             >
               <FileDown className="size-4" aria-hidden />
               Export PDF
@@ -362,7 +367,7 @@ export default function RosterPage() {
                 const standing =
                   row.performancePercentage === null
                     ? null
-                    : eligibilityFor(row.performancePercentage)
+                    : eligibilityFor(row.performancePercentage, threshold)
 
                 return (
                   <TableRow key={row.enrollment}>
@@ -447,7 +452,7 @@ export default function RosterPage() {
                         </Badge>
                         <RecentAttendance records={row.attendance.recent} />
                         <span className="block text-[11px] text-muted-foreground">
-                          {concernFor(row)}
+                          {concernFor(row, threshold)}
                         </span>
                       </div>
                     </TableCell>
@@ -490,8 +495,8 @@ export default function RosterPage() {
   )
 }
 
-function concernFor(row: ClassStudent) {
-  if (row.attendance.held > 0 && row.attendance.percentage < 75) {
+function concernFor(row: ClassStudent, threshold: number) {
+  if (row.attendance.held > 0 && row.attendance.percentage < threshold) {
     return `Attendance ${row.attendance.percentage}%`
   }
   if (

@@ -35,6 +35,8 @@ export interface PerformanceWeights {
   classPerformanceWeight: number
   assignmentWeight: number
   assessmentWeight: number
+  /** Decimal string, as exam marks are: parse before comparing. */
+  attendanceEligibilityThreshold: string
   updatedAt: string
 }
 

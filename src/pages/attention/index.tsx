@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useEligibilityThreshold } from "@/hooks/use-eligibility-threshold"
 import { usePagedQuery } from "@/hooks/use-paged-query"
 import {
   ALL,
@@ -28,12 +29,13 @@ export default function AttendanceAttentionPage() {
   })
   const { data, isLoading, isFetching, error, refetch } =
     useGetAttendanceAttentionQuery(params)
+  const threshold = useEligibilityThreshold()
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
       <PageHeader
         title="Attendance attention"
-        description="Active students below 75% attendance in the classes you manage."
+        description={`Active students below ${threshold}% attendance in the classes you manage.`}
         meta={data ? `${data.count} need follow-up` : undefined}
       />
 
@@ -100,7 +102,7 @@ export default function AttendanceAttentionPage() {
             setFilters({ batch: "all", ordering: "attendance_percentage" }),
         }}
         emptyTitle="No students need attendance follow-up"
-        emptyMessage="No active student in your management scope is below 75% attendance."
+        emptyMessage={`No active student in your management scope is below ${threshold}% attendance.`}
         columns={[
           {
             header: "#",

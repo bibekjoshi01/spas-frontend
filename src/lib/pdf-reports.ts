@@ -66,7 +66,8 @@ async function pdfTools(): Promise<{
 
 export async function exportRosterPdf(
   subject: ClassSummary,
-  students: ClassStudent[]
+  students: ClassStudent[],
+  threshold: number
 ) {
   const { jsPDF, autoTable } = await pdfTools()
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
@@ -110,7 +111,7 @@ export async function exportRosterPdf(
         : `${student.classPerformance.score}/10`,
       student.performancePercentage === null
         ? "No data"
-        : `${STANDING[eligibilityFor(student.performancePercentage)]} (${student.performancePercentage}%)`,
+        : `${STANDING[eligibilityFor(student.performancePercentage, threshold)]} (${student.performancePercentage}%)`,
     ]),
     styles: {
       font: "helvetica",
@@ -128,7 +129,8 @@ export async function exportRosterPdf(
 
 export async function exportAllocationPerformancePdf(
   allocation: Allocation,
-  students: ClassStudent[]
+  students: ClassStudent[],
+  threshold: number
 ) {
   const { jsPDF, autoTable } = await pdfTools()
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
@@ -174,9 +176,10 @@ export async function exportAllocationPerformancePdf(
       student.performancePercentage === null
         ? "—"
         : `${student.performancePercentage}%`,
-      (student.attendance.held > 0 && student.attendance.percentage < 75) ||
+      (student.attendance.held > 0 &&
+        student.attendance.percentage < threshold) ||
       (student.performancePercentage !== null &&
-        eligibilityFor(student.performancePercentage) === "at-risk")
+        eligibilityFor(student.performancePercentage, threshold) === "at-risk")
         ? "Needs attention"
         : "On track",
     ]),

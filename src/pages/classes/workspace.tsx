@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { useEligibilityThreshold } from "@/hooks/use-eligibility-threshold"
 import { useHasPermission } from "@/hooks/use-has-permissions"
 import {
   eligibilityFor,
@@ -31,6 +32,7 @@ export default function ClassWorkspacePage() {
   const canViewAssignments = useHasPermission("view_assignment")
   const canViewPerformance = useHasPermission("view_class_performance")
   const allocation = Number(useParams().allocationId)
+  const threshold = useEligibilityThreshold()
   const classes = useGetClassesQuery()
   const students = useGetClassStudentsQuery(allocation, { skip: !allocation })
   const exams = useGetExamsQuery(
@@ -63,7 +65,7 @@ export default function ClassWorkspacePage() {
     students.data?.filter(
       (student) =>
         student.performancePercentage !== null &&
-        eligibilityFor(student.performancePercentage) === "at-risk"
+        eligibilityFor(student.performancePercentage, threshold) === "at-risk"
     ) ?? []
   const unrated =
     students.data?.filter((student) => student.classPerformance.score === null)

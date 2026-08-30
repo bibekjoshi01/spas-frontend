@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAppSelector } from "@/lib/redux/hooks"
+import { useEligibilityThreshold } from "@/hooks/use-eligibility-threshold"
 import { useHasRole } from "@/hooks/use-has-permissions"
 import {
   type DashboardOverview,
@@ -37,6 +38,7 @@ export default function OverviewPage() {
   const { data, isLoading, error, refetch } = useGetDashboardOverviewQuery()
   const profile = useAppSelector((state) => state.auth.profile)
   const hasTeacherRole = useHasRole("TEACHER")
+  const threshold = useEligibilityThreshold()
   const isTeacher = data ? data.experience === "TEACHER" : hasTeacherRole
 
   const today = useMemo(() => localDateKey(), [])
@@ -102,7 +104,7 @@ export default function OverviewPage() {
               />
               <StatTile
                 icon={<AlertTriangle className="size-4" aria-hidden />}
-                label="Below 75%"
+                label={`Below ${threshold}%`}
                 value={data.stats.studentsBelowEligibility}
                 hint="need attention"
                 accent="amber"

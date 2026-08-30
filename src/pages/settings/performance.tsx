@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
+  DEFAULT_ELIGIBILITY_THRESHOLD,
   useGetPerformanceWeightsQuery,
   useUpdatePerformanceWeightsMutation,
-} from "@/lib/api/teaching.api"
+} from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
 
 const DEFAULTS = {
@@ -33,11 +34,17 @@ const FIELDS = [
   ["assessmentWeight", "Assessments", "Marks earned in internal assessments."],
 ] as const
 
+function clampPercent(value: number) {
+  return Math.min(100, Math.max(0, value))
+}
+
 export default function PerformanceSettings() {
   const { data, isLoading, isError } = useGetPerformanceWeightsQuery()
   const [update, { isLoading: isSaving }] =
     useUpdatePerformanceWeightsMutation()
   const [changes, setChanges] = useState<Partial<typeof DEFAULTS>>({})
+  const [threshold, setThreshold] = useState<number | null>(null)
+
   const values = {
     attendanceWeight: data?.attendanceWeight ?? DEFAULTS.attendanceWeight,
     classPerformanceWeight:
@@ -46,6 +53,12 @@ export default function PerformanceSettings() {
     assessmentWeight: data?.assessmentWeight ?? DEFAULTS.assessmentWeight,
     ...changes,
   }
+  const savedThreshold = Number(data?.attendanceEligibilityThreshold)
+  const eligibility =
+    threshold ??
+    (Number.isFinite(savedThreshold)
+      ? savedThreshold
+      : DEFAULT_ELIGIBILITY_THRESHOLD)
 
   const total = Object.values(values).reduce((sum, value) => sum + value, 0)
   const valid =
@@ -54,10 +67,14 @@ export default function PerformanceSettings() {
   async function save() {
     if (!valid) return
     try {
-      await update(values).unwrap()
-      notifier.success("Performance weights saved.")
+      await update({
+        ...values,
+        // Decimals cross the wire as strings, as exam marks do.
+        attendanceEligibilityThreshold: eligibility.toFixed(2),
+      }).unwrap()
+      notifier.success("Performance settings saved.")
     } catch {
-      notifier.error("Could not save performance weights.")
+      notifier.error("Could not save performance settings.")
     }
   }
 
@@ -68,7 +85,7 @@ export default function PerformanceSettings() {
         actions={
           <Button onClick={save} disabled={!valid || isLoading || isSaving}>
             <Save className="size-4" aria-hidden />
-            {isSaving ? "Saving…" : "Save weights"}
+            {isSaving ? "Saving…" : "Save settings"}
           </Button>
         }
       />
@@ -120,10 +137,7 @@ export default function PerformanceSettings() {
                     onChange={(event) =>
                       setChanges((current) => ({
                         ...current,
-                        [key]: Math.min(
-                          100,
-                          Math.max(0, Number(event.target.value))
-                        ),
+                        [key]: clampPercent(Number(event.target.value)),
                       }))
                     }
                     className="pr-8 text-right font-semibold tabular-nums"
@@ -144,6 +158,55 @@ export default function PerformanceSettings() {
             {valid ? "Ready to save" : "Weights must total exactly 100%"}
           </span>
           <span className="tabular-nums">Total: {total}%</span>
+        </div>
+      </section>
+
+      <section
+        className="border bg-white dark:bg-slate-950"
+        aria-labelledby="eligibility-heading"
+      >
+        <div className="border-b bg-blue-50 px-4 py-3 dark:bg-blue-950/40">
+          <h2
+            id="eligibility-heading"
+            className="text-base font-bold text-blue-950 dark:text-blue-100"
+          >
+            Attendance requirement
+          </h2>
+          <p className="mt-1 text-sm text-blue-900/70 dark:text-blue-200/70">
+            The attendance your university requires. Set it once and every
+            eligibility badge, roster flag and attention queue measures against
+            it.
+          </p>
+        </div>
+
+        <div className="grid gap-3 px-4 py-4 sm:grid-cols-[1fr_140px] sm:items-center">
+          <div>
+            <Label htmlFor="eligibility" className="font-semibold">
+              Minimum attendance
+            </Label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              A student below this appears in the attendance attention queue.
+              Most colleges apply 75%.
+            </p>
+          </div>
+          <div className="relative">
+            <Input
+              id="eligibility"
+              type="number"
+              min={0}
+              max={100}
+              step={0.5}
+              value={eligibility}
+              disabled={isLoading}
+              onChange={(event) =>
+                setThreshold(clampPercent(Number(event.target.value)))
+              }
+              className="pr-8 text-right font-semibold tabular-nums"
+            />
+            <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-sm text-muted-foreground">
+              %
+            </span>
+          </div>
         </div>
       </section>
     </div>

@@ -437,13 +437,30 @@ export interface AttendanceAttention {
   lastAttendanceDate: string | null
 }
 
-/** The attendance requirement every eligibility badge is measured against. */
-export const ELIGIBILITY_THRESHOLD = 75
+/**
+ * The requirement a college falls back to before its own policy has loaded.
+ *
+ * It matches the backend's shipped default, so a screen rendering early agrees
+ * with the queue the server builds.
+ */
+export const DEFAULT_ELIGIBILITY_THRESHOLD = 75
 
 export type Eligibility = "eligible" | "borderline" | "at-risk"
 
-export function eligibilityFor(percentage: number): Eligibility {
-  if (percentage >= ELIGIBILITY_THRESHOLD) return "eligible"
+/**
+ * Where an attendance percentage sits against the college's requirement.
+ *
+ * The bar is passed in rather than assumed: it is a per-college setting, and a
+ * screen that hardcoded 75 would contradict the attention queue the server
+ * builds from the college's own figure. Use `useEligibilityThreshold`.
+ */
+export function eligibilityFor(
+  percentage: number,
+  threshold: number
+): Eligibility {
+  if (percentage >= threshold) return "eligible"
+  // Half is a floor rather than a fraction of the bar: below it a student is in
+  // trouble whatever the college requires.
   if (percentage >= 50) return "borderline"
   return "at-risk"
 }

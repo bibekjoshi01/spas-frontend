@@ -1,4 +1,5 @@
-import { ELIGIBILITY_THRESHOLD, eligibilityFor } from "@/lib/api"
+import { eligibilityFor } from "@/lib/api"
+import { useEligibilityThreshold } from "@/hooks/use-eligibility-threshold"
 import { cn } from "@/lib/utils"
 
 const TONE = {
@@ -23,15 +24,16 @@ interface AttendanceMeterProps {
 /**
  * Attendance as a bar with the eligibility line marked on it.
  *
- * The 75% mark is drawn, not implied, so a teacher can see who is close to
- * losing eligibility without reading the number.
+ * The college's requirement is drawn, not implied, so a teacher can see who is
+ * close to losing eligibility without reading the number.
  */
 export function AttendanceMeter({
   percentage,
   showValue = true,
   className,
 }: AttendanceMeterProps) {
-  const tone = eligibilityFor(percentage)
+  const threshold = useEligibilityThreshold()
+  const tone = eligibilityFor(percentage, threshold)
   const clamped = Math.max(0, Math.min(100, percentage))
 
   return (
@@ -39,7 +41,7 @@ export function AttendanceMeter({
       <div
         className="relative h-2 w-full min-w-16 overflow-hidden rounded-full bg-muted"
         role="img"
-        aria-label={`${percentage}% attendance`}
+        aria-label={`${percentage}% attendance, ${threshold}% required`}
       >
         <div
           className={cn("h-full rounded-full transition-all", TONE[tone])}
@@ -47,7 +49,7 @@ export function AttendanceMeter({
         />
         <div
           className="absolute inset-y-0 w-px bg-foreground/30"
-          style={{ left: `${ELIGIBILITY_THRESHOLD}%` }}
+          style={{ left: `${threshold}%` }}
           aria-hidden
         />
       </div>
