@@ -2,6 +2,7 @@ import { useMemo } from "react"
 import { FileDown } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
+import { FilterBar } from "@/components/filter-bar"
 import { PageHeader } from "@/components/page-header"
 import { ResourceList } from "@/components/resource-list"
 import { Button } from "@/components/ui/button"
@@ -144,125 +145,222 @@ export default function AttendanceReportPage() {
           placeholder: "Search subject or teacher",
         }}
         filters={
-          <>
-            <div className="flex items-center gap-1">
-              <Button size="sm" variant="outline" onClick={() => setPreset(1)}>
-                Today
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setPreset(7)}>
-                7 days
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setPreset(30)}>
-                30 days
-              </Button>
-            </div>
-            <DatePickerInput
-              className="w-48"
-              value={filters.start_date}
-              max={filters.end_date}
-              onValueChange={(start_date) => setFilters({ start_date })}
-              aria-label="Report start date"
-            />
-            <DatePickerInput
-              className="w-48"
-              value={filters.end_date}
-              min={filters.start_date}
-              max={today}
-              onValueChange={(end_date) => setFilters({ end_date })}
-              aria-label="Report end date"
-            />
-            <Select
-              value={filters.program}
-              onValueChange={(program) =>
-                setFilters({
-                  program,
-                  batch: "all",
-                  batch_semester: "all",
-                  allocation: "all",
-                })
-              }
-            >
-              <SelectTrigger className="w-52" aria-label="Filter by program">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All programs</SelectItem>
-                {programs.data?.results.map((row) => (
-                  <SelectItem key={row.id} value={String(row.id)}>
-                    {row.code} — {row.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={filters.batch}
-              onValueChange={(batch) =>
-                setFilters({ batch, batch_semester: "all", allocation: "all" })
-              }
-            >
-              <SelectTrigger className="w-48" aria-label="Filter by batch">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All batches</SelectItem>
-                {visibleBatches.map((row) => (
-                  <SelectItem key={row.id} value={String(row.id)}>
-                    {row.program.code} · {row.year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={filters.batch_semester}
-              onValueChange={(batch_semester) =>
-                setFilters({ batch_semester, allocation: "all" })
-              }
-            >
-              <SelectTrigger className="w-52" aria-label="Filter by semester">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All semesters</SelectItem>
-                {visibleSemesters.map((row) => (
-                  <SelectItem key={row.id} value={String(row.id)}>
-                    {row.batch.program.code} {row.batch.year} · Semester{" "}
-                    {row.semester}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={filters.allocation}
-              onValueChange={(allocation) => setFilters({ allocation })}
-            >
-              <SelectTrigger className="w-64" aria-label="Filter by class">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All classes</SelectItem>
-                {visibleAllocations.map((row) => (
-                  <SelectItem key={row.id} value={String(row.id)}>
-                    {row.subject.code} · {row.batchSemester.batch.program.code}{" "}
-                    {row.batchSemester.batch.year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={filters.ordering}
-              onValueChange={(ordering) => setFilters({ ordering })}
-            >
-              <SelectTrigger className="w-44" aria-label="Sort report">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="-date">Newest first</SelectItem>
-                <SelectItem value="date">Oldest first</SelectItem>
-                <SelectItem value="-absent">Most absent first</SelectItem>
-                <SelectItem value="subject">Subject</SelectItem>
-              </SelectContent>
-            </Select>
-          </>
+          <FilterBar
+            pageKey="reports.attendance"
+            filters={[
+              {
+                id: "range",
+                label: "Date range",
+                // The report is *of* a date range; without one there is nothing
+                // to show, so it never leaves the toolbar.
+                pinned: true,
+                control: (
+                  <>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setPreset(1)}
+                      >
+                        Today
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setPreset(7)}
+                      >
+                        7 days
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setPreset(30)}
+                      >
+                        30 days
+                      </Button>
+                    </div>
+                    <DatePickerInput
+                      className="w-48"
+                      value={filters.start_date}
+                      max={filters.end_date}
+                      onValueChange={(start_date) => setFilters({ start_date })}
+                      aria-label="Report start date"
+                    />
+                    <DatePickerInput
+                      className="w-48"
+                      value={filters.end_date}
+                      min={filters.start_date}
+                      max={today}
+                      onValueChange={(end_date) => setFilters({ end_date })}
+                      aria-label="Report end date"
+                    />
+                  </>
+                ),
+              },
+              {
+                id: "program",
+                label: "Program",
+                isActive: filters.program !== "all",
+                onReset: () =>
+                  setFilters({
+                    program: "all",
+                    batch: "all",
+                    batch_semester: "all",
+                    allocation: "all",
+                  }),
+                control: (
+                  <Select
+                    value={filters.program}
+                    onValueChange={(program) =>
+                      setFilters({
+                        program,
+                        batch: "all",
+                        batch_semester: "all",
+                        allocation: "all",
+                      })
+                    }
+                  >
+                    <SelectTrigger
+                      className="w-52"
+                      aria-label="Filter by program"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All programs</SelectItem>
+                      {programs.data?.results.map((row) => (
+                        <SelectItem key={row.id} value={String(row.id)}>
+                          {row.code} — {row.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+              {
+                id: "batch",
+                label: "Batch",
+                isActive: filters.batch !== "all",
+                onReset: () =>
+                  setFilters({
+                    batch: "all",
+                    batch_semester: "all",
+                    allocation: "all",
+                  }),
+                control: (
+                  <Select
+                    value={filters.batch}
+                    onValueChange={(batch) =>
+                      setFilters({
+                        batch,
+                        batch_semester: "all",
+                        allocation: "all",
+                      })
+                    }
+                  >
+                    <SelectTrigger
+                      className="w-48"
+                      aria-label="Filter by batch"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All batches</SelectItem>
+                      {visibleBatches.map((row) => (
+                        <SelectItem key={row.id} value={String(row.id)}>
+                          {row.program.code} · {row.year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+              {
+                id: "semester",
+                label: "Semester",
+                isActive: filters.batch_semester !== "all",
+                onReset: () =>
+                  setFilters({ batch_semester: "all", allocation: "all" }),
+                control: (
+                  <Select
+                    value={filters.batch_semester}
+                    onValueChange={(batch_semester) =>
+                      setFilters({ batch_semester, allocation: "all" })
+                    }
+                  >
+                    <SelectTrigger
+                      className="w-52"
+                      aria-label="Filter by semester"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All semesters</SelectItem>
+                      {visibleSemesters.map((row) => (
+                        <SelectItem key={row.id} value={String(row.id)}>
+                          {row.batch.program.code} {row.batch.year} · Semester{" "}
+                          {row.semester}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+              {
+                id: "allocation",
+                label: "Class",
+                defaultVisible: false,
+                isActive: filters.allocation !== "all",
+                onReset: () => setFilters({ allocation: "all" }),
+                control: (
+                  <Select
+                    value={filters.allocation}
+                    onValueChange={(allocation) => setFilters({ allocation })}
+                  >
+                    <SelectTrigger
+                      className="w-64"
+                      aria-label="Filter by class"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All classes</SelectItem>
+                      {visibleAllocations.map((row) => (
+                        <SelectItem key={row.id} value={String(row.id)}>
+                          {row.subject.code} ·{" "}
+                          {row.batchSemester.batch.program.code}{" "}
+                          {row.batchSemester.batch.year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+              {
+                id: "ordering",
+                label: "Sort order",
+                defaultVisible: false,
+                isActive: filters.ordering !== "-date",
+                onReset: () => setFilters({ ordering: "-date" }),
+                control: (
+                  <Select
+                    value={filters.ordering}
+                    onValueChange={(ordering) => setFilters({ ordering })}
+                  >
+                    <SelectTrigger className="w-44" aria-label="Sort report">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="-date">Newest first</SelectItem>
+                      <SelectItem value="date">Oldest first</SelectItem>
+                      <SelectItem value="-absent">Most absent first</SelectItem>
+                      <SelectItem value="subject">Subject</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+            ]}
+          />
         }
         clearFilters={{
           visible:

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { Eye, Pencil, Plus, Trash2, UserPlus } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { FilterBar } from "@/components/filter-bar"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { QueryState } from "@/components/query-state"
 import { ResourceList, RowActions } from "@/components/resource-list"
@@ -69,6 +70,15 @@ export function AllocationsSection() {
     filters["subject__program"] === "all"
       ? undefined
       : filters["subject__program"]
+  // Program narrows the batch and subject lists, so dropping it drops what it
+  // scoped with it rather than leaving a batch that no longer belongs.
+  const clearProgram = () =>
+    setFilters({
+      subject__program: "all",
+      batch_semester__batch: "all",
+      batch_semester__semester: "all",
+      subject: "all",
+    })
   const batches = useGetBatchesQuery({
     ...ALL,
     ...(selectedProgram ? { program: selectedProgram } : {}),
@@ -120,103 +130,159 @@ export function AllocationsSection() {
           placeholder: "Search by subject",
         }}
         filters={
-          <>
-            <Select
-              value={filters["subject__program"]}
-              onValueChange={(value) =>
-                setFilters({
-                  subject__program: value,
-                  batch_semester__batch: "all",
-                  batch_semester__semester: "all",
-                  subject: "all",
-                })
-              }
-            >
-              <SelectTrigger className="w-56" aria-label="Filter by program">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All programs</SelectItem>
-                {programs.data?.results.map((row) => (
-                  <SelectItem key={row.id} value={String(row.id)}>
-                    {row.code} — {row.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={filters["batch_semester__batch"]}
-              onValueChange={(value) =>
-                setFilters({ batch_semester__batch: value })
-              }
-            >
-              <SelectTrigger className="w-48" aria-label="Filter by batch">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All batches</SelectItem>
-                {batches.data?.results.map((row) => (
-                  <SelectItem key={row.id} value={String(row.id)}>
-                    {row.program.code} — {row.year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={filters["batch_semester__semester"]}
-              onValueChange={(value) =>
-                setFilters({ batch_semester__semester: value })
-              }
-            >
-              <SelectTrigger className="w-40" aria-label="Filter by semester">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All semesters</SelectItem>
-                {semesterOptions.map((semester) => (
-                  <SelectItem key={semester} value={String(semester)}>
-                    {semesterLabel(semester)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={filters.subject}
-              onValueChange={(value) => setFilters({ subject: value })}
-            >
-              <SelectTrigger className="w-52" aria-label="Filter by subject">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All subjects</SelectItem>
-                {subjects.data?.results.map((row) => (
-                  <SelectItem key={row.id} value={String(row.id)}>
-                    {row.code} — {row.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={filters.teacher}
-              onValueChange={(value) => setFilters({ teacher: value })}
-            >
-              <SelectTrigger className="w-52" aria-label="Filter by teacher">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All teachers</SelectItem>
-                {teachers.data?.results.map((row) => (
-                  <SelectItem key={row.id} value={String(row.id)}>
-                    {row.fullName || row.username}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </>
+          <FilterBar
+            pageKey="academics.allocations"
+            filters={[
+              {
+                id: "program",
+                label: "Program",
+                isActive: filters["subject__program"] !== "all",
+                onReset: () => clearProgram(),
+                control: (
+                  <Select
+                    value={filters["subject__program"]}
+                    onValueChange={(value) =>
+                      setFilters({
+                        subject__program: value,
+                        batch_semester__batch: "all",
+                        batch_semester__semester: "all",
+                        subject: "all",
+                      })
+                    }
+                  >
+                    <SelectTrigger
+                      className="w-56"
+                      aria-label="Filter by program"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All programs</SelectItem>
+                      {programs.data?.results.map((row) => (
+                        <SelectItem key={row.id} value={String(row.id)}>
+                          {row.code} — {row.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+              {
+                id: "batch",
+                label: "Batch",
+                isActive: filters["batch_semester__batch"] !== "all",
+                onReset: () => setFilters({ batch_semester__batch: "all" }),
+                control: (
+                  <Select
+                    value={filters["batch_semester__batch"]}
+                    onValueChange={(value) =>
+                      setFilters({ batch_semester__batch: value })
+                    }
+                  >
+                    <SelectTrigger
+                      className="w-48"
+                      aria-label="Filter by batch"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All batches</SelectItem>
+                      {batches.data?.results.map((row) => (
+                        <SelectItem key={row.id} value={String(row.id)}>
+                          {row.program.code} — {row.year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+              {
+                id: "semester",
+                label: "Semester",
+                isActive: filters["batch_semester__semester"] !== "all",
+                onReset: () => setFilters({ batch_semester__semester: "all" }),
+                control: (
+                  <Select
+                    value={filters["batch_semester__semester"]}
+                    onValueChange={(value) =>
+                      setFilters({ batch_semester__semester: value })
+                    }
+                  >
+                    <SelectTrigger
+                      className="w-40"
+                      aria-label="Filter by semester"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All semesters</SelectItem>
+                      {semesterOptions.map((semester) => (
+                        <SelectItem key={semester} value={String(semester)}>
+                          {semesterLabel(semester)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+              {
+                id: "subject",
+                label: "Subject",
+                defaultVisible: false,
+                isActive: filters.subject !== "all",
+                onReset: () => setFilters({ subject: "all" }),
+                control: (
+                  <Select
+                    value={filters.subject}
+                    onValueChange={(value) => setFilters({ subject: value })}
+                  >
+                    <SelectTrigger
+                      className="w-52"
+                      aria-label="Filter by subject"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All subjects</SelectItem>
+                      {subjects.data?.results.map((row) => (
+                        <SelectItem key={row.id} value={String(row.id)}>
+                          {row.code} — {row.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+              {
+                id: "teacher",
+                label: "Teacher",
+                defaultVisible: false,
+                isActive: filters.teacher !== "all",
+                onReset: () => setFilters({ teacher: "all" }),
+                control: (
+                  <Select
+                    value={filters.teacher}
+                    onValueChange={(value) => setFilters({ teacher: value })}
+                  >
+                    <SelectTrigger
+                      className="w-52"
+                      aria-label="Filter by teacher"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All teachers</SelectItem>
+                      {teachers.data?.results.map((row) => (
+                        <SelectItem key={row.id} value={String(row.id)}>
+                          {row.fullName || row.username}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+            ]}
+          />
         }
         clearFilters={{
           visible:

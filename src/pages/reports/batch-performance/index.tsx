@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { FileDown, Mail } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
+import { FilterBar } from "@/components/filter-bar"
 import { PageHeader } from "@/components/page-header"
 import { ResourceList } from "@/components/resource-list"
 import { Badge } from "@/components/ui/badge"
@@ -125,67 +126,114 @@ export default function BatchPerformanceReportPage() {
           placeholder: "Search student, roll or phone",
         }}
         filters={
-          <>
-            <Select
-              value={batch}
-              onValueChange={(value) => {
-                setBatch(value)
-                setSemesterId("")
-              }}
-            >
-              <SelectTrigger className="w-52" aria-label="Select batch">
-                <SelectValue placeholder="Select batch" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All authorized batches</SelectItem>
-                {batches.data?.results.map((row) => (
-                  <SelectItem key={row.id} value={String(row.id)}>
-                    {row.program.code} · Batch {row.year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={effectiveSemesterId} onValueChange={setSemesterId}>
-              <SelectTrigger className="w-64" aria-label="Select semester">
-                <SelectValue placeholder="Select semester" />
-              </SelectTrigger>
-              <SelectContent>
-                {visibleSemesters.map((row) => (
-                  <SelectItem key={row.id} value={String(row.id)}>
-                    {row.batch.program.code} · Batch {row.batch.year} · Semester{" "}
-                    {row.semester} · {row.status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={filters.attention}
-              onValueChange={(attention) => setFilters({ attention })}
-            >
-              <SelectTrigger className="w-44" aria-label="Filter by standing">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All students</SelectItem>
-                <SelectItem value="true">Needs attention</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={filters.ordering}
-              onValueChange={(ordering) => setFilters({ ordering })}
-            >
-              <SelectTrigger className="w-48" aria-label="Sort report">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="risk">Attention first</SelectItem>
-                <SelectItem value="-overall_percentage">
-                  Highest performance
-                </SelectItem>
-                <SelectItem value="roll_number">Roll number</SelectItem>
-              </SelectContent>
-            </Select>
-          </>
+          <FilterBar
+            pageKey="reports.batch-performance"
+            filters={[
+              {
+                id: "batch",
+                label: "Batch",
+                // Batch and semester name the report rather than narrow it, so
+                // neither can be taken off the toolbar.
+                pinned: true,
+                control: (
+                  <Select
+                    value={batch}
+                    onValueChange={(value) => {
+                      setBatch(value)
+                      setSemesterId("")
+                    }}
+                  >
+                    <SelectTrigger className="w-52" aria-label="Select batch">
+                      <SelectValue placeholder="Select batch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        All authorized batches
+                      </SelectItem>
+                      {batches.data?.results.map((row) => (
+                        <SelectItem key={row.id} value={String(row.id)}>
+                          {row.program.code} · Batch {row.year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+              {
+                id: "semester",
+                label: "Semester",
+                pinned: true,
+                control: (
+                  <Select
+                    value={effectiveSemesterId}
+                    onValueChange={setSemesterId}
+                  >
+                    <SelectTrigger
+                      className="w-64"
+                      aria-label="Select semester"
+                    >
+                      <SelectValue placeholder="Select semester" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {visibleSemesters.map((row) => (
+                        <SelectItem key={row.id} value={String(row.id)}>
+                          {row.batch.program.code} · Batch {row.batch.year} ·
+                          Semester {row.semester} · {row.status}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+              {
+                id: "attention",
+                label: "Standing",
+                isActive: filters.attention !== "all",
+                onReset: () => setFilters({ attention: "all" }),
+                control: (
+                  <Select
+                    value={filters.attention}
+                    onValueChange={(attention) => setFilters({ attention })}
+                  >
+                    <SelectTrigger
+                      className="w-44"
+                      aria-label="Filter by standing"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All students</SelectItem>
+                      <SelectItem value="true">Needs attention</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+              {
+                id: "ordering",
+                label: "Sort order",
+                defaultVisible: false,
+                isActive: filters.ordering !== "risk",
+                onReset: () => setFilters({ ordering: "risk" }),
+                control: (
+                  <Select
+                    value={filters.ordering}
+                    onValueChange={(ordering) => setFilters({ ordering })}
+                  >
+                    <SelectTrigger className="w-48" aria-label="Sort report">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="risk">Attention first</SelectItem>
+                      <SelectItem value="-overall_percentage">
+                        Highest performance
+                      </SelectItem>
+                      <SelectItem value="roll_number">Roll number</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+            ]}
+          />
         }
         clearFilters={{
           visible: filters.attention !== "all" || filters.ordering !== "risk",
