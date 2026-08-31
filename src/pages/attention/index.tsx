@@ -19,6 +19,7 @@ import {
   useGetAttendanceAttentionQuery,
   useGetBatchesQuery,
 } from "@/lib/api"
+import { formatPercentage } from "@/lib/utils"
 
 export default function AttendanceAttentionPage() {
   const batches = useGetBatchesQuery(ALL)
@@ -35,7 +36,7 @@ export default function AttendanceAttentionPage() {
     <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
       <PageHeader
         title="Attendance attention"
-        description={`Active students below ${threshold}% attendance in the classes you manage.`}
+        description={`Active students below ${formatPercentage(threshold)} attendance in the classes you manage.`}
         meta={data ? `${data.count} need follow-up` : undefined}
       />
 
@@ -102,7 +103,7 @@ export default function AttendanceAttentionPage() {
             setFilters({ batch: "all", ordering: "attendance_percentage" }),
         }}
         emptyTitle="No students need attendance follow-up"
-        emptyMessage={`No active student in your management scope is below ${threshold}% attendance.`}
+        emptyMessage={`No active student in your management scope is below ${formatPercentage(threshold)} attendance.`}
         columns={[
           {
             header: "#",

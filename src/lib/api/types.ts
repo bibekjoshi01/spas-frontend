@@ -35,6 +35,16 @@ export interface ListParams {
 /** Asking for everything: the backend treats limit=0 as "no page". */
 export const ALL: ListParams = { limit: 0 }
 
+/**
+ * What a create or edit form is allowed to offer.
+ *
+ * Deactivating a department, program or subject retires it from new work
+ * without touching what already refers to it, so pickers ask for this while
+ * filter bars keep using {@link ALL} — you still need to narrow a report by a
+ * program the college has since retired.
+ */
+export const ACTIVE_ONLY: ListParams = { limit: 0, is_active: true }
+
 /** Pulls a human-readable message out of an RTK Query error. */
 export function apiErrorMessage(
   error: unknown,

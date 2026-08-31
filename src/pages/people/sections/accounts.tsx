@@ -1,11 +1,12 @@
 import { useState } from "react"
-import { ChevronDown, Plus, ShieldCheck, Trash2 } from "lucide-react"
+import { ChevronDown, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { ResourceList, RowActions } from "@/components/resource-list"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
@@ -27,6 +28,8 @@ import {
   useGetUsersQuery,
   useUpdateUserMutation,
 } from "@/lib/api"
+import { useAppSelector } from "@/lib/redux/hooks"
+import { formatDisplayDateTime } from "@/lib/utils/date"
 import { notifier } from "@/lib/utils/notifier"
 
 /** Every account that can sign in, and the roles it holds. */
@@ -39,9 +42,11 @@ export function AccountsSection() {
     useGetUsersQuery(params)
 
   const [isCreating, setIsCreating] = useState(false)
+  const [editing, setEditing] = useState<AppUser | null>(null)
   const [archiving, setArchiving] = useState<AppUser | null>(null)
   const [archive, { isLoading: isArchiving }] = useDeleteUserMutation()
   const [update] = useUpdateUserMutation()
+  const currentAccountId = useAppSelector((state) => state.auth.profile?.id)
 
   const canAdd = useHasPermission("add_user")
   const canEdit = useHasPermission("edit_user")
@@ -60,10 +65,7 @@ export function AccountsSection() {
       : current.filter((id) => id !== roleId)
 
     try {
-      await update({
-        id: user.id,
-        body: { roles: next },
-      }).unwrap()
+      await update({ id: user.id, body: { roles: next } }).unwrap()
       notifier.success(`Role updated for ${user.username}.`)
     } catch {
       notifier.error("Could not change that role.")
@@ -145,7 +147,7 @@ export function AccountsSection() {
             cell: (row) =>
               row.isSuperuser ? (
                 <span className="text-sm text-muted-foreground">
-                  Everything, by definition
+                  All permissions
                 </span>
               ) : canEdit ? (
                 <RolePicker
@@ -166,20 +168,61 @@ export function AccountsSection() {
               ),
           },
           {
+            header: "Status",
+            className: "whitespace-nowrap",
+            cell: (row) => (
+              <Badge variant={row.isActive ? "secondary" : "destructive"}>
+                {row.isActive ? "Active" : "Inactive"}
+              </Badge>
+            ),
+          },
+          {
+            header: "Last login",
+            className: "min-w-40 whitespace-nowrap",
+            cell: (row) =>
+              row.lastLogin ? (
+                <div>
+                  <div className="text-sm tabular-nums">
+                    {formatDisplayDateTime(row.lastLogin)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Details locked
+                  </div>
+                </div>
+              ) : (
+                <Badge variant="outline">Never signed in</Badge>
+              ),
+          },
+          {
             header: "",
-            className: "w-24 text-right",
+            className: "w-20 text-right",
             cell: (row) => (
               <RowActions>
-                {canDelete && !row.isSuperuser && (
+                {canEdit && !row.isSuperuser && row.id !== currentAccountId && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    aria-label={`Archive ${row.username}`}
-                    onClick={() => setArchiving(row)}
+                    aria-label={`Edit ${row.username}`}
+                    title={
+                      row.lastLogin ? "Manage account access" : "Edit account"
+                    }
+                    onClick={() => setEditing(row)}
                   >
-                    <Trash2 className="size-4 text-destructive" aria-hidden />
+                    <Pencil className="size-4" aria-hidden />
                   </Button>
                 )}
+                {canDelete &&
+                  !row.isSuperuser &&
+                  row.id !== currentAccountId && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Archive ${row.username}`}
+                      onClick={() => setArchiving(row)}
+                    >
+                      <Trash2 className="size-4 text-destructive" aria-hidden />
+                    </Button>
+                  )}
               </RowActions>
             ),
           },
@@ -187,6 +230,7 @@ export function AccountsSection() {
       />
 
       {isCreating && <UserForm onClose={() => setIsCreating(false)} />}
+      {editing && <UserForm user={editing} onClose={() => setEditing(null)} />}
 
       <ConfirmDialog
         open={Boolean(archiving)}
@@ -253,18 +297,26 @@ function RolePicker({
   )
 }
 
-function UserForm({ onClose }: { onClose: () => void }) {
+function UserForm({ user, onClose }: { user?: AppUser; onClose: () => void }) {
   const roles = useGetRolesQuery({ ...ALL, assignable: true })
-  const [create, state] = useCreateUserMutation()
+  const [create, createState] = useCreateUserMutation()
+  const [update, updateState] = useUpdateUserMutation()
+  const state = user ? updateState : createState
+  const detailsEditable = !user?.lastLogin
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    username: "",
-    email: "",
-    phoneNo: "",
-    alternatePhoneNo: "",
+    firstName: user?.firstName ?? "",
+    middleName: user?.middleName ?? "",
+    lastName: user?.lastName ?? "",
+    username: user?.username ?? "",
+    email: user?.email ?? "",
+    phoneNo: user?.phoneNo ?? "",
+    alternatePhoneNo: user?.alternatePhoneNo ?? "",
     password: "",
-    roles: [] as number[],
+    roles:
+      user?.roles
+        .filter((role) => role.codename !== "SYSTEM-USER")
+        .map((role) => role.id) ?? ([] as number[]),
+    isActive: user?.isActive ?? true,
   })
 
   const errors = fieldErrorsFrom(state.error)
@@ -273,144 +325,251 @@ function UserForm({ onClose }: { onClose: () => void }) {
     <FormDialog
       open
       onOpenChange={(next) => !next && onClose()}
-      title="New Account"
-      description="Create a sign-in and assign the user's initial role."
+      title={user ? `Edit ${user.username}` : "New Account"}
+      description={
+        !user
+          ? "Create a sign-in and assign the user's initial role."
+          : detailsEditable
+            ? "This account has not signed in yet, so its details and access can still be corrected."
+            : "Identity details are locked after first sign-in. You can still activate or deactivate access."
+      }
       formError={formErrorFrom(state.error)}
       isSubmitting={state.isLoading}
       canSubmit={Boolean(
-        form.username.trim() && form.email.trim() && form.password
+        user
+          ? !detailsEditable || (form.username.trim() && form.email.trim())
+          : form.username.trim() && form.email.trim() && form.password
       )}
-      submitLabel="Create account"
+      submitLabel={user ? "Save changes" : "Create account"}
+      contentClassName="sm:max-w-2xl"
       onSubmit={async () => {
         try {
-          const account = {
-            username: form.username.trim(),
-            email: form.email.trim(),
-            phoneNo: form.phoneNo.trim(),
-            alternatePhoneNo: form.alternatePhoneNo.trim(),
-            password: form.password,
-            firstName: form.firstName.trim(),
-            lastName: form.lastName.trim(),
-            roles: form.roles,
-          }
+          if (user) {
+            const body = detailsEditable
+              ? {
+                  username: form.username.trim(),
+                  email: form.email.trim(),
+                  phoneNo: form.phoneNo.trim(),
+                  alternatePhoneNo: form.alternatePhoneNo.trim(),
+                  firstName: form.firstName.trim(),
+                  middleName: form.middleName.trim(),
+                  lastName: form.lastName.trim(),
+                  roles: form.roles,
+                  isActive: form.isActive,
+                  ...(form.password ? { password: form.password } : {}),
+                }
+              : { isActive: form.isActive }
 
-          await create(account).unwrap()
-          notifier.success("Account created.")
+            await update({ id: user.id, body }).unwrap()
+            notifier.success(
+              form.isActive === user.isActive
+                ? "Account updated."
+                : form.isActive
+                  ? "Account activated."
+                  : "Account deactivated."
+            )
+          } else {
+            await create({
+              username: form.username.trim(),
+              email: form.email.trim(),
+              phoneNo: form.phoneNo.trim(),
+              alternatePhoneNo: form.alternatePhoneNo.trim(),
+              password: form.password,
+              firstName: form.firstName.trim(),
+              middleName: form.middleName.trim(),
+              lastName: form.lastName.trim(),
+              roles: form.roles,
+            }).unwrap()
+            notifier.success("Account created.")
+          }
           onClose()
         } catch {
           /* the form shows the error */
         }
       }}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="First name" htmlFor="u-first" error={errors.firstName}>
-          <Input
-            id="u-first"
-            value={form.firstName}
-            onChange={(event) =>
-              setForm({ ...form, firstName: event.target.value })
-            }
-          />
-        </Field>
-        <Field label="Last name" htmlFor="u-last" error={errors.lastName}>
-          <Input
-            id="u-last"
-            value={form.lastName}
-            onChange={(event) =>
-              setForm({ ...form, lastName: event.target.value })
-            }
-          />
-        </Field>
-      </div>
+      {detailsEditable && (
+        <>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field
+              label="First name"
+              htmlFor="u-first"
+              error={errors.firstName}
+            >
+              <Input
+                id="u-first"
+                value={form.firstName}
+                onChange={(event) =>
+                  setForm({ ...form, firstName: event.target.value })
+                }
+              />
+            </Field>
+            <Field
+              label="Middle name"
+              htmlFor="u-middle"
+              error={errors.middleName}
+            >
+              <Input
+                id="u-middle"
+                value={form.middleName}
+                onChange={(event) =>
+                  setForm({ ...form, middleName: event.target.value })
+                }
+                placeholder="Optional"
+              />
+            </Field>
+            <Field label="Last name" htmlFor="u-last" error={errors.lastName}>
+              <Input
+                id="u-last"
+                value={form.lastName}
+                onChange={(event) =>
+                  setForm({ ...form, lastName: event.target.value })
+                }
+              />
+            </Field>
+          </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Username" htmlFor="u-username" error={errors.username}>
-          <Input
-            id="u-username"
-            value={form.username}
-            onChange={(event) =>
-              setForm({ ...form, username: event.target.value })
-            }
-          />
-        </Field>
-        <Field label="Email" htmlFor="u-email" error={errors.email}>
-          <Input
-            id="u-email"
-            type="email"
-            value={form.email}
-            onChange={(event) =>
-              setForm({ ...form, email: event.target.value })
-            }
-          />
-        </Field>
-      </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              label="Username"
+              htmlFor="u-username"
+              error={errors.username}
+            >
+              <Input
+                id="u-username"
+                value={form.username}
+                onChange={(event) =>
+                  setForm({ ...form, username: event.target.value })
+                }
+              />
+            </Field>
+            <Field label="Email" htmlFor="u-email" error={errors.email}>
+              <Input
+                id="u-email"
+                type="email"
+                value={form.email}
+                onChange={(event) =>
+                  setForm({ ...form, email: event.target.value })
+                }
+              />
+            </Field>
+          </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Primary phone" htmlFor="u-phone" error={errors.phoneNo}>
-          <Input
-            id="u-phone"
-            type="tel"
-            inputMode="tel"
-            value={form.phoneNo}
-            onChange={(event) =>
-              setForm({ ...form, phoneNo: event.target.value })
-            }
-            placeholder="Optional"
-          />
-        </Field>
-        <Field
-          label="Alternate phone"
-          htmlFor="u-alt-phone"
-          error={errors.alternatePhoneNo}
-        >
-          <Input
-            id="u-alt-phone"
-            type="tel"
-            inputMode="tel"
-            value={form.alternatePhoneNo}
-            onChange={(event) =>
-              setForm({ ...form, alternatePhoneNo: event.target.value })
-            }
-            placeholder="Optional"
-          />
-        </Field>
-      </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              label="Primary phone"
+              htmlFor="u-phone"
+              error={errors.phoneNo}
+            >
+              <Input
+                id="u-phone"
+                type="tel"
+                inputMode="tel"
+                value={form.phoneNo}
+                onChange={(event) =>
+                  setForm({ ...form, phoneNo: event.target.value })
+                }
+                placeholder="Optional"
+              />
+            </Field>
+            <Field
+              label="Alternate phone"
+              htmlFor="u-alt-phone"
+              error={errors.alternatePhoneNo}
+            >
+              <Input
+                id="u-alt-phone"
+                type="tel"
+                inputMode="tel"
+                value={form.alternatePhoneNo}
+                onChange={(event) =>
+                  setForm({ ...form, alternatePhoneNo: event.target.value })
+                }
+                placeholder="Optional"
+              />
+            </Field>
+          </div>
 
-      <Field
-        label="Temporary password"
-        htmlFor="u-password"
-        error={errors.password}
-        hint="The user can change this after signing in."
-      >
-        <Input
-          id="u-password"
-          type="text"
-          value={form.password}
-          onChange={(event) =>
-            setForm({ ...form, password: event.target.value })
-          }
-        />
-      </Field>
+          <Field
+            label={user ? "New temporary password" : "Temporary password"}
+            htmlFor="u-password"
+            error={errors.password}
+            hint={
+              user
+                ? "Leave blank to keep the current temporary password."
+                : "The user can change this after signing in."
+            }
+          >
+            <Input
+              id="u-password"
+              type="text"
+              value={form.password}
+              onChange={(event) =>
+                setForm({ ...form, password: event.target.value })
+              }
+              placeholder={user ? "Unchanged" : undefined}
+            />
+          </Field>
 
-      <Field
-        label="Roles"
-        error={errors.roles}
-        hint="Select every responsibility this account should have."
-      >
-        <RolePicker
-          roles={roles.data?.results ?? []}
-          selectedIds={form.roles}
-          ariaLabel="Roles"
-          onToggle={(roleId, checked) =>
-            setForm({
-              ...form,
-              roles: checked
-                ? [...form.roles, roleId]
-                : form.roles.filter((id) => id !== roleId),
-            })
-          }
-        />
-      </Field>
+          <Field
+            label="Roles"
+            error={errors.roles}
+            hint="Select every responsibility this account should have."
+          >
+            <RolePicker
+              roles={roles.data?.results ?? []}
+              selectedIds={form.roles}
+              ariaLabel="Roles"
+              onToggle={(roleId, checked) =>
+                setForm({
+                  ...form,
+                  roles: checked
+                    ? [...form.roles, roleId]
+                    : form.roles.filter((id) => id !== roleId),
+                })
+              }
+            />
+          </Field>
+        </>
+      )}
+
+      {user?.lastLogin && (
+        <div className="border bg-muted/40 p-3 text-sm">
+          <div className="font-semibold">Account details are locked</div>
+          <p className="mt-1 text-muted-foreground">
+            First sign-in has occurred. Last login:{" "}
+            {formatDisplayDateTime(user.lastLogin)}.
+          </p>
+        </div>
+      )}
+
+      {user && (
+        <Field label="Account access" error={errors.isActive}>
+          <label
+            htmlFor="u-active"
+            className="flex cursor-pointer items-start gap-3 border bg-background p-3"
+          >
+            <Checkbox
+              id="u-active"
+              checked={form.isActive}
+              onCheckedChange={(checked) =>
+                setForm({ ...form, isActive: checked === true })
+              }
+              className="mt-0.5"
+            />
+            <span>
+              <span className="block text-sm font-semibold">
+                {form.isActive ? "Account is active" : "Account is deactivated"}
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                {form.isActive
+                  ? "This user can sign in according to their assigned role."
+                  : "Sign-in and authenticated access are blocked until reactivated."}
+              </span>
+            </span>
+          </label>
+        </Field>
+      )}
     </FormDialog>
   )
 }

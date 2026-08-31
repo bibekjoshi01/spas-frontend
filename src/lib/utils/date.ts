@@ -20,3 +20,17 @@ export function formatDisplayDate(
     ? value
     : date.toLocaleDateString(undefined, options)
 }
+
+/** Render an API timestamp in the viewer's local date and time. */
+export function formatDisplayDateTime(value: string): string {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      })
+}

@@ -10,6 +10,7 @@ import {
   useGetPerformanceWeightsQuery,
   useUpdatePerformanceWeightsMutation,
 } from "@/lib/api"
+import { formatPercentage } from "@/lib/utils"
 import { notifier } from "@/lib/utils/notifier"
 
 const DEFAULTS = {
@@ -157,7 +158,7 @@ export default function PerformanceSettings() {
           <span>
             {valid ? "Ready to save" : "Weights must total exactly 100%"}
           </span>
-          <span className="tabular-nums">Total: {total}%</span>
+          <span className="tabular-nums">Total: {formatPercentage(total)}</span>
         </div>
       </section>
 

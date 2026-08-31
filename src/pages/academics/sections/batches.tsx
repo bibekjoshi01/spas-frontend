@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select"
 import { useHasPermission } from "@/hooks/use-has-permissions"
 import {
+  ACTIVE_ONLY,
   ALL,
   type Batch,
   type BatchSemester,
@@ -151,10 +152,16 @@ export function BatchesSection() {
       )}
       <ConfirmDialog
         open={Boolean(archiving)}
-        onOpenChange={(open) => !open && setArchiving(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setArchiving(null)
+            archiveState.reset()
+          }
+        }}
         title={`Archive ${archiving?.program.code} ${archiving?.year}?`}
-        description="The batch will leave active listings. Its students, semesters, classes, and historical records are preserved."
+        description="The batch leaves every listing. Only a batch with no students or semesters left under it can be archived, so nothing disappears along with it."
         isPending={archiveState.isLoading}
+        error={archiveState.error}
         onConfirm={async () => {
           if (!archiving) return
           try {
@@ -162,7 +169,7 @@ export function BatchesSection() {
             notifier.success("Batch archived.")
             setArchiving(null)
           } catch {
-            notifier.error("Could not archive that batch.")
+            /* the dialog shows the refusal */
           }
         }}
       />
@@ -367,7 +374,7 @@ function BatchRow({
 }
 
 function BatchForm({ batch, onClose }: { batch?: Batch; onClose: () => void }) {
-  const programs = useGetProgramsQuery(ALL)
+  const programs = useGetProgramsQuery(ACTIVE_ONLY)
   const [create, createState] = useCreateBatchMutation()
   const [update, updateState] = useUpdateBatchMutation()
   const [form, setForm] = useState({
@@ -414,7 +421,11 @@ function BatchForm({ batch, onClose }: { batch?: Batch; onClose: () => void }) {
       }}
     >
       {!batch && programs.data && programs.data.results.length > 1 && (
-        <Field label="Program" error={errors.program}>
+        <Field
+          label="Program"
+          error={errors.program}
+          hint="Only active programs are listed."
+        >
           <Select
             value={form.program}
             onValueChange={(value) => setForm({ ...form, program: value })}

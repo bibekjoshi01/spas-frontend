@@ -6,15 +6,11 @@ import { FilterBar } from "@/components/filter-bar"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { QueryState } from "@/components/query-state"
 import { ResourceList, RowActions } from "@/components/resource-list"
+import { RowActionsMenu } from "@/components/row-actions-menu"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { TimePickerInput } from "@/components/ui/date-time-picker"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+
 import {
   Select,
   SelectContent,
@@ -44,6 +40,7 @@ import {
   useGetSubjectsQuery,
   useUpdateAllocationMutation,
 } from "@/lib/api"
+import { withCurrentOption } from "@/lib/utils"
 import { notifier } from "@/lib/utils/notifier"
 
 import { AllocationReportDialog } from "./allocation-report-dialog"
@@ -104,7 +101,10 @@ export function AllocationsSection() {
   const [enrolling, setEnrolling] = useState<Allocation | null>(null)
   const [archiving, setArchiving] = useState<Allocation | null>(null)
   const [reporting, setReporting] = useState<Allocation | null>(null)
-  const [archive, { isLoading: isArchiving }] = useDeleteAllocationMutation()
+  const [
+    archive,
+    { isLoading: isArchiving, error: archiveError, reset: resetArchive },
+  ] = useDeleteAllocationMutation()
 
   const canAdd = useHasPermission("add_subject_allocation")
   const canEdit = useHasPermission("edit_subject_allocation")
@@ -364,56 +364,60 @@ export function AllocationsSection() {
           },
           {
             header: "",
-            className: "w-28 text-right",
+            className: "w-12 text-right",
             cell: (row) => (
               <RowActions>
-                {canViewReport && (
-                  <TooltipProvider delayDuration={300}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`View performance report for ${row.subject.code}`}
-                          onClick={() => setReporting(row)}
-                        >
-                          <Eye className="size-4" aria-hidden />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>View report</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-                {canEdit && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Edit ${row.subject.code}`}
-                    onClick={() => setEditing(row)}
-                  >
-                    <Pencil className="size-4" aria-hidden />
-                  </Button>
-                )}
-                {canEnrol && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Add students to ${row.subject.code}`}
-                    onClick={() => setEnrolling(row)}
-                  >
-                    <UserPlus className="size-4" aria-hidden />
-                  </Button>
-                )}
-                {canDelete && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Archive ${row.subject.code}`}
-                    onClick={() => setArchiving(row)}
-                  >
-                    <Trash2 className="size-4 text-destructive" aria-hidden />
-                  </Button>
-                )}
+                <RowActionsMenu
+                  triggerLabel={`Actions for ${row.subject.code}`}
+                  title={`${row.subject.code} — ${row.subject.name}`}
+                  description={`${row.batchSemester.batch.program.code} · Batch ${row.batchSemester.batch.year} · ${semesterLabel(row.batchSemester.semester)}`}
+                  actions={[
+                    ...(canViewReport
+                      ? [
+                          {
+                            label: "View report",
+                            description:
+                              "Attendance and performance for the whole class.",
+                            icon: <Eye className="size-4" aria-hidden />,
+                            onSelect: () => setReporting(row),
+                          },
+                        ]
+                      : []),
+                    ...(canEdit
+                      ? [
+                          {
+                            label: "Edit allocation",
+                            description:
+                              "Change the teacher or the scheduled period.",
+                            icon: <Pencil className="size-4" aria-hidden />,
+                            onSelect: () => setEditing(row),
+                          },
+                        ]
+                      : []),
+                    ...(canEnrol
+                      ? [
+                          {
+                            label: "Add students",
+                            description: `${row.enrolledCount} enrolled on this class.`,
+                            icon: <UserPlus className="size-4" aria-hidden />,
+                            onSelect: () => setEnrolling(row),
+                          },
+                        ]
+                      : []),
+                    ...(canDelete
+                      ? [
+                          {
+                            label: "Archive allocation",
+                            description:
+                              "Withdraws the class; its records are kept.",
+                            icon: <Trash2 className="size-4" aria-hidden />,
+                            onSelect: () => setArchiving(row),
+                            destructive: true,
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
               </RowActions>
             ),
           },
@@ -442,9 +446,15 @@ export function AllocationsSection() {
 
       <ConfirmDialog
         open={Boolean(archiving)}
-        onOpenChange={(open) => !open && setArchiving(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setArchiving(null)
+            resetArchive()
+          }
+        }}
         title={`Archive ${archiving?.subject.code}?`}
-        description="The class leaves every listing along with its roster, attendance, marks and assignments. Nothing is destroyed."
+        description="The class leaves every listing. Only a class with no roster, attendance, marks or assignments can be archived, so its records are never taken out of view with it."
+        error={archiveError}
         isPending={isArchiving}
         onConfirm={async () => {
           if (!archiving) return
@@ -453,7 +463,7 @@ export function AllocationsSection() {
             notifier.success("Allocation archived.")
             setArchiving(null)
           } catch {
-            notifier.error("Could not archive that allocation.")
+            /* the dialog shows the refusal */
           }
         }}
       />
@@ -483,6 +493,7 @@ function AllocationForm({ onClose }: { onClose: () => void }) {
     chosenSemester
       ? {
           limit: 0,
+          is_active: true,
           program: chosenSemester.batch.program.id,
           semester: chosenSemester.semester,
         }
@@ -644,11 +655,20 @@ function AllocationEditForm({
     chosenSemester
       ? {
           limit: 0,
+          is_active: true,
           program: chosenSemester.batch.program.id,
           semester: chosenSemester.semester,
         }
       : { limit: 0 },
     { skip: !chosenSemester }
+  )
+  // A subject retired since the allocation was made still has to appear, or the
+  // select would blank out and the next save would move the class elsewhere.
+  const subjectOptions = withCurrentOption(
+    subjects.data?.results,
+    chosenSemester?.id === allocation.batchSemester.id
+      ? allocation.subject
+      : null
   )
   const errors = fieldErrorsFrom(state.error)
 
@@ -718,7 +738,7 @@ function AllocationEditForm({
               <SelectValue placeholder="Choose a subject" />
             </SelectTrigger>
             <SelectContent>
-              {subjects.data?.results.map((row) => (
+              {subjectOptions.map((row) => (
                 <SelectItem key={row.id} value={String(row.id)}>
                   {row.code} — {row.name}
                 </SelectItem>

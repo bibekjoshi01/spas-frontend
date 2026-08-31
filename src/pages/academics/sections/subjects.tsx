@@ -3,7 +3,7 @@ import { Pencil, Plus, Trash2, Upload } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { ImportDialog } from "@/components/import-dialog"
-import { Field, FormDialog } from "@/components/form-dialog"
+import { ActiveField, Field, FormDialog } from "@/components/form-dialog"
 import { ResourceList, RowActions } from "@/components/resource-list"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,7 @@ import {
 import { useHasPermission } from "@/hooks/use-has-permissions"
 import { usePagedQuery } from "@/hooks/use-paged-query"
 import {
+  ACTIVE_ONLY,
   ALL,
   type Subject,
   fieldErrorsFrom,
@@ -39,6 +40,7 @@ export function SubjectsSection() {
     search: "",
     program: "all",
     semester: "all",
+    is_active: "all",
   })
   const onlyProgram =
     programs.data?.results.length === 1
@@ -56,7 +58,10 @@ export function SubjectsSection() {
   const [importProgram, setImportProgram] = useState("")
   const [editing, setEditing] = useState<Subject | null>(null)
   const [archiving, setArchiving] = useState<Subject | null>(null)
-  const [archive, { isLoading: isArchiving }] = useDeleteSubjectMutation()
+  const [
+    archive,
+    { isLoading: isArchiving, error: archiveError, reset: resetArchive },
+  ] = useDeleteSubjectMutation()
 
   const canAdd = useHasPermission("add_subject")
   const canEdit = useHasPermission("edit_subject")
@@ -118,11 +123,29 @@ export function SubjectsSection() {
                 )}
               </SelectContent>
             </Select>
+
+            <Select
+              value={filters.is_active}
+              onValueChange={(value) => setFilters({ is_active: value })}
+            >
+              <SelectTrigger className="w-40" aria-label="Filter by status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Active and inactive</SelectItem>
+                <SelectItem value="true">Active only</SelectItem>
+                <SelectItem value="false">Inactive only</SelectItem>
+              </SelectContent>
+            </Select>
           </>
         }
         clearFilters={{
-          visible: filters.program !== "all" || filters.semester !== "all",
-          onClear: () => setFilters({ program: "all", semester: "all" }),
+          visible:
+            filters.program !== "all" ||
+            filters.semester !== "all" ||
+            filters.is_active !== "all",
+          onClear: () =>
+            setFilters({ program: "all", semester: "all", is_active: "all" }),
         }}
         action={
           canAdd ? (
@@ -184,6 +207,15 @@ export function SubjectsSection() {
             header: "Credits",
             className: "w-20 text-right tabular-nums",
             cell: (row) => row.creditHours,
+          },
+          {
+            header: "Status",
+            className: "w-24",
+            cell: (row) => (
+              <Badge variant={row.isActive ? "secondary" : "outline"}>
+                {row.isActive ? "Active" : "Inactive"}
+              </Badge>
+            ),
           },
           {
             header: "",
@@ -272,9 +304,15 @@ export function SubjectsSection() {
 
       <ConfirmDialog
         open={Boolean(archiving)}
-        onOpenChange={(open) => !open && setArchiving(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setArchiving(null)
+            resetArchive()
+          }
+        }}
         title={`Archive ${archiving?.code}?`}
-        description="It leaves the curriculum and frees its code for reuse. Classes already teaching it keep their records."
+        description="It leaves the curriculum and frees its code for reuse. Only a subject no class is teaching can be archived — deactivate it instead to keep it off new allocations."
+        error={archiveError}
         isPending={isArchiving}
         onConfirm={async () => {
           if (!archiving) return
@@ -283,7 +321,7 @@ export function SubjectsSection() {
             notifier.success("Subject archived.")
             setArchiving(null)
           } catch {
-            notifier.error("Could not archive that subject.")
+            /* the dialog shows the refusal */
           }
         }}
       />
@@ -298,7 +336,9 @@ function SubjectForm({
   subject?: Subject
   onClose: () => void
 }) {
-  const programs = useGetProgramsQuery(ALL)
+  // The picker only shows when creating, so it never has to carry a retired
+  // program forward the way the program form does for its department.
+  const programs = useGetProgramsQuery(ACTIVE_ONLY)
   const [create, createState] = useCreateSubjectMutation()
   const [update, updateState] = useUpdateSubjectMutation()
 
@@ -310,6 +350,7 @@ function SubjectForm({
     creditHours: String(subject?.creditHours ?? 3),
     isElective: subject?.isElective ?? false,
   })
+  const [isActive, setIsActive] = useState(subject?.isActive ?? true)
   const onlyProgram =
     programs.data?.results.length === 1
       ? String(programs.data.results[0].id)
@@ -331,7 +372,7 @@ function SubjectForm({
 
     try {
       if (subject) {
-        await update({ id: subject.id, body }).unwrap()
+        await update({ id: subject.id, body: { ...body, isActive } }).unwrap()
         notifier.success("Subject updated.")
       } else {
         await create({ ...body, program: Number(effectiveProgram) }).unwrap()
@@ -358,7 +399,11 @@ function SubjectForm({
       onSubmit={submit}
     >
       {!subject && programs.data && programs.data.results.length > 1 && (
-        <Field label="Program" error={errors.program}>
+        <Field
+          label="Program"
+          error={errors.program}
+          hint="Only active programs are listed."
+        >
           <Select
             value={form.program}
             onValueChange={(value) => setForm({ ...form, program: value })}
@@ -448,6 +493,15 @@ function SubjectForm({
           Elective
         </label>
       </div>
+
+      {subject && (
+        <ActiveField
+          checked={isActive}
+          onChange={setIsActive}
+          noun="subject"
+          error={errors.isActive}
+        />
+      )}
     </FormDialog>
   )
 }

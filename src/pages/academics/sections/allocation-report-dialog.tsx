@@ -2,7 +2,7 @@ import { useMemo, useState } from "react"
 import { FileDown, Search } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
-import { QueryState } from "@/components/query-state"
+import { InlineSpinner, QueryState } from "@/components/query-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,6 +29,7 @@ import {
 } from "@/lib/api"
 import { useEligibilityThreshold } from "@/hooks/use-eligibility-threshold"
 import { exportAllocationPerformancePdf } from "@/lib/pdf-reports"
+import { formatPercentage } from "@/lib/utils"
 import { notifier } from "@/lib/utils/notifier"
 import { StudentDetailDialog } from "@/pages/roster/student-detail-dialog"
 
@@ -44,6 +45,9 @@ export function AllocationReportDialog({
   const [search, setSearch] = useState("")
   const [attentionOnly, setAttentionOnly] = useState(false)
   const [detailEnrollment, setDetailEnrollment] = useState<number | null>(null)
+  // Drawing a roster-sized PDF outlasts the click, so the button reports its own
+  // progress rather than only greying out.
+  const [exporting, setExporting] = useState(false)
 
   const rows = useMemo(() => {
     const needle = search.trim().toLowerCase()
@@ -87,10 +91,13 @@ export function AllocationReportDialog({
   ).length
 
   const exportPdf = async () => {
+    setExporting(true)
     try {
       await exportAllocationPerformancePdf(allocation, rows, threshold)
     } catch {
       notifier.error("Could not export this subject report.")
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -117,23 +124,28 @@ export function AllocationReportDialog({
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!rows.length}
+                disabled={!rows.length || exporting}
                 onClick={() => void exportPdf()}
               >
-                <FileDown className="size-4" aria-hidden />
-                Export PDF
+                {exporting ? (
+                  <InlineSpinner />
+                ) : (
+                  <FileDown className="size-4" aria-hidden />
+                )}
+                {exporting ? "Preparing PDF…" : "Export PDF"}
               </Button>
             </div>
           </DialogHeader>
 
           <QueryState
             isLoading={students.isLoading}
+            isFetching={students.isFetching && !students.isLoading}
             error={students.error}
             onRetry={students.refetch}
             skeleton="table"
           >
             <div className="space-y-3">
-              <div className="grid border sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-3">
                 <Metric
                   label="Enrolled students"
                   value={students.data?.length ?? 0}
@@ -141,7 +153,7 @@ export function AllocationReportDialog({
                 <Metric label="Need attention" value={attentionCount} danger />
                 <Metric
                   label="Average performance"
-                  value={average === null ? "—" : `${average.toFixed(1)}%`}
+                  value={formatPercentage(average)}
                 />
               </div>
 
@@ -229,7 +241,7 @@ export function AllocationReportDialog({
                           <div className="font-bold tabular-nums">
                             {row.performancePercentage === null
                               ? "—"
-                              : `${row.performancePercentage}%`}
+                              : formatPercentage(row.performancePercentage)}
                           </div>
                           {isAttention(
                             row.performancePercentage,
@@ -286,8 +298,8 @@ function Metric({
     <div
       className={
         danger
-          ? "border-b border-l-4 border-l-red-500 p-3 sm:border-r"
-          : "border-b p-3 sm:border-r"
+          ? "border border-l-4 border-l-red-500 bg-background p-3"
+          : "border bg-background p-3"
       }
     >
       <div className="text-xs font-bold text-muted-foreground">{label}</div>

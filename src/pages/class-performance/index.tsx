@@ -180,6 +180,10 @@ export default function ClassPerformancePage() {
 
       <QueryState
         isLoading={classes.isLoading || ratings.isLoading}
+        isFetching={
+          (classes.isFetching || ratings.isFetching) &&
+          !(classes.isLoading || ratings.isLoading)
+        }
         error={classes.error ?? ratings.error}
         isEmpty={visible.length === 0}
         onRetry={ratings.refetch}

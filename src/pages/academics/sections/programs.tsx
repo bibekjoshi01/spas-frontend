@@ -2,8 +2,9 @@ import { useState } from "react"
 import { Pencil, Plus, Trash2 } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
-import { Field, FormDialog } from "@/components/form-dialog"
+import { ActiveField, Field, FormDialog } from "@/components/form-dialog"
 import { ResourceList, RowActions } from "@/components/resource-list"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -16,6 +17,7 @@ import {
 import { useHasPermission } from "@/hooks/use-has-permissions"
 import { usePagedQuery } from "@/hooks/use-paged-query"
 import {
+  ACTIVE_ONLY,
   ALL,
   type Program,
   fieldErrorsFrom,
@@ -27,6 +29,7 @@ import {
   useGetAuthorityCandidatesQuery,
   useUpdateProgramMutation,
 } from "@/lib/api"
+import { withCurrentOption } from "@/lib/utils"
 import { notifier } from "@/lib/utils/notifier"
 
 export function ProgramsSection() {
@@ -34,6 +37,7 @@ export function ProgramsSection() {
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
     department: "all",
+    is_active: "all",
   })
   const onlyDepartment =
     departments.data?.results.length === 1
@@ -53,7 +57,10 @@ export function ProgramsSection() {
   const [isCreating, setIsCreating] = useState(false)
   const [editing, setEditing] = useState<Program | null>(null)
   const [archiving, setArchiving] = useState<Program | null>(null)
-  const [archive, { isLoading: isArchiving }] = useDeleteProgramMutation()
+  const [
+    archive,
+    { isLoading: isArchiving, error: archiveError, reset: resetArchive },
+  ] = useDeleteProgramMutation()
 
   const canAdd = useHasPermission("add_program")
   const canEdit = useHasPermission("edit_program")
@@ -77,31 +84,47 @@ export function ProgramsSection() {
           placeholder: "Search programs",
         }}
         filters={
-          departments.data && departments.data.results.length > 1 ? (
+          <>
             <Select
-              value={filters.department}
-              onValueChange={(value) => setFilters({ department: value })}
+              value={filters.is_active}
+              onValueChange={(value) => setFilters({ is_active: value })}
             >
-              <SelectTrigger
-                className="w-72 max-w-full"
-                aria-label="Filter by department"
-              >
+              <SelectTrigger className="w-40" aria-label="Filter by status">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All departments</SelectItem>
-                {departments.data?.results.map((row) => (
-                  <SelectItem key={row.id} value={String(row.id)}>
-                    {row.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="all">Active and inactive</SelectItem>
+                <SelectItem value="true">Active only</SelectItem>
+                <SelectItem value="false">Inactive only</SelectItem>
               </SelectContent>
             </Select>
-          ) : null
+
+            {departments.data && departments.data.results.length > 1 ? (
+              <Select
+                value={filters.department}
+                onValueChange={(value) => setFilters({ department: value })}
+              >
+                <SelectTrigger
+                  className="w-72 max-w-full"
+                  aria-label="Filter by department"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All departments</SelectItem>
+                  {departments.data?.results.map((row) => (
+                    <SelectItem key={row.id} value={String(row.id)}>
+                      {row.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : null}
+          </>
         }
         clearFilters={{
-          visible: filters.department !== "all",
-          onClear: () => setFilters({ department: "all" }),
+          visible: filters.department !== "all" || filters.is_active !== "all",
+          onClear: () => setFilters({ department: "all", is_active: "all" }),
         }}
         action={
           canAdd ? (
@@ -144,6 +167,15 @@ export function ProgramsSection() {
             cell: (row) => row.coordinator?.fullName ?? "—",
           },
           {
+            header: "Status",
+            className: "w-24",
+            cell: (row) => (
+              <Badge variant={row.isActive ? "secondary" : "outline"}>
+                {row.isActive ? "Active" : "Inactive"}
+              </Badge>
+            ),
+          },
+          {
             header: "",
             className: "w-24 text-right",
             cell: (row) => (
@@ -181,9 +213,15 @@ export function ProgramsSection() {
 
       <ConfirmDialog
         open={Boolean(archiving)}
-        onOpenChange={(open) => !open && setArchiving(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setArchiving(null)
+            resetArchive()
+          }
+        }}
         title={`Archive ${archiving?.name}?`}
-        description="It leaves every listing. Batches and subjects already under it are unaffected."
+        description="It leaves every listing. Only a program with no batches or subjects left under it can be archived."
+        error={archiveError}
         isPending={isArchiving}
         onConfirm={async () => {
           if (!archiving) return
@@ -192,7 +230,7 @@ export function ProgramsSection() {
             notifier.success("Program archived.")
             setArchiving(null)
           } catch {
-            notifier.error("Could not archive that program.")
+            /* the dialog shows the refusal */
           }
         }}
       />
@@ -207,7 +245,7 @@ function ProgramForm({
   program?: Program
   onClose: () => void
 }) {
-  const departments = useGetDepartmentsQuery(ALL)
+  const departments = useGetDepartmentsQuery(ACTIVE_ONLY)
   const coordinators = useGetAuthorityCandidatesQuery()
   const [create, createState] = useCreateProgramMutation()
   const [update, updateState] = useUpdateProgramMutation()
@@ -219,10 +257,13 @@ function ProgramForm({
     totalSemesters: String(program?.totalSemesters ?? 8),
     coordinator: program?.coordinator ? String(program.coordinator.id) : "",
   })
+  const [isActive, setIsActive] = useState(program?.isActive ?? true)
+  const departmentOptions = withCurrentOption(
+    departments.data?.results,
+    program?.department
+  )
   const onlyDepartment =
-    departments.data?.results.length === 1
-      ? String(departments.data.results[0].id)
-      : null
+    departmentOptions.length === 1 ? String(departmentOptions[0].id) : null
 
   const effectiveDepartment = form.department || onlyDepartment || ""
 
@@ -240,7 +281,7 @@ function ProgramForm({
 
     try {
       if (program) {
-        await update({ id: program.id, body }).unwrap()
+        await update({ id: program.id, body: { ...body, isActive } }).unwrap()
         notifier.success("Program updated.")
       } else {
         await create(body).unwrap()
@@ -265,8 +306,12 @@ function ProgramForm({
       submitLabel={program ? "Save changes" : "Create"}
       onSubmit={submit}
     >
-      {departments.data && departments.data.results.length > 1 ? (
-        <Field label="Department" error={errors.department}>
+      {departments.data && departmentOptions.length > 1 ? (
+        <Field
+          label="Department"
+          error={errors.department}
+          hint="Only active departments can take a new program."
+        >
           <Select
             value={form.department}
             onValueChange={(value) => setForm({ ...form, department: value })}
@@ -275,7 +320,7 @@ function ProgramForm({
               <SelectValue placeholder="Choose a department" />
             </SelectTrigger>
             <SelectContent>
-              {departments.data?.results.map((row) => (
+              {departmentOptions.map((row) => (
                 <SelectItem key={row.id} value={String(row.id)}>
                   {row.name}
                 </SelectItem>
@@ -349,6 +394,15 @@ function ProgramForm({
           </SelectContent>
         </Select>
       </Field>
+
+      {program && (
+        <ActiveField
+          checked={isActive}
+          onChange={setIsActive}
+          noun="program"
+          error={errors.isActive}
+        />
+      )}
     </FormDialog>
   )
 }

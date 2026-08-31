@@ -1,3 +1,5 @@
+import { useState } from "react"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { FileDown } from "lucide-react"
@@ -16,13 +18,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { QueryState } from "@/components/query-state"
+import { InlineSpinner, QueryState } from "@/components/query-state"
 import {
   ASSIGNMENT_LABELS,
   EXAM_TYPE_LABELS,
   useGetClassStudentDetailQuery,
 } from "@/lib/api"
 import { exportStudentDetailPdf } from "@/lib/pdf-reports"
+import { formatPercentage } from "@/lib/utils"
+import { notifier } from "@/lib/utils/notifier"
 
 export function StudentDetailDialog({
   allocation,
@@ -35,6 +39,21 @@ export function StudentDetailDialog({
 }) {
   const detail = useGetClassStudentDetailQuery({ allocation, enrollment })
   const data = detail.data
+  // Drawing the PDF outlasts the fetch it is drawn from, so the button reports
+  // its own progress rather than only greying out.
+  const [exporting, setExporting] = useState(false)
+
+  const exportPdf = async () => {
+    if (!data) return
+    setExporting(true)
+    try {
+      await exportStudentDetailPdf(data)
+    } catch {
+      notifier.error("Could not export this student record.")
+    } finally {
+      setExporting(false)
+    }
+  }
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -57,17 +76,22 @@ export function StudentDetailDialog({
             <Button
               variant="outline"
               size="sm"
-              disabled={!data}
-              onClick={() => data && void exportStudentDetailPdf(data)}
+              disabled={!data || exporting}
+              onClick={() => void exportPdf()}
             >
-              <FileDown className="size-4" aria-hidden />
-              Export PDF
+              {exporting ? (
+                <InlineSpinner />
+              ) : (
+                <FileDown className="size-4" aria-hidden />
+              )}
+              {exporting ? "Preparing PDF…" : "Export PDF"}
             </Button>
           </div>
         </DialogHeader>
 
         <QueryState
           isLoading={detail.isLoading}
+          isFetching={detail.isFetching && !detail.isLoading}
           error={detail.error}
           isEmpty={!data}
           onRetry={detail.refetch}
@@ -107,7 +131,7 @@ export function StudentDetailDialog({
                     <Metric label="Sessions" value={data.attendance.held} />
                     <Metric
                       label="Attendance"
-                      value={`${data.attendance.percentage}%`}
+                      value={formatPercentage(data.attendance.percentage)}
                     />
                   </div>
                 ) : (

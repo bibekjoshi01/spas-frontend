@@ -50,6 +50,7 @@ import {
 } from "@/lib/api"
 import { StudentDetailDialog } from "./student-detail-dialog"
 import { exportRosterPdf } from "@/lib/pdf-reports"
+import { formatPercentage } from "@/lib/utils"
 
 const ELIGIBILITY_LABEL = {
   eligible: "Eligible",
@@ -447,7 +448,7 @@ export default function RosterPage() {
                           }
                         >
                           {standing
-                            ? `${ELIGIBILITY_LABEL[standing]} · ${row.performancePercentage}%`
+                            ? `${ELIGIBILITY_LABEL[standing]} · ${formatPercentage(row.performancePercentage)}`
                             : "No data"}
                         </Badge>
                         <RecentAttendance records={row.attendance.recent} />
@@ -497,7 +498,7 @@ export default function RosterPage() {
 
 function concernFor(row: ClassStudent, threshold: number) {
   if (row.attendance.held > 0 && row.attendance.percentage < threshold) {
-    return `Attendance ${row.attendance.percentage}%`
+    return `Attendance ${formatPercentage(row.attendance.percentage)}`
   }
   if (
     row.internalMarks.total > 0 &&
@@ -583,7 +584,7 @@ function exportCsv(rows: ClassStudent[], classCode: string) {
     row.alternatePhoneNo,
     row.attendance.attended,
     row.attendance.held,
-    row.attendance.percentage,
+    Math.round(row.attendance.percentage * 100) / 100,
     row.internalMarks.obtained,
     row.internalMarks.total,
     row.assignments.done,

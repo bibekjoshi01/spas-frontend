@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Pencil, Plus, Trash2 } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
-import { Field, FormDialog } from "@/components/form-dialog"
+import { ActiveField, Field, FormDialog } from "@/components/form-dialog"
 import { ResourceList, RowActions } from "@/components/resource-list"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -32,6 +32,7 @@ import { notifier } from "@/lib/utils/notifier"
 export function DepartmentsSection() {
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
+    is_active: "all",
   })
   const { data, isLoading, isFetching, error, refetch } =
     useGetDepartmentsQuery(params)
@@ -39,7 +40,10 @@ export function DepartmentsSection() {
   const [editing, setEditing] = useState<Department | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [archiving, setArchiving] = useState<Department | null>(null)
-  const [archive, { isLoading: isArchiving }] = useDeleteDepartmentMutation()
+  const [
+    archive,
+    { isLoading: isArchiving, error: archiveError, reset: resetArchive },
+  ] = useDeleteDepartmentMutation()
 
   const canAdd = useHasPermission("add_department")
   const canEdit = useHasPermission("edit_department")
@@ -61,6 +65,25 @@ export function DepartmentsSection() {
           value: filters.search,
           onChange: (value) => setFilters({ search: value }),
           placeholder: "Search departments",
+        }}
+        filters={
+          <Select
+            value={filters.is_active}
+            onValueChange={(value) => setFilters({ is_active: value })}
+          >
+            <SelectTrigger className="w-40" aria-label="Filter by status">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Active and inactive</SelectItem>
+              <SelectItem value="true">Active only</SelectItem>
+              <SelectItem value="false">Inactive only</SelectItem>
+            </SelectContent>
+          </Select>
+        }
+        clearFilters={{
+          visible: filters.is_active !== "all",
+          onClear: () => setFilters({ is_active: "all" }),
         }}
         action={
           canAdd ? (
@@ -163,9 +186,15 @@ export function DepartmentsSection() {
 
       <ConfirmDialog
         open={Boolean(archiving)}
-        onOpenChange={(open) => !open && setArchiving(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setArchiving(null)
+            resetArchive()
+          }
+        }}
         title={`Archive ${archiving?.name}?`}
-        description="It leaves every listing and frees its name for reuse. Programs already under it are unaffected."
+        description="It leaves every listing and frees its name for reuse. Only a department with no programs left under it can be archived."
+        error={archiveError}
         isPending={isArchiving}
         onConfirm={async () => {
           if (!archiving) return
@@ -174,7 +203,7 @@ export function DepartmentsSection() {
             notifier.success("Department archived.")
             setArchiving(null)
           } catch {
-            notifier.error("Could not archive that department.")
+            /* the dialog shows the refusal */
           }
         }}
       />
@@ -200,6 +229,7 @@ function DepartmentForm({
   const [head, setHead] = useState(
     department?.head ? String(department.head.id) : ""
   )
+  const [isActive, setIsActive] = useState(department?.isActive ?? true)
 
   const state = department ? updateState : createState
   const errors = fieldErrorsFrom(state.error)
@@ -209,7 +239,7 @@ function DepartmentForm({
       if (department) {
         await update({
           id: department.id,
-          body: { name, code, head: head ? Number(head) : null },
+          body: { name, code, isActive, head: head ? Number(head) : null },
         }).unwrap()
         notifier.success("Department updated.")
       } else {
@@ -274,6 +304,15 @@ function DepartmentForm({
           </SelectContent>
         </Select>
       </Field>
+
+      {department && (
+        <ActiveField
+          checked={isActive}
+          onChange={setIsActive}
+          noun="department"
+          error={errors.isActive}
+        />
+      )}
     </FormDialog>
   )
 }

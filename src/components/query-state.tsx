@@ -8,6 +8,14 @@ import { cn } from "@/lib/utils"
 
 interface QueryStateProps {
   isLoading: boolean
+  /**
+   * A refetch running over data that is already on screen.
+   *
+   * Left undefined the screen renders exactly as before; passed, the stale
+   * content stays put behind a busy veil instead of sitting there looking
+   * settled while a slow report is still on its way.
+   */
+  isFetching?: boolean
   error?: unknown
   isEmpty?: boolean
   onRetry?: () => void
@@ -27,6 +35,7 @@ interface QueryStateProps {
  */
 export function QueryState({
   isLoading,
+  isFetching,
   error,
   isEmpty,
   onRetry,
@@ -73,7 +82,31 @@ export function QueryState({
     )
   }
 
-  return <>{children}</>
+  if (isFetching === undefined) return <>{children}</>
+
+  return (
+    <div className="relative" aria-busy={isFetching || undefined}>
+      {children}
+      {isFetching && <BusyOverlay />}
+    </div>
+  )
+}
+
+/**
+ * The veil laid over content that is being refreshed.
+ *
+ * It keeps the old figures readable underneath — a report reads better dimmed
+ * than blanked — while making it unmistakable that they are on their way out.
+ */
+export function BusyOverlay({ label = "Loading" }: { label?: string }) {
+  return (
+    <div className="absolute inset-0 z-10 flex items-start justify-center rounded-lg bg-background/60 pt-10 backdrop-blur-[1px]">
+      <span className="flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs font-medium shadow-sm">
+        <InlineSpinner />
+        {label}
+      </span>
+    </div>
+  )
 }
 
 function LoadingSkeleton({

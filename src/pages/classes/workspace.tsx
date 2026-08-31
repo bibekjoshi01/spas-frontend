@@ -25,6 +25,7 @@ import {
   useGetClassStudentsQuery,
   useGetExamsQuery,
 } from "@/lib/api"
+import { formatPercentage } from "@/lib/utils"
 import { localDateKey } from "@/lib/utils/date"
 
 export default function ClassWorkspacePage() {
@@ -60,6 +61,15 @@ export default function ClassWorkspacePage() {
     exams.isLoading ||
     assignments.isLoading ||
     sessions.isLoading
+  // Five reads back this one screen, so it stays marked busy until the slowest
+  // of them lands rather than settling on whichever arrived first.
+  const refreshing =
+    !loading &&
+    (classes.isFetching ||
+      students.isFetching ||
+      exams.isFetching ||
+      assignments.isFetching ||
+      sessions.isFetching)
 
   const atRisk =
     students.data?.filter(
@@ -108,6 +118,7 @@ export default function ClassWorkspacePage() {
 
       <QueryState
         isLoading={loading}
+        isFetching={refreshing}
         error={error}
         isEmpty={!selected}
         onRetry={() => {
@@ -244,7 +255,7 @@ export default function ClassWorkspacePage() {
                             </span>
                           </span>
                           <span className="font-semibold text-red-600 tabular-nums">
-                            {student.performancePercentage}%
+                            {formatPercentage(student.performancePercentage)}
                           </span>
                         </Link>
                       ))}

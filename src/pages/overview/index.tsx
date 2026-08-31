@@ -32,10 +32,12 @@ import {
   semesterLabel,
   useGetDashboardOverviewQuery,
 } from "@/lib/api"
+import { formatPercentage } from "@/lib/utils"
 import { localDateKey } from "@/lib/utils/date"
 
 export default function OverviewPage() {
-  const { data, isLoading, error, refetch } = useGetDashboardOverviewQuery()
+  const { data, isLoading, isFetching, error, refetch } =
+    useGetDashboardOverviewQuery()
   const profile = useAppSelector((state) => state.auth.profile)
   const hasTeacherRole = useHasRole("TEACHER")
   const threshold = useEligibilityThreshold()
@@ -74,6 +76,7 @@ export default function OverviewPage() {
 
       <QueryState
         isLoading={isLoading}
+        isFetching={isFetching && !isLoading}
         error={error}
         onRetry={refetch}
         skeleton="stats"
@@ -98,13 +101,13 @@ export default function OverviewPage() {
               <StatTile
                 icon={<TrendingUp className="size-4" aria-hidden />}
                 label="Average attendance"
-                value={`${data.stats.avgAttendancePercentage}%`}
+                value={formatPercentage(data.stats.avgAttendancePercentage)}
                 hint={isTeacher ? "your classes held" : "scoped classes held"}
                 accent="emerald"
               />
               <StatTile
                 icon={<AlertTriangle className="size-4" aria-hidden />}
-                label={`Below ${threshold}%`}
+                label={`Below ${formatPercentage(threshold)}`}
                 value={data.stats.studentsBelowEligibility}
                 hint="need attention"
                 accent="amber"
@@ -312,7 +315,7 @@ function ManagementTodayPanel({
         <DailyMetric
           icon={Activity}
           label="Attendance rate"
-          value={`${data.attendancePercentage}%`}
+          value={formatPercentage(data.attendancePercentage)}
         />
         <DailyMetric icon={Users} label="Students marked" value={data.marked} />
         <DailyMetric

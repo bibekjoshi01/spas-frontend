@@ -5,6 +5,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog"
 import { ImportDialog } from "@/components/import-dialog"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { ResourceList, RowActions } from "@/components/resource-list"
+import { RowActionsMenu } from "@/components/row-actions-menu"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -58,7 +59,10 @@ export function StudentsSection() {
   const [editing, setEditing] = useState<Student | null>(null)
   const [archiving, setArchiving] = useState<Student | null>(null)
   const [reporting, setReporting] = useState<Student | null>(null)
-  const [archive, { isLoading: isArchiving }] = useDeleteStudentMutation()
+  const [
+    archive,
+    { isLoading: isArchiving, error: archiveError, reset: resetArchive },
+  ] = useDeleteStudentMutation()
 
   const canAdd = useHasPermission("add_student")
   const canEdit = useHasPermission("edit_student")
@@ -202,37 +206,46 @@ export function StudentsSection() {
           },
           {
             header: "",
-            className: "w-24 text-right",
+            className: "w-12 text-right",
             cell: (row) => (
               <RowActions>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`View performance report for ${row.fullName}`}
-                  onClick={() => setReporting(row)}
-                >
-                  <Eye className="size-4" aria-hidden />
-                </Button>
-                {canEdit && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Edit ${row.fullName}`}
-                    onClick={() => setEditing(row)}
-                  >
-                    <Pencil className="size-4" aria-hidden />
-                  </Button>
-                )}
-                {canDelete && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Archive ${row.fullName}`}
-                    onClick={() => setArchiving(row)}
-                  >
-                    <Trash2 className="size-4 text-destructive" aria-hidden />
-                  </Button>
-                )}
+                <RowActionsMenu
+                  triggerLabel={`Actions for ${row.fullName}`}
+                  title={row.fullName}
+                  description={`Roll ${row.rollNumber} · ${STATUS_LABEL[row.status]}`}
+                  actions={[
+                    {
+                      label: "View report",
+                      description:
+                        "The complete academic record, semester by semester.",
+                      icon: <Eye className="size-4" aria-hidden />,
+                      onSelect: () => setReporting(row),
+                    },
+                    ...(canEdit
+                      ? [
+                          {
+                            label: "Edit student",
+                            description:
+                              "Correct details, contact or standing.",
+                            icon: <Pencil className="size-4" aria-hidden />,
+                            onSelect: () => setEditing(row),
+                          },
+                        ]
+                      : []),
+                    ...(canDelete
+                      ? [
+                          {
+                            label: "Archive student",
+                            description:
+                              "Removes them from rosters; their records are kept.",
+                            icon: <Trash2 className="size-4" aria-hidden />,
+                            onSelect: () => setArchiving(row),
+                            destructive: true,
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
               </RowActions>
             ),
           },
@@ -301,9 +314,15 @@ export function StudentsSection() {
 
       <ConfirmDialog
         open={Boolean(archiving)}
-        onOpenChange={(open) => !open && setArchiving(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setArchiving(null)
+            resetArchive()
+          }
+        }}
         title={`Archive ${archiving?.fullName}?`}
-        description="They leave every listing and their roll number frees up. Their attendance and marks are kept."
+        description="They leave every listing and their roll number frees up. Only a student with no enrollments can be archived — set their standing instead to record that they left."
+        error={archiveError}
         isPending={isArchiving}
         onConfirm={async () => {
           if (!archiving) return
@@ -312,7 +331,7 @@ export function StudentsSection() {
             notifier.success("Student archived.")
             setArchiving(null)
           } catch {
-            notifier.error("Could not archive that student.")
+            /* the dialog shows the refusal */
           }
         }}
       />

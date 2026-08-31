@@ -31,6 +31,9 @@ export interface AppUser {
   id: number
   uuid: string
   username: string
+  firstName: string
+  middleName: string
+  lastName: string
   fullName: string
   email: string
   phoneNo: string
@@ -40,6 +43,20 @@ export interface AppUser {
   isSuperuser: boolean
   roles: Array<{ id: number; name: string; codename: string }>
   dateJoined: string
+  lastLogin: string | null
+}
+
+export interface UpdateUser {
+  username?: string
+  firstName?: string
+  middleName?: string
+  lastName?: string
+  email?: string
+  phoneNo?: string
+  alternatePhoneNo?: string
+  password?: string
+  isActive?: boolean
+  roles?: number[]
 }
 
 export interface NewStudent {
@@ -134,6 +151,7 @@ export const peopleApi = rootAPI.injectEndpoints({
         email: string
         password: string
         firstName?: string
+        middleName?: string
         lastName?: string
         phoneNo?: string
         alternatePhoneNo?: string
@@ -146,7 +164,7 @@ export const peopleApi = rootAPI.injectEndpoints({
 
     updateUser: build.mutation<
       MessageWithIdResponse,
-      { id: number; body: Record<string, unknown> }
+      { id: number; body: UpdateUser }
     >({
       query: ({ id, body }) => ({
         url: `${USERS}/users/${id}`,

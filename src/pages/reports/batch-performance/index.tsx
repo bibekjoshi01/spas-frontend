@@ -4,10 +4,12 @@ import { FileDown, Mail } from "lucide-react"
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { FilterBar } from "@/components/filter-bar"
 import { PageHeader } from "@/components/page-header"
+import { InlineSpinner } from "@/components/query-state"
 import { ResourceList } from "@/components/resource-list"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Select,
   SelectContent,
@@ -25,6 +27,7 @@ import {
   useLazyGetBatchSemesterPerformanceReportQuery,
 } from "@/lib/api"
 import { exportBatchSemesterPerformancePdf } from "@/lib/pdf-reports"
+import { formatPercentage } from "@/lib/utils"
 import { notifier } from "@/lib/utils/notifier"
 
 import { ManagementStudentReportDialog } from "@/pages/people/management-student-report-dialog"
@@ -35,8 +38,11 @@ export default function BatchPerformanceReportPage() {
   const [batch, setBatch] = useState("all")
   const [semesterId, setSemesterId] = useState("")
   const [studentId, setStudentId] = useState<number | null>(null)
-  const [loadExport, exportState] =
-    useLazyGetBatchSemesterPerformanceReportQuery()
+  const [loadExport] = useLazyGetBatchSemesterPerformanceReportQuery()
+  // Covers the render as well as the fetch: pulling every row is only half the
+  // wait, and a button that springs back while the PDF is still drawing invites
+  // a second click.
+  const [exporting, setExporting] = useState(false)
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
     attention: "all",
@@ -70,6 +76,7 @@ export default function BatchPerformanceReportPage() {
 
   const exportPdf = async () => {
     if (!effectiveSemesterId) return
+    setExporting(true)
     try {
       const complete = await loadExport({
         batchSemester: Number(effectiveSemesterId),
@@ -80,6 +87,8 @@ export default function BatchPerformanceReportPage() {
       await exportBatchSemesterPerformancePdf(complete)
     } catch {
       notifier.error("Could not export this batch report.")
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -91,12 +100,21 @@ export default function BatchPerformanceReportPage() {
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Summary label="Students" value={data?.summary.students} />
-        <Summary label="With Evidence" value={data?.summary.withEvidence} />
+        <Summary
+          label="Students"
+          value={data?.summary.students}
+          loading={report.isFetching}
+        />
+        <Summary
+          label="With Evidence"
+          value={data?.summary.withEvidence}
+          loading={report.isFetching}
+        />
         <Summary
           label="Need Attention"
           value={data?.summary.needsAttention}
           tone="danger"
+          loading={report.isFetching}
         />
         <Summary
           label="Average Performance"
@@ -104,9 +122,10 @@ export default function BatchPerformanceReportPage() {
             data?.summary.averagePerformance === null
               ? "—"
               : data
-                ? `${data.summary.averagePerformance}%`
+                ? formatPercentage(data.summary.averagePerformance)
                 : undefined
           }
+          loading={report.isFetching}
         />
       </div>
 
@@ -243,13 +262,15 @@ export default function BatchPerformanceReportPage() {
           <Button
             size="sm"
             variant="outline"
-            disabled={
-              !effectiveSemesterId || exportState.isLoading || !data?.count
-            }
+            disabled={!effectiveSemesterId || exporting || !data?.count}
             onClick={() => void exportPdf()}
           >
-            <FileDown className="size-4" aria-hidden />
-            Export PDF
+            {exporting ? (
+              <InlineSpinner />
+            ) : (
+              <FileDown className="size-4" aria-hidden />
+            )}
+            {exporting ? "Preparing PDF…" : "Export PDF"}
           </Button>
         }
         emptyTitle={
@@ -370,10 +391,12 @@ function Summary({
   label,
   value,
   tone,
+  loading,
 }: {
   label: string
   value: string | number | undefined
   tone?: "danger"
+  loading?: boolean
 }) {
   return (
     <Card
@@ -385,14 +408,20 @@ function Summary({
     >
       <CardContent className="p-3">
         <div className="text-xs font-bold text-muted-foreground">{label}</div>
-        <div className="mt-1 text-xl font-bold tabular-nums">
-          {value ?? "—"}
-        </div>
+        {/* A bare dash would read as a real total of nothing, so a figure
+            still being counted shows as a skeleton instead. */}
+        {loading ? (
+          <Skeleton className="mt-1.5 h-6 w-16" />
+        ) : (
+          <div className="mt-1 text-xl font-bold tabular-nums">
+            {value ?? "—"}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
 }
 
 function percent(value: number | null) {
-  return value === null ? "—" : `${value}%`
+  return formatPercentage(value)
 }

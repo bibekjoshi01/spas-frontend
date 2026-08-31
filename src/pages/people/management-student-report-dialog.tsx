@@ -9,7 +9,7 @@ import {
 } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
-import { QueryState } from "@/components/query-state"
+import { InlineSpinner, QueryState } from "@/components/query-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -35,7 +35,9 @@ import {
   useGetManagementStudentReportQuery,
 } from "@/lib/api"
 import { exportManagementStudentReportPdf } from "@/lib/pdf-reports"
+import { formatPercentage } from "@/lib/utils"
 import { formatDisplayDate } from "@/lib/utils/date"
+import { notifier } from "@/lib/utils/notifier"
 
 type SubjectReport = ManagementStudentReport["subjects"][number]
 
@@ -54,6 +56,9 @@ export function ManagementStudentReportDialog({
 }) {
   const report = useGetManagementStudentReportQuery(studentId)
   const data = report.data
+  // The full record is a slow read and the PDF is drawn from it, so the button
+  // reports its own progress rather than only greying out.
+  const [exporting, setExporting] = useState(false)
   const [selection, setSelection] = useState<{
     studentId: number
     semester: number
@@ -71,6 +76,18 @@ export function ManagementStudentReportDialog({
     ? selectedSemester
     : (defaultSemester?.semester ?? null)
   const semester = semesters.find((group) => group.semester === activeSemester)
+
+  const exportPdf = async () => {
+    if (!data) return
+    setExporting(true)
+    try {
+      await exportManagementStudentReportPdf(data)
+    } catch {
+      notifier.error("Could not export this student report.")
+    } finally {
+      setExporting(false)
+    }
+  }
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -93,19 +110,22 @@ export function ManagementStudentReportDialog({
             <Button
               variant="outline"
               size="sm"
-              disabled={!data}
-              onClick={() =>
-                data && void exportManagementStudentReportPdf(data)
-              }
+              disabled={!data || exporting}
+              onClick={() => void exportPdf()}
             >
-              <FileDown className="size-4" aria-hidden />
-              Export full PDF
+              {exporting ? (
+                <InlineSpinner />
+              ) : (
+                <FileDown className="size-4" aria-hidden />
+              )}
+              {exporting ? "Preparing PDF…" : "Export full PDF"}
             </Button>
           </div>
         </DialogHeader>
 
         <QueryState
           isLoading={report.isLoading}
+          isFetching={report.isFetching && !report.isLoading}
           error={report.error}
           isEmpty={!data}
           onRetry={report.refetch}
@@ -279,7 +299,7 @@ function SemesterReport({ group }: { group: SemesterGroup }) {
             value={
               summary.attendancePercentage === null
                 ? "—"
-                : `${summary.attendancePercentage}%`
+                : formatPercentage(summary.attendancePercentage)
             }
           />
           <SummaryMetric
@@ -370,7 +390,7 @@ function SubjectReportCard({
               <Metric label="Sessions" value={subject.attendance.held} />
               <Metric
                 label="Attendance"
-                value={`${subject.attendance.percentage}%`}
+                value={formatPercentage(subject.attendance.percentage)}
               />
             </div>
           ) : (

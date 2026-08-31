@@ -1,12 +1,14 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { FileDown } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { FilterBar } from "@/components/filter-bar"
 import { PageHeader } from "@/components/page-header"
+import { InlineSpinner } from "@/components/query-state"
 import { ResourceList } from "@/components/resource-list"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { DatePickerInput } from "@/components/ui/date-time-picker"
 import {
   Select,
@@ -27,6 +29,7 @@ import {
   useLazyGetManagementAttendanceReportQuery,
 } from "@/lib/api"
 import { exportManagementAttendanceReportPdf } from "@/lib/pdf-reports"
+import { formatPercentage } from "@/lib/utils"
 import { formatDisplayDate, localDateKey } from "@/lib/utils/date"
 import { notifier } from "@/lib/utils/notifier"
 
@@ -37,7 +40,11 @@ export default function AttendanceReportPage() {
   const batches = useGetBatchesQuery(ALL)
   const semesters = useGetBatchSemestersQuery(ALL)
   const allocations = useGetAllocationsQuery(ALL)
-  const [loadExport, exportState] = useLazyGetManagementAttendanceReportQuery()
+  const [loadExport] = useLazyGetManagementAttendanceReportQuery()
+  // Covers the render as well as the fetch: pulling every row is only half the
+  // wait, and a button that springs back while the PDF is still drawing invites
+  // a second click.
+  const [exporting, setExporting] = useState(false)
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
     start_date: dateDaysAgo(6),
@@ -99,6 +106,7 @@ export default function AttendanceReportPage() {
     setFilters({ start_date: dateDaysAgo(days - 1), end_date: today })
 
   const exportPdf = async () => {
+    setExporting(true)
     try {
       const complete = await loadExport({
         ...params,
@@ -109,6 +117,8 @@ export default function AttendanceReportPage() {
       await exportManagementAttendanceReportPdf(complete)
     } catch {
       notifier.error("Could not export this attendance report.")
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -120,12 +130,30 @@ export default function AttendanceReportPage() {
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Summary label="Classes Held" value={data?.summary.sessions} />
-        <Summary label="Students Marked" value={data?.summary.marked} />
-        <Summary label="Absent" value={data?.summary.absent} danger />
+        <Summary
+          label="Classes Held"
+          value={data?.summary.sessions}
+          loading={report.isFetching}
+        />
+        <Summary
+          label="Students Marked"
+          value={data?.summary.marked}
+          loading={report.isFetching}
+        />
+        <Summary
+          label="Absent"
+          value={data?.summary.absent}
+          danger
+          loading={report.isFetching}
+        />
         <Summary
           label="Attendance"
-          value={data ? `${data.summary.attendancePercentage}%` : undefined}
+          value={
+            data
+              ? formatPercentage(data.summary.attendancePercentage)
+              : undefined
+          }
+          loading={report.isFetching}
         />
       </div>
 
@@ -386,10 +414,15 @@ export default function AttendanceReportPage() {
           <Button
             variant="outline"
             size="sm"
-            disabled={!data?.count || exportState.isLoading}
+            disabled={!data?.count || exporting}
             onClick={() => void exportPdf()}
           >
-            <FileDown className="size-4" aria-hidden /> Export PDF
+            {exporting ? (
+              <InlineSpinner />
+            ) : (
+              <FileDown className="size-4" aria-hidden />
+            )}
+            {exporting ? "Preparing PDF…" : "Export PDF"}
           </Button>
         }
         emptyTitle="No attendance sessions found"
@@ -469,10 +502,12 @@ function Summary({
   label,
   value,
   danger,
+  loading,
 }: {
   label: string
   value: string | number | undefined
   danger?: boolean
+  loading?: boolean
 }) {
   return (
     <Card
@@ -482,9 +517,15 @@ function Summary({
     >
       <CardContent className="p-3">
         <div className="text-xs font-bold text-muted-foreground">{label}</div>
-        <div className="mt-1 text-xl font-bold tabular-nums">
-          {value ?? "—"}
-        </div>
+        {/* A bare dash would read as a real total of nothing, so a figure
+            still being counted shows as a skeleton instead. */}
+        {loading ? (
+          <Skeleton className="mt-1.5 h-6 w-16" />
+        ) : (
+          <div className="mt-1 text-xl font-bold tabular-nums">
+            {value ?? "—"}
+          </div>
+        )}
       </CardContent>
     </Card>
   )

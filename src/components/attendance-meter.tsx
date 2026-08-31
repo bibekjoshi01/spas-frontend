@@ -1,6 +1,6 @@
 import { eligibilityFor } from "@/lib/api"
 import { useEligibilityThreshold } from "@/hooks/use-eligibility-threshold"
-import { cn } from "@/lib/utils"
+import { cn, formatPercentage } from "@/lib/utils"
 
 const TONE = {
   eligible: "bg-emerald-500",
@@ -35,13 +35,16 @@ export function AttendanceMeter({
   const threshold = useEligibilityThreshold()
   const tone = eligibilityFor(percentage, threshold)
   const clamped = Math.max(0, Math.min(100, percentage))
+  // Eligibility still uses the exact API value; only its presentation is
+  // rounded so repeating decimals remain readable.
+  const shown = formatPercentage(percentage)
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <div
         className="relative h-2 w-full min-w-16 overflow-hidden rounded-full bg-muted"
         role="img"
-        aria-label={`${percentage}% attendance, ${threshold}% required`}
+        aria-label={`${shown} attendance, ${formatPercentage(threshold)} required`}
       >
         <div
           className={cn("h-full rounded-full transition-all", TONE[tone])}
@@ -61,7 +64,7 @@ export function AttendanceMeter({
             TEXT_TONE[tone]
           )}
         >
-          {percentage}%
+          {shown}
         </span>
       )}
     </div>

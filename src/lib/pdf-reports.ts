@@ -14,6 +14,7 @@ import {
   eligibilityFor,
   semesterLabel,
 } from "@/lib/api"
+import { formatPercentage } from "@/lib/utils"
 
 const STANDING = {
   eligible: "Eligible",
@@ -99,7 +100,7 @@ export async function exportRosterPdf(
       [student.email, student.phoneNo, student.alternatePhoneNo]
         .filter(Boolean)
         .join("\n") || "—",
-      `${student.attendance.attended}/${student.attendance.held} (${student.attendance.percentage}%)`,
+      `${student.attendance.attended}/${student.attendance.held} (${formatPercentage(student.attendance.percentage)})`,
       student.internalMarks.total
         ? `${student.internalMarks.obtained}/${student.internalMarks.total}`
         : "—",
@@ -111,7 +112,7 @@ export async function exportRosterPdf(
         : `${student.classPerformance.score}/10`,
       student.performancePercentage === null
         ? "No data"
-        : `${STANDING[eligibilityFor(student.performancePercentage, threshold)]} (${student.performancePercentage}%)`,
+        : `${STANDING[eligibilityFor(student.performancePercentage, threshold)]} (${formatPercentage(student.performancePercentage)})`,
     ]),
     styles: {
       font: "helvetica",
@@ -163,7 +164,7 @@ export async function exportAllocationPerformancePdf(
       [student.email, student.phoneNo, student.alternatePhoneNo]
         .filter(Boolean)
         .join("\n") || "—",
-      `${student.attendance.attended}/${student.attendance.held} (${student.attendance.percentage}%)`,
+      `${student.attendance.attended}/${student.attendance.held} (${formatPercentage(student.attendance.percentage)})`,
       student.internalMarks.total
         ? `${student.internalMarks.obtained}/${student.internalMarks.total}`
         : "—",
@@ -175,7 +176,7 @@ export async function exportAllocationPerformancePdf(
         : `${student.classPerformance.score}/10`,
       student.performancePercentage === null
         ? "—"
-        : `${student.performancePercentage}%`,
+        : formatPercentage(student.performancePercentage),
       (student.attendance.held > 0 &&
         student.attendance.percentage < threshold) ||
       (student.performancePercentage !== null &&
@@ -234,7 +235,7 @@ export async function exportStudentDetailPdf(data: ClassStudentDetail) {
             attendance.excused,
             attendance.late,
             attendance.held,
-            `${attendance.percentage}%`,
+            formatPercentage(attendance.percentage),
           ],
         ]
       : [["—", "—", "—", "—", "—", "Unavailable"]],
@@ -361,7 +362,9 @@ export async function exportManagementStudentReportPdf(
           subject.semester,
           `${subject.class.code} — ${subject.class.name}`,
           subject.semesterStatus,
-          subject.attendance ? `${subject.attendance.percentage}%` : "—",
+          subject.attendance
+            ? formatPercentage(subject.attendance.percentage)
+            : "—",
           subject.assessments.length,
           subject.assignments.length,
           subject.classPerformance
@@ -397,7 +400,9 @@ export async function exportManagementStudentReportPdf(
       ],
       body: [
         [
-          subject.attendance ? `${subject.attendance.percentage}%` : "—",
+          subject.attendance
+            ? formatPercentage(subject.attendance.percentage)
+            : "—",
           subject.attendance?.present ?? "—",
           subject.attendance?.absent ?? "—",
           subject.attendance?.late ?? "—",
@@ -525,7 +530,7 @@ export async function exportBatchSemesterPerformancePdf(
 }
 
 function pdfPercent(value: number | null) {
-  return value === null ? "—" : `${value}%`
+  return formatPercentage(value)
 }
 
 export async function exportManagementAttendanceReportPdf(
@@ -536,7 +541,7 @@ export async function exportManagementAttendanceReportPdf(
   heading(
     doc,
     "Attendance report",
-    `${data.range.startDate} to ${data.range.endDate} · ${data.summary.sessions} classes held · ${data.summary.attendancePercentage}% attendance`
+    `${data.range.startDate} to ${data.range.endDate} · ${data.summary.sessions} classes held · ${formatPercentage(data.summary.attendancePercentage)} attendance`
   )
 
   autoTable(doc, {
@@ -567,7 +572,7 @@ export async function exportManagementAttendanceReportPdf(
       row.absent,
       row.late,
       row.excused,
-      `${row.attendancePercentage}%`,
+      formatPercentage(row.attendancePercentage),
     ]),
     styles: { fontSize: 7.5, cellPadding: 2, valign: "middle" },
     headStyles: { fillColor: [30, 41, 59] },

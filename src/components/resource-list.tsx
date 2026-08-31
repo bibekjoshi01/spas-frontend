@@ -126,6 +126,7 @@ export function ResourceList<T>({
 
       <QueryState
         isLoading={isLoading}
+        isFetching={isFetching && !isLoading}
         error={error}
         isEmpty={rows?.length === 0}
         onRetry={refetch}
@@ -135,8 +136,10 @@ export function ResourceList<T>({
         emptyAction={emptyAction}
       >
         <div
-          className="overflow-x-auto rounded-lg border bg-white dark:bg-slate-950"
-          aria-busy={isFetching || undefined}
+          className={cn(
+            "overflow-x-auto rounded-lg border bg-white transition-opacity dark:bg-slate-950",
+            isFetching && !isLoading && "opacity-60"
+          )}
         >
           <Table>
             <TableHeader>

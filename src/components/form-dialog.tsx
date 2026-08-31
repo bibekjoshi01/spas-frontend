@@ -87,6 +87,48 @@ export function FormDialog({
   )
 }
 
+/**
+ * The active switch shared by every form that can retire a record.
+ *
+ * Retiring is not deleting: the record keeps everything hanging off it and only
+ * stops being offered for new work, so the caption says so rather than leaving
+ * the reader to guess what a bare checkbox costs them.
+ */
+export function ActiveField({
+  checked,
+  onChange,
+  noun,
+  error,
+}: {
+  checked: boolean
+  onChange: (checked: boolean) => void
+  /** What is being retired — "department", "program", "subject". */
+  noun: string
+  error?: string
+}) {
+  return (
+    <Field
+      label="Availability"
+      error={error}
+      hint={
+        checked
+          ? `Offered when creating anything under this ${noun}.`
+          : `Hidden from new work. Existing records keep this ${noun}.`
+      }
+    >
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="size-4 rounded border-input"
+          checked={checked}
+          onChange={(event) => onChange(event.target.checked)}
+        />
+        Active
+      </label>
+    </Field>
+  )
+}
+
 interface FieldProps {
   label: string
   htmlFor?: string
