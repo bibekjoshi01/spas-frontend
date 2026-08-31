@@ -81,7 +81,7 @@ export function RowActionsMenu({
         }}
       >
         <DialogContent
-          className="sm:max-w-sm"
+          className="sm:max-w-lg"
           onCloseAutoFocus={(event) => chose && event.preventDefault()}
         >
           <DialogHeader className="pr-10">
@@ -98,13 +98,13 @@ export function RowActionsMenu({
                 type="button"
                 onClick={() => choose(action)}
                 className={cn(
-                  "flex items-start gap-3 rounded-md border border-transparent px-3 py-2.5 text-left transition-colors",
+                  "flex items-center gap-3 rounded-md border border-transparent px-3 py-2.5 text-left transition-colors",
                   "hover:bg-accent focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
                   action.destructive &&
                     "text-destructive hover:bg-destructive/10"
                 )}
               >
-                <span className="mt-0.5 shrink-0" aria-hidden>
+                <span className="shrink-0" aria-hidden>
                   {action.icon}
                 </span>
                 <span className="min-w-0">

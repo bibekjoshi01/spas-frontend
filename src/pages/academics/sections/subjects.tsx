@@ -7,6 +7,7 @@ import { ActiveField, Field, FormDialog } from "@/components/form-dialog"
 import { ResourceList, RowActions } from "@/components/resource-list"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -482,12 +483,10 @@ function SubjectForm({
         </Field>
 
         <label className="flex items-center gap-2 pb-2 text-sm">
-          <input
-            type="checkbox"
-            className="size-4 rounded border-input"
+          <Checkbox
             checked={form.isElective}
-            onChange={(event) =>
-              setForm({ ...form, isElective: event.target.checked })
+            onCheckedChange={(checked) =>
+              setForm({ ...form, isElective: checked === true })
             }
           />
           Elective

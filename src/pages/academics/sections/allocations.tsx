@@ -9,6 +9,7 @@ import { ResourceList, RowActions } from "@/components/resource-list"
 import { RowActionsMenu } from "@/components/row-actions-menu"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { TimePickerInput } from "@/components/ui/date-time-picker"
 
 import {
@@ -896,20 +897,18 @@ function EnrolStudentsDialog({
               return (
                 <li key={student.id}>
                   <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted has-disabled:cursor-default has-disabled:bg-muted/40">
-                    <input
-                      type="checkbox"
-                      className="size-4 rounded border-input"
+                    <Checkbox
                       checked={isEnrolled || selected.includes(student.id)}
                       disabled={isEnrolled}
-                      onChange={(event) =>
+                      onCheckedChange={(checked) =>
                         setSelected(
-                          event.target.checked
+                          checked === true
                             ? [...selected, student.id]
                             : selected.filter((id) => id !== student.id)
                         )
                       }
                     />
-                    <span className="w-10 font-mono text-xs text-muted-foreground tabular-nums">
+                    <span className="w-24 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
                       {student.rollNumber}
                     </span>
                     <span className="min-w-0 flex-1">{student.fullName}</span>
