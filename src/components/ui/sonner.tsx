@@ -20,7 +20,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         classNames: {
           toast: "!pr-12",
           closeButton:
-            "!left-auto !right-3 !top-1/2 !translate-x-0 !-translate-y-1/2 !text-white",
+            "!left-auto !right-3 !top-1/2 !translate-x-0 !-translate-y-1/2 !border-foreground/30 !bg-background/90 !text-foreground hover:!bg-background [&>svg]:!size-3.5 [&>svg]:!stroke-[2.5]",
         },
       }}
       icons={{
