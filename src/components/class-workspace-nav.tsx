@@ -62,7 +62,7 @@ export function ClassWorkspaceNav({
 
   return (
     <section className="border bg-card" aria-label="Class workspace">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-l-4 border-l-sky-500 bg-slate-900 px-4 py-3 text-white dark:bg-slate-950">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-l-4 border-l-sky-500 bg-banner px-4 py-3 text-banner-foreground">
         <div className="min-w-0">
           <p className="mb-0.5 text-[10px] font-bold tracking-[0.14em] text-sky-300 uppercase">
             Class workspace
@@ -70,7 +70,7 @@ export function ClassWorkspaceNav({
           <p className="truncate text-base font-bold tracking-tight">
             {value.code} — {value.name}
           </p>
-          <p className="mt-0.5 text-xs text-slate-300">
+          <p className="mt-0.5 text-xs text-banner-muted-foreground">
             {value.programCode} · Batch {value.batchYear} · Semester{" "}
             {value.semester}
           </p>
@@ -78,9 +78,9 @@ export function ClassWorkspaceNav({
         <Badge
           variant="outline"
           className={cn(
-            "border-slate-500 bg-slate-800 text-slate-100",
+            "border-white/25 bg-white/10 text-banner-foreground",
             value.semesterStatus === "RUNNING" &&
-              "border-emerald-400/60 bg-emerald-950 text-emerald-200"
+              "border-emerald-400/60 bg-emerald-500/15 text-emerald-200"
           )}
         >
           {value.semesterStatus === "RUNNING"

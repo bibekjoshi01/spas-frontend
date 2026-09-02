@@ -30,7 +30,12 @@ export function TableSkeleton({
   className?: string
 }) {
   return (
-    <div className={cn("overflow-hidden rounded-lg border bg-card", className)}>
+    <div
+      className={cn(
+        "overflow-hidden rounded-lg border bg-table-surface",
+        className
+      )}
+    >
       <div className="flex gap-4 border-b-2 border-table-header-border bg-table-header px-3 py-3">
         {Array.from({ length: columns }).map((_, column) => (
           <Skeleton

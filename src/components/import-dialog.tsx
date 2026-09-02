@@ -210,7 +210,7 @@ export function ImportDialog({
               ) : null}
 
               <div className="max-h-72 overflow-y-auto rounded-sm border">
-                <table className="w-full text-sm">
+                <table className="w-full bg-table-surface text-sm">
                   <thead className="sticky top-0 bg-table-header text-table-header-foreground">
                     <tr className="text-left">
                       <th className="w-14 px-2 py-1.5 font-medium">Row</th>
