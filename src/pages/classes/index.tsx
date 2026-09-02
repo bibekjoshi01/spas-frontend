@@ -84,7 +84,7 @@ export default function ClassesPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search classes"
-              className="pl-8"
+              className="bg-white pl-8 dark:bg-input/30"
               aria-label="Search classes"
             />
           </div>

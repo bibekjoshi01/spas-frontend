@@ -423,7 +423,7 @@ function TeacherWorkQueue({ items }: { items: WorkItem[] }) {
   const visible = items.slice(0, 8)
 
   return (
-    <section className="border bg-background">
+    <section className="border bg-white dark:bg-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-primary px-3 py-2.5 text-primary-foreground">
         <div>
           <h2 className="flex items-center gap-2 font-semibold">
@@ -449,7 +449,7 @@ function TeacherWorkQueue({ items }: { items: WorkItem[] }) {
       </div>
 
       {visible.length ? (
-        <div className="divide-y bg-white">
+        <div className="divide-y bg-white dark:bg-card">
           {visible.map((item) => {
             const Icon = workIcon(item.kind)
             return (
@@ -481,14 +481,14 @@ function TeacherWorkQueue({ items }: { items: WorkItem[] }) {
           })}
         </div>
       ) : (
-        <div className="flex items-center gap-2 bg-white px-3 py-5 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 bg-white px-3 py-5 text-sm text-muted-foreground dark:bg-card">
           <CheckCircle2 className="size-4 text-emerald-600" aria-hidden />
           Your active class records are complete.
         </div>
       )}
 
       {items.length > visible.length && (
-        <div className="border-t bg-white px-3 py-2 text-xs text-muted-foreground">
+        <div className="border-t bg-white px-3 py-2 text-xs text-muted-foreground dark:bg-card">
           Showing the first {visible.length} of {items.length} tasks. Open a
           class workspace for its full completion checklist.
         </div>
