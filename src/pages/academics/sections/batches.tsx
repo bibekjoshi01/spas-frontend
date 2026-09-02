@@ -75,7 +75,7 @@ export function BatchesSection() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-stretch justify-between gap-3 rounded-sm border bg-white p-2 sm:items-center dark:bg-slate-950">
+      <div className="flex flex-wrap items-stretch justify-between gap-3 rounded-sm border bg-card p-2 sm:items-center">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 [&_[data-slot=select-trigger]]:max-w-full">
           {programs.data && programs.data.results.length > 1 && (
             <>
@@ -220,7 +220,7 @@ function BatchRow({
   }
 
   return (
-    <div className="rounded-lg border bg-white dark:bg-slate-950">
+    <div className="rounded-lg border bg-card">
       <div className="flex items-center hover:bg-muted/50">
         <button
           type="button"
@@ -288,7 +288,7 @@ function BatchRow({
               {semesters.data?.results.map((semester) => (
                 <li
                   key={semester.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-white px-3 py-2 dark:bg-slate-950"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-card px-3 py-2"
                 >
                   <div>
                     <div className="flex items-center gap-2">

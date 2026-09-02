@@ -25,6 +25,29 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
 
+  /*
+   * Panel bands.
+   *
+   * A panel is a plain surface — white here, near-black in the dark theme —
+   * with a tinted band across its head saying what kind of section it is:
+   * neutral for structure, info for a record, accent for a summary, warn for
+   * something needing attention. The tints are what tells one panel from the
+   * next, so they stay distinct from the surface in both themes.
+   */
+  --band: oklch(0.968 0.007 248);
+  --band-foreground: oklch(0.21 0.04 266);
+  --band-info: oklch(0.97 0.014 255);
+  --band-info-foreground: oklch(0.282 0.091 268);
+  --band-accent: oklch(0.969 0.016 294);
+  --band-accent-foreground: oklch(0.283 0.141 291);
+  --band-warn: oklch(0.987 0.022 95);
+  --band-warn-foreground: oklch(0.414 0.112 46);
+
+  /* The header row of a data table, one step firmer than a panel band. */
+  --table-header: oklch(0.929 0.013 256);
+  --table-header-foreground: oklch(0.35 0.02 266);
+  --table-header-border: oklch(0.869 0.02 253);
+
   /* Status Colors */
   --success: oklch(0.627 0.175 149.2);
   --success-foreground: oklch(1 0 0);
@@ -72,6 +95,20 @@
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
+
+  /* Bands sit a step above the surface here, as they sit below it in light. */
+  --band: oklch(0.269 0.006 264);
+  --band-foreground: oklch(0.96 0 0);
+  --band-info: oklch(0.283 0.048 264);
+  --band-info-foreground: oklch(0.932 0.032 255);
+  --band-accent: oklch(0.285 0.052 293);
+  --band-accent-foreground: oklch(0.932 0.028 294);
+  --band-warn: oklch(0.29 0.048 85);
+  --band-warn-foreground: oklch(0.938 0.04 95);
+
+  --table-header: oklch(0.3 0.008 264);
+  --table-header-foreground: oklch(0.87 0 0);
+  --table-header-border: oklch(0.37 0.01 264);
 
   /* Status Colors */
   --success: oklch(0.71 0.17 149.2);
@@ -138,6 +175,19 @@
 
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
+
+  --color-band: var(--band);
+  --color-band-foreground: var(--band-foreground);
+  --color-band-info: var(--band-info);
+  --color-band-info-foreground: var(--band-info-foreground);
+  --color-band-accent: var(--band-accent);
+  --color-band-accent-foreground: var(--band-accent-foreground);
+  --color-band-warn: var(--band-warn);
+  --color-band-warn-foreground: var(--band-warn-foreground);
+
+  --color-table-header: var(--table-header);
+  --color-table-header-foreground: var(--table-header-foreground);
+  --color-table-header-border: var(--table-header-border);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);

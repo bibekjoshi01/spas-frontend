@@ -227,9 +227,12 @@ export default function RosterPage() {
               <Button asChild size="sm">
                 <Link to={`/class-performance?class=${allocation}`}>
                   <PencilLine className="size-4" aria-hidden />
-                  {chosen?.semesterStatus === "RUNNING" && canEditPerformance
-                    ? "Add class performance"
-                    : "View class performance"}
+                  <span className="hidden sm:inline">
+                    {chosen?.semesterStatus === "RUNNING" && canEditPerformance
+                      ? "Add class performance"
+                      : "View class performance"}
+                  </span>
+                  <span className="sm:hidden">Performance</span>
                 </Link>
               </Button>
             )}
@@ -240,7 +243,8 @@ export default function RosterPage() {
               onClick={() => exportCsv(visible, chosen?.code ?? "class")}
             >
               <Download className="size-4" aria-hidden />
-              Export CSV
+              <span className="hidden sm:inline">Export CSV</span>
+              <span className="sm:hidden">CSV</span>
             </Button>
             <Button
               variant="outline"
@@ -251,7 +255,8 @@ export default function RosterPage() {
               }
             >
               <FileDown className="size-4" aria-hidden />
-              Export PDF
+              <span className="hidden sm:inline">Export PDF</span>
+              <span className="sm:hidden">PDF</span>
             </Button>
           </>
         }
@@ -354,7 +359,7 @@ export default function RosterPage() {
         <div className="overflow-x-auto rounded-lg border">
           <Table>
             <TableHeader>
-              <TableRow className="border-b-2 border-slate-300 bg-slate-200 hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-800">
+              <TableRow className="border-b-2 border-table-header-border bg-table-header hover:bg-table-header">
                 <TableHead className="w-16">Roll</TableHead>
                 <TableHead>Student</TableHead>
                 <TableHead className="min-w-52">Contact info</TableHead>

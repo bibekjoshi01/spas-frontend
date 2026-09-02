@@ -102,7 +102,7 @@ export function StudentDetailDialog({
         >
           {data && (
             <div className="space-y-5">
-              <section className="border bg-white p-3 dark:bg-slate-950">
+              <section className="border bg-card p-3">
                 <h3 className="mb-2 font-semibold">Student and contact</h3>
                 <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
                   <Detail
@@ -124,7 +124,7 @@ export function StudentDetailDialog({
                   count={data.attendance?.held ?? 0}
                 />
                 {data.attendance ? (
-                  <div className="grid border bg-white sm:grid-cols-3 lg:grid-cols-6 dark:bg-slate-950">
+                  <div className="grid border bg-card sm:grid-cols-3 lg:grid-cols-6">
                     <Metric label="Present" value={data.attendance.present} />
                     <Metric label="Absent" value={data.attendance.absent} />
                     <Metric label="Excused" value={data.attendance.excused} />
@@ -136,7 +136,7 @@ export function StudentDetailDialog({
                     />
                   </div>
                 ) : (
-                  <p className="border bg-white p-3 text-sm text-muted-foreground dark:bg-slate-950">
+                  <p className="border bg-card p-3 text-sm text-muted-foreground">
                     Attendance summary is unavailable.
                   </p>
                 )}
@@ -202,7 +202,7 @@ export function StudentDetailDialog({
                   title="Class performance"
                   count={data.classPerformance ? 1 : 0}
                 />
-                <div className="border bg-white p-3 text-sm dark:bg-slate-950">
+                <div className="border bg-card p-3 text-sm">
                   {data.classPerformance ? (
                     <div className="flex flex-wrap items-start gap-3">
                       <Badge className="text-sm">
@@ -263,7 +263,7 @@ function DetailTable({
     <div className="overflow-x-auto border">
       <Table>
         <TableHeader>
-          <TableRow className="bg-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-800">
+          <TableRow className="bg-table-header hover:bg-table-header">
             {headers.map((header) => (
               <TableHead key={header}>{header}</TableHead>
             ))}

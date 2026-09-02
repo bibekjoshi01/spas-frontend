@@ -92,18 +92,15 @@ export default function PerformanceSettings() {
         }
       />
 
-      <section
-        className="border bg-white dark:bg-slate-950"
-        aria-labelledby="weight-heading"
-      >
-        <div className="border-b bg-blue-50 px-4 py-3 dark:bg-blue-950/40">
+      <section className="border bg-card" aria-labelledby="weight-heading">
+        <div className="border-b bg-band-info px-4 py-3">
           <h1
             id="weight-heading"
-            className="text-base font-bold text-blue-950 dark:text-blue-100"
+            className="text-base font-bold text-band-info-foreground"
           >
             Performance weightage
           </h1>
-          <p className="mt-1 text-sm text-blue-900/70 dark:text-blue-200/70">
+          <p className="mt-1 text-sm text-band-info-foreground/70">
             Set how much each metric contributes to the overall student
             performance score.
           </p>
@@ -114,7 +111,7 @@ export default function PerformanceSettings() {
             Could not load performance settings.
           </p>
         ) : (
-          <div className="divide-y bg-white dark:bg-slate-950">
+          <div className="divide-y bg-card">
             {FIELDS.map(([key, label, description]) => (
               <div
                 key={key}
@@ -161,8 +158,8 @@ export default function PerformanceSettings() {
             isLoading
               ? "bg-muted text-muted-foreground"
               : valid
-                ? "bg-emerald-50 text-emerald-800"
-                : "bg-red-50 text-red-800"
+                ? "bg-success-soft text-success"
+                : "bg-destructive-soft text-destructive"
           }`}
         >
           {isLoading ? (
@@ -180,18 +177,15 @@ export default function PerformanceSettings() {
         </div>
       </section>
 
-      <section
-        className="border bg-white dark:bg-slate-950"
-        aria-labelledby="eligibility-heading"
-      >
-        <div className="border-b bg-blue-50 px-4 py-3 dark:bg-blue-950/40">
+      <section className="border bg-card" aria-labelledby="eligibility-heading">
+        <div className="border-b bg-band-info px-4 py-3">
           <h2
             id="eligibility-heading"
-            className="text-base font-bold text-blue-950 dark:text-blue-100"
+            className="text-base font-bold text-band-info-foreground"
           >
             Attendance requirement
           </h2>
-          <p className="mt-1 text-sm text-blue-900/70 dark:text-blue-200/70">
+          <p className="mt-1 text-sm text-band-info-foreground/70">
             The attendance your university requires. Set it once and every
             eligibility badge, roster flag and attention queue measures against
             it.

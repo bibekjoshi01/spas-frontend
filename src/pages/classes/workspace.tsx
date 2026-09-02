@@ -106,7 +106,7 @@ export default function ClassWorkspacePage() {
             asChild
             variant="outline"
             size="sm"
-            className="bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900"
+            className="bg-card hover:bg-accent"
           >
             <Link to="/classes">
               <ArrowLeft className="size-4" aria-hidden />
@@ -136,7 +136,7 @@ export default function ClassWorkspacePage() {
           <div className="space-y-3">
             <ClassWorkspaceNav value={selected} active="Overview" />
 
-            <div className="grid border bg-white sm:grid-cols-2 lg:grid-cols-5 dark:bg-slate-950">
+            <div className="grid grid-cols-2 border bg-card sm:grid-cols-3 lg:grid-cols-5">
               <Metric
                 icon={Users}
                 label="Students"
@@ -172,8 +172,8 @@ export default function ClassWorkspacePage() {
             </div>
 
             <div className="grid gap-3 lg:grid-cols-[1fr_1fr]">
-              <section className="border bg-white dark:bg-slate-950">
-                <div className="border-b bg-muted/60 px-3 py-2">
+              <section className="border bg-card">
+                <div className="border-b bg-band px-3 py-2">
                   <h2 className="font-semibold">Next actions</h2>
                   <p className="text-xs text-muted-foreground">
                     Incomplete work in this class.
@@ -222,8 +222,8 @@ export default function ClassWorkspacePage() {
               </section>
 
               {canViewPerformance && (
-                <section className="border bg-white dark:bg-slate-950">
-                  <div className="flex items-center justify-between border-b bg-muted/60 px-3 py-2">
+                <section className="border bg-card">
+                  <div className="flex items-center justify-between border-b bg-band px-3 py-2">
                     <div>
                       <h2 className="font-semibold">
                         Students needing attention
@@ -254,7 +254,7 @@ export default function ClassWorkspacePage() {
                               {student.rollNumber}
                             </span>
                           </span>
-                          <span className="font-semibold text-red-600 tabular-nums">
+                          <span className="font-semibold text-destructive tabular-nums">
                             {formatPercentage(student.performancePercentage)}
                           </span>
                         </Link>
@@ -291,7 +291,7 @@ function Metric({
   tone?: "risk"
 }) {
   return (
-    <div className="border-b p-3 last:border-b-0 sm:border-r sm:border-b-0">
+    <div className="border-r border-b p-3 last:border-r-0 sm:border-b-0">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Icon className="size-4" aria-hidden />
         {label}
@@ -299,7 +299,7 @@ function Metric({
       <p
         className={
           tone === "risk"
-            ? "mt-1 text-2xl font-bold text-red-600"
+            ? "mt-1 text-2xl font-bold text-destructive"
             : "mt-1 text-2xl font-bold"
         }
       >

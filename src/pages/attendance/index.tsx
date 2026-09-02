@@ -21,11 +21,22 @@ import { useHasPermission } from "@/hooks/use-has-permissions"
 import { useRememberedClass } from "@/hooks/use-remembered-class"
 import {
   ATTENDANCE_LABELS,
+  type AttendanceStatus,
   type AttendanceSessionSummary,
   useGetAttendanceSessionQuery,
   useGetAttendanceSessionsQuery,
   useGetClassesQuery,
 } from "@/lib/api"
+
+const STATUS_STYLES: Record<AttendanceStatus, string> = {
+  PRESENT:
+    "border-emerald-600 bg-emerald-600 text-white dark:border-emerald-700 dark:bg-emerald-700",
+  ABSENT:
+    "border-rose-600 bg-rose-600 text-white dark:border-rose-700 dark:bg-rose-700",
+  LATE: "border-amber-500 bg-amber-500 text-white dark:border-amber-600 dark:bg-amber-600",
+  EXCUSED:
+    "border-sky-600 bg-sky-600 text-white dark:border-sky-700 dark:bg-sky-700",
+}
 
 const today = new Date()
 today.setHours(0, 0, 0, 0)
@@ -144,7 +155,7 @@ export default function AttendancePage() {
             asChild
             variant="outline"
             size="sm"
-            className="bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900"
+            className="bg-card hover:bg-accent"
           >
             <Link to="/classes">
               <ArrowLeft className="size-4" aria-hidden />
@@ -196,8 +207,11 @@ export default function AttendancePage() {
         emptyMessage="Attendance becomes available after a class is allocated to you."
       >
         <div className="grid gap-3 lg:grid-cols-[auto_minmax(0,1fr)]">
-          <section className="border bg-card" aria-label="Attendance calendar">
-            <div className="border-b bg-muted/50 px-3 py-2">
+          <section
+            className="self-start border bg-card"
+            aria-label="Attendance calendar"
+          >
+            <div className="border-b bg-band px-3 py-2">
               <h2 className="font-semibold">Attendance calendar</h2>
               <p className="text-xs text-muted-foreground">
                 Recorded dates have a green marker. Blank dates are not
@@ -224,7 +238,7 @@ export default function AttendancePage() {
           </section>
 
           <section className="min-w-0 border bg-card">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/50 px-3 py-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-band px-3 py-2">
               <div>
                 <h2 className="font-semibold">
                   {selectedDate.toLocaleDateString(undefined, {
@@ -378,7 +392,7 @@ function InlineSessionDetail({
   const detail = useGetAttendanceSessionQuery(session.id)
 
   return (
-    <div className="border-t bg-muted/20 p-3">
+    <div className="border-t bg-band p-3">
       {detail.isLoading ? (
         <div className="flex min-h-24 items-center justify-center">
           <InlineSpinner />
@@ -391,9 +405,9 @@ function InlineSessionDetail({
           </Button>
         </div>
       ) : (
-        <div className="overflow-x-auto border bg-white dark:bg-slate-950">
-          <table className="w-full bg-white text-sm dark:bg-slate-950">
-            <thead className="border-b bg-slate-100 text-left dark:bg-slate-900">
+        <div className="overflow-x-auto border bg-card">
+          <table className="w-full bg-card text-sm">
+            <thead className="border-b bg-table-header text-left text-table-header-foreground">
               <tr>
                 <th className="w-14 px-3 py-2 font-semibold">#</th>
                 <th className="w-28 px-3 py-2 font-semibold">Roll</th>
@@ -416,7 +430,10 @@ function InlineSessionDetail({
                     {record.phoneNo || "—"}
                   </td>
                   <td className="px-3 py-2">
-                    <Badge variant="outline">
+                    <Badge
+                      variant="outline"
+                      className={STATUS_STYLES[record.status]}
+                    >
                       {ATTENDANCE_LABELS[record.status]}
                     </Badge>
                   </td>

@@ -168,7 +168,7 @@ export function AllocationReportDialog({
                 />
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 border bg-white p-2 dark:bg-slate-950">
+              <div className="flex flex-wrap items-center justify-between gap-2 border bg-card p-2">
                 <div className="relative w-full sm:w-80">
                   <Search
                     className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
@@ -195,7 +195,7 @@ export function AllocationReportDialog({
               <div className="overflow-x-auto border">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-slate-200 dark:bg-slate-800">
+                    <TableRow className="bg-table-header">
                       <TableHead>#</TableHead>
                       <TableHead>Student</TableHead>
                       <TableHead>Contact</TableHead>
@@ -323,8 +323,8 @@ function Metric({
     <div
       className={
         danger
-          ? "border border-l-4 border-l-red-500 bg-white p-3 dark:bg-slate-950"
-          : "border bg-white p-3 dark:bg-slate-950"
+          ? "border border-l-4 border-l-red-500 bg-card p-3"
+          : "border bg-card p-3"
       }
     >
       <div className="text-xs font-bold text-muted-foreground">{label}</div>

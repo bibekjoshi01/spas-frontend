@@ -246,6 +246,24 @@ export default function OverviewPage() {
                         </div>
                       ))}
                     </div>
+
+                    {data.stats.studentsBelowEligibility >
+                      data.studentsNeedingAttention.length && (
+                      <div className="mt-4 flex items-center justify-between gap-3 border-t pt-3 text-xs text-muted-foreground">
+                        <span className="tabular-nums">
+                          Showing {data.studentsNeedingAttention.length} of{" "}
+                          {data.stats.studentsBelowEligibility}
+                        </span>
+                        {!isTeacher && (
+                          <Button asChild variant="outline" size="sm">
+                            <Link to="/attention">
+                              View all
+                              <ArrowRight className="size-3.5" aria-hidden />
+                            </Link>
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -301,8 +319,8 @@ function ManagementTodayPanel({
         : "Program"
 
   return (
-    <section className="border bg-white">
-      <div className="flex items-center justify-between gap-3 border-b bg-violet-50 px-3 py-2.5 dark:bg-violet-950/40">
+    <section className="border bg-card">
+      <div className="flex items-center justify-between gap-3 border-b bg-band-accent px-3 py-2.5">
         <div>
           <h2 className="font-semibold">Today’s attendance</h2>
           <p className="text-xs text-muted-foreground">
@@ -312,7 +330,7 @@ function ManagementTodayPanel({
         <Badge variant="outline">{data.sessionsRecorded} sessions</Badge>
       </div>
 
-      <div className="grid grid-cols-2 border-b bg-white sm:grid-cols-3 dark:bg-slate-950">
+      <div className="grid grid-cols-2 border-b bg-card sm:grid-cols-3">
         <DailyMetric
           icon={Activity}
           label="Attendance rate"
@@ -339,7 +357,7 @@ function ManagementTodayPanel({
       </div>
 
       <div className="mt-3 border-t">
-        <div className="flex items-center justify-between gap-3 border-b bg-amber-50 px-3 py-2.5 dark:bg-amber-950/30">
+        <div className="flex items-center justify-between gap-3 border-b bg-band-warn px-3 py-2.5">
           <div>
             <h3 className="text-sm font-semibold">Classes to review</h3>
             <p className="text-xs text-muted-foreground">
@@ -347,14 +365,11 @@ function ManagementTodayPanel({
               mean a class was scheduled.
             </p>
           </div>
-          <Badge
-            variant="outline"
-            className="shrink-0 bg-background tabular-nums"
-          >
+          <Badge variant="outline" className="shrink-0 bg-card tabular-nums">
             {data.classesToReview.length}
           </Badge>
         </div>
-        <div className="bg-white p-3 dark:bg-slate-950">
+        <div className="bg-card p-3">
           {data.classesToReview.length ? (
             <div className="max-h-52 divide-y overflow-y-auto border">
               {data.classesToReview.map((item) => (
@@ -409,7 +424,7 @@ function DailyMetric({
       <p
         className={
           tone === "risk"
-            ? "mt-1 text-xl font-bold text-red-600 tabular-nums"
+            ? "mt-1 text-xl font-bold text-destructive tabular-nums"
             : "mt-1 text-xl font-bold tabular-nums"
         }
       >
@@ -423,7 +438,7 @@ function TeacherWorkQueue({ items }: { items: WorkItem[] }) {
   const visible = items.slice(0, 8)
 
   return (
-    <section className="border bg-white dark:bg-card">
+    <section className="border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-primary px-3 py-2.5 text-primary-foreground">
         <div>
           <h2 className="flex items-center gap-2 font-semibold">
@@ -449,7 +464,7 @@ function TeacherWorkQueue({ items }: { items: WorkItem[] }) {
       </div>
 
       {visible.length ? (
-        <div className="divide-y bg-white dark:bg-card">
+        <div className="divide-y bg-card">
           {visible.map((item) => {
             const Icon = workIcon(item.kind)
             return (
@@ -481,14 +496,14 @@ function TeacherWorkQueue({ items }: { items: WorkItem[] }) {
           })}
         </div>
       ) : (
-        <div className="flex items-center gap-2 bg-white px-3 py-5 text-sm text-muted-foreground dark:bg-card">
+        <div className="flex items-center gap-2 bg-card px-3 py-5 text-sm text-muted-foreground">
           <CheckCircle2 className="size-4 text-emerald-600" aria-hidden />
           Your active class records are complete.
         </div>
       )}
 
       {items.length > visible.length && (
-        <div className="border-t bg-white px-3 py-2 text-xs text-muted-foreground dark:bg-card">
+        <div className="border-t bg-card px-3 py-2 text-xs text-muted-foreground">
           Showing the first {visible.length} of {items.length} tasks. Open a
           class workspace for its full completion checklist.
         </div>

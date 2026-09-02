@@ -1,4 +1,5 @@
 import Logo from "@/assets/logo.png"
+import { Link } from "react-router-dom"
 import {
   Sidebar,
   SidebarContent,
@@ -34,7 +35,11 @@ export default function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r">
       <SidebarHeader className="h-14 border-b">
-        <div className="flex items-center gap-3 px-4 transition-all duration-200 group-data-[collapsible=icon]:px-0">
+        <Link
+          to="/dashboard"
+          aria-label="Go to dashboard"
+          className="flex items-center gap-3 rounded-sm px-4 transition-all duration-200 group-data-[collapsible=icon]:px-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        >
           <img src={Logo} alt="SPAS" className="size-8 shrink-0" />
 
           <div className="min-w-0 overflow-hidden transition-all duration-200 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0">
@@ -46,7 +51,7 @@ export default function AppSidebar() {
               Academic operations
             </p>
           </div>
-        </div>
+        </Link>
       </SidebarHeader>
 
       <SidebarContent>

@@ -120,7 +120,7 @@ export default function ClassPerformancePage() {
             asChild
             variant="outline"
             size="sm"
-            className="bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900"
+            className="bg-card hover:bg-accent"
           >
             <Link to="/classes">
               <ArrowLeft className="size-4" aria-hidden />
@@ -200,7 +200,7 @@ export default function ClassPerformancePage() {
         <div className="overflow-x-auto rounded-lg border">
           <Table>
             <TableHeader>
-              <TableRow className="border-b-2 border-slate-300 bg-slate-200 hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-800">
+              <TableRow className="border-b-2 border-table-header-border bg-table-header hover:bg-table-header">
                 <TableHead className="w-14">#</TableHead>
                 <TableHead className="w-28">Roll</TableHead>
                 <TableHead>Student</TableHead>
@@ -220,7 +220,7 @@ export default function ClassPerformancePage() {
                     key={row.enrollment}
                     className={
                       row.enrollment === focusEnrollment
-                        ? "bg-amber-50 hover:bg-amber-50 dark:bg-amber-950/30"
+                        ? "bg-band-warn hover:bg-band-warn"
                         : undefined
                     }
                   >

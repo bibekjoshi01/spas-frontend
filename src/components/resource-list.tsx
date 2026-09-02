@@ -137,13 +137,13 @@ export function ResourceList<T>({
       >
         <div
           className={cn(
-            "overflow-x-auto rounded-lg border bg-white transition-opacity dark:bg-slate-950",
+            "overflow-x-auto rounded-lg border bg-card transition-opacity",
             isFetching && !isLoading && "opacity-60"
           )}
         >
           <Table>
             <TableHeader>
-              <TableRow className="border-b-2 border-slate-300 bg-slate-200 hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-800">
+              <TableRow className="border-b-2 border-table-header-border bg-table-header hover:bg-table-header">
                 {columns.map((column, index) => (
                   <TableHead
                     key={index}

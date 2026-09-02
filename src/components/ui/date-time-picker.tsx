@@ -48,7 +48,7 @@ export function DatePickerInput({
           <button
             type="button"
             disabled={disabled}
-            className="flex h-8 w-9 shrink-0 items-center justify-center rounded-r-sm border border-l-0 bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+            className="flex h-8 w-9 shrink-0 items-center justify-center rounded-r-sm border border-l-0 bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
             aria-label={`Open ${ariaLabel.toLowerCase()} calendar`}
           >
             <CalendarDays className="size-4" aria-hidden />
@@ -121,7 +121,7 @@ export function TimePickerInput({
         type="button"
         onClick={openPicker}
         disabled={disabled}
-        className="flex h-8 w-9 shrink-0 items-center justify-center rounded-r-sm border border-l-0 bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+        className="flex h-8 w-9 shrink-0 items-center justify-center rounded-r-sm border border-l-0 bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
         aria-label={`Open ${ariaLabel.toLowerCase()} picker`}
       >
         <Clock3 className="size-4" aria-hidden />

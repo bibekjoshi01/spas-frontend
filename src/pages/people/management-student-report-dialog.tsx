@@ -146,12 +146,12 @@ export function ManagementStudentReportDialog({
                 />
               )}
 
-              <section className="border bg-white dark:bg-slate-950">
-                <div className="border-b bg-blue-50 px-3 py-2.5 dark:bg-blue-950/40">
-                  <h3 className="font-semibold text-blue-950 dark:text-blue-100">
+              <section className="border bg-card">
+                <div className="border-b bg-band-info px-3 py-2.5">
+                  <h3 className="font-semibold text-band-info-foreground">
                     Student profile
                   </h3>
-                  <p className="text-xs text-blue-900/70 dark:text-blue-200/70">
+                  <p className="text-xs text-band-info-foreground/70">
                     Identity, contact and academic placement.
                   </p>
                 </div>
@@ -190,7 +190,7 @@ export function ManagementStudentReportDialog({
               {semester ? (
                 <SemesterReport group={semester} />
               ) : (
-                <p className="border bg-white p-6 text-center text-sm text-muted-foreground dark:bg-slate-950">
+                <p className="border bg-card p-6 text-center text-sm text-muted-foreground">
                   No subject records have been created for this student.
                 </p>
               )}
@@ -212,11 +212,8 @@ function SemesterTabs({
   onSelect: (semester: number) => void
 }) {
   return (
-    <section
-      className="border bg-white dark:bg-slate-950"
-      aria-label="Semester selection"
-    >
-      <div className="border-b bg-slate-100 px-3 py-2.5 dark:bg-slate-900">
+    <section className="border bg-card" aria-label="Semester selection">
+      <div className="border-b bg-band px-3 py-2.5">
         <h3 className="font-semibold">Semester history</h3>
         <p className="text-xs text-muted-foreground">
           Select a semester to view only its subjects and records.
@@ -241,8 +238,8 @@ function SemesterTabs({
                 onClick={() => onSelect(group.semester)}
                 className={
                   selected
-                    ? "min-w-36 border border-blue-600 bg-blue-50 px-3 py-2 text-left text-blue-950 dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-100"
-                    : "min-w-36 border bg-white px-3 py-2 text-left hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900"
+                    ? "min-w-36 border border-primary bg-band-info px-3 py-2 text-left text-band-info-foreground"
+                    : "min-w-36 border bg-card px-3 py-2 text-left hover:bg-accent"
                 }
               >
                 <span className="flex items-center justify-between gap-2">
@@ -274,13 +271,13 @@ function SemesterReport({ group }: { group: SemesterGroup }) {
       aria-labelledby={`semester-tab-${group.semester}`}
       className="space-y-3"
     >
-      <section className="border bg-white dark:bg-slate-950">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-violet-50 px-3 py-2.5 dark:bg-violet-950/40">
+      <section className="border bg-card">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-band-accent px-3 py-2.5">
           <div>
-            <h3 className="font-semibold text-violet-950 dark:text-violet-100">
+            <h3 className="font-semibold text-band-accent-foreground">
               Semester {group.semester} overview
             </h3>
-            <p className="text-xs text-violet-900/70 dark:text-violet-200/70">
+            <p className="text-xs text-band-accent-foreground/70">
               Evidence across {group.subjects.length}{" "}
               {group.subjects.length === 1 ? "subject" : "subjects"}.
             </p>
@@ -349,8 +346,8 @@ function SubjectReportCard({
   ).length
 
   return (
-    <details open={defaultOpen} className="border bg-white dark:bg-slate-950">
-      <summary className="cursor-pointer list-none bg-slate-100 p-3 dark:bg-slate-900 [&::-webkit-details-marker]:hidden">
+    <details open={defaultOpen} className="border bg-card">
+      <summary className="cursor-pointer list-none bg-band p-3 [&::-webkit-details-marker]:hidden">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="font-semibold">
@@ -366,13 +363,13 @@ function SubjectReportCard({
                 <AttendanceMeter percentage={subject.attendance.percentage} />
               </span>
             )}
-            <Badge variant="outline" className="bg-white dark:bg-slate-950">
+            <Badge variant="outline" className="bg-card">
               Assessments {assessmentResults}/{subject.assessments.length}
             </Badge>
-            <Badge variant="outline" className="bg-white dark:bg-slate-950">
+            <Badge variant="outline" className="bg-card">
               Assignments {assignmentResults}/{subject.assignments.length}
             </Badge>
-            <Badge variant="outline" className="bg-white dark:bg-slate-950">
+            <Badge variant="outline" className="bg-card">
               Rating {subject.classPerformance?.score ?? "—"}/10
             </Badge>
           </div>
@@ -383,7 +380,7 @@ function SubjectReportCard({
         <section>
           <h4 className="mb-2 text-sm font-semibold">Attendance</h4>
           {subject.attendance ? (
-            <div className="grid border bg-white sm:grid-cols-3 lg:grid-cols-6 dark:bg-slate-950">
+            <div className="grid border bg-card sm:grid-cols-3 lg:grid-cols-6">
               <Metric label="Present" value={subject.attendance.present} />
               <Metric label="Absent" value={subject.attendance.absent} />
               <Metric label="Excused" value={subject.attendance.excused} />
@@ -395,7 +392,7 @@ function SubjectReportCard({
               />
             </div>
           ) : (
-            <p className="border bg-white p-3 text-sm text-muted-foreground dark:bg-slate-950">
+            <p className="border bg-card p-3 text-sm text-muted-foreground">
               No attendance record for this subject.
             </p>
           )}
@@ -437,7 +434,7 @@ function SubjectReportCard({
 
         <section>
           <h4 className="mb-2 text-sm font-semibold">Class performance</h4>
-          <div className="grid border bg-white text-sm sm:grid-cols-[9rem_minmax(0,1fr)] dark:bg-slate-950">
+          <div className="grid border bg-card text-sm sm:grid-cols-[9rem_minmax(0,1fr)]">
             <div className="border-b p-3 sm:border-r sm:border-b-0">
               <div className="text-xs text-muted-foreground">Rating</div>
               <div className="mt-1 text-xl font-bold tabular-nums">
@@ -490,9 +487,7 @@ function StatusBadge({
     <Badge
       variant={status === "RUNNING" ? "default" : "outline"}
       className={`${compact ? "px-1.5 py-0 text-[10px]" : ""} ${
-        status === "RUNNING"
-          ? "bg-emerald-600 hover:bg-emerald-600"
-          : "bg-white dark:bg-slate-950"
+        status === "RUNNING" ? "bg-emerald-600 hover:bg-emerald-600" : "bg-card"
       }`}
     >
       {status.toLowerCase()}
@@ -603,7 +598,7 @@ function ReportTable({
       <div className="overflow-x-auto border">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/70">
+            <TableRow>
               {headers.map((header) => (
                 <TableHead key={header}>{header}</TableHead>
               ))}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, type KeyboardEvent } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import { ArrowLeft, ClipboardList, Pencil, Plus, Save } from "lucide-react"
 
@@ -102,7 +102,7 @@ export default function ExamsPage() {
             asChild
             variant="outline"
             size="sm"
-            className="bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900"
+            className="bg-card hover:bg-accent"
           >
             <Link to="/classes">
               <ArrowLeft className="size-4" aria-hidden />
@@ -598,6 +598,24 @@ function MarksDialog({
     [entries, exam.fullMarks]
   )
 
+  const focusNextMarksInput = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter" || event.nativeEvent.isComposing) return
+
+    event.preventDefault()
+    const inputs = Array.from(
+      event.currentTarget
+        .closest("tbody")
+        ?.querySelectorAll<HTMLInputElement>(
+          'input[data-marks-entry="true"]:not(:disabled)'
+        ) ?? []
+    )
+    const currentIndex = inputs.indexOf(event.currentTarget)
+    const nextInput = inputs[currentIndex + 1]
+
+    nextInput?.focus()
+    nextInput?.select()
+  }
+
   const submit = async () => {
     if (!roster.data) return
 
@@ -648,8 +666,8 @@ function MarksDialog({
             emptyMessage="Register students onto this class first."
           >
             <div className="h-full max-h-[72dvh] overflow-auto rounded-lg border">
-              <table className="w-full min-w-[46rem] border-collapse bg-white text-sm dark:bg-slate-950">
-                <thead className="sticky top-0 z-10 bg-muted">
+              <table className="w-full min-w-[46rem] border-collapse bg-card text-sm">
+                <thead className="sticky top-0 z-10 bg-table-header text-table-header-foreground">
                   <tr className="border-b">
                     <th
                       scope="col"
@@ -700,6 +718,7 @@ function MarksDialog({
                         <td className="px-3 py-2.5">
                           <Input
                             type="number"
+                            data-marks-entry="true"
                             inputMode="decimal"
                             min={0}
                             max={exam.fullMarks}
@@ -720,6 +739,7 @@ function MarksDialog({
                                 },
                               })
                             }
+                            onKeyDown={focusNextMarksInput}
                           />
                         </td>
                         <td className="px-3 py-2.5 text-center">

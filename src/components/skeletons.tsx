@@ -30,13 +30,8 @@ export function TableSkeleton({
   className?: string
 }) {
   return (
-    <div
-      className={cn(
-        "overflow-hidden rounded-lg border bg-white dark:bg-slate-950",
-        className
-      )}
-    >
-      <div className="flex gap-4 border-b-2 border-slate-300 bg-slate-200 px-3 py-3 dark:border-slate-700 dark:bg-slate-800">
+    <div className={cn("overflow-hidden rounded-lg border bg-card", className)}>
+      <div className="flex gap-4 border-b-2 border-table-header-border bg-table-header px-3 py-3">
         {Array.from({ length: columns }).map((_, column) => (
           <Skeleton
             key={column}
@@ -75,7 +70,7 @@ export function MetricRowSkeleton({
   return (
     <div className={cn("grid gap-3", className)}>
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="border bg-white p-3 dark:bg-slate-950">
+        <div key={index} className="border bg-card p-3">
           <Skeleton className="h-3 w-24" />
           <Skeleton className="mt-2 h-6 w-14" />
         </div>
@@ -93,8 +88,8 @@ export function PanelSkeleton({
   className?: string
 }) {
   return (
-    <section className={cn("border bg-white dark:bg-slate-950", className)}>
-      <div className="border-b bg-slate-100 px-3 py-2.5 dark:bg-slate-900">
+    <section className={cn("border bg-card", className)}>
+      <div className="border-b bg-band px-3 py-2.5">
         <Skeleton className="h-4 w-40" />
         <Skeleton className="mt-1.5 h-3 w-64 max-w-full" />
       </div>
@@ -120,7 +115,7 @@ function LinesSkeleton({ count = 3 }: { count?: number }) {
 /** Rows in a bordered list — the shape the enrolment and marking dialogs use. */
 export function ListSkeleton({ rows = 6 }: { rows?: number }) {
   return (
-    <ul className="divide-y rounded-md border bg-white dark:bg-slate-950">
+    <ul className="divide-y rounded-md border bg-card">
       {Array.from({ length: rows }).map((_, index) => (
         <li key={index} className="flex items-center gap-3 px-3 py-2.5">
           <Skeleton className="size-4 shrink-0" />
@@ -242,7 +237,7 @@ export function ClassReportSkeleton() {
   return (
     <div className="space-y-3">
       <MetricRowSkeleton count={3} />
-      <div className="flex flex-wrap items-center justify-between gap-2 border bg-white p-2 dark:bg-slate-950">
+      <div className="flex flex-wrap items-center justify-between gap-2 border bg-card p-2">
         <Skeleton className="h-9 w-full sm:w-80" />
         <Skeleton className="h-8 w-44" />
       </div>

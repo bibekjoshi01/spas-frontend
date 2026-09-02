@@ -218,7 +218,8 @@ export default function AttendanceSessionPage() {
               }
             >
               <CalendarDays className="size-4" aria-hidden />
-              View attendance history
+              <span className="hidden sm:inline">View attendance history</span>
+              <span className="sm:hidden">History</span>
             </Button>
             <Button
               size="sm"
@@ -258,7 +259,7 @@ export default function AttendanceSessionPage() {
       >
         <div className="space-y-4">
           {!canWrite && classInfo && !existing.isLoading && (
-            <div className="border-l-4 border-amber-500 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+            <div className="border-l-4 border-amber-500 bg-band-warn px-3 py-2 text-sm text-band-warn-foreground">
               {semesterReadOnly
                 ? `This semester is ${classInfo.semesterStatus.toLowerCase()}. Attendance is available for viewing only.`
                 : "You can view this attendance, but your role does not permit changing it."}
@@ -278,7 +279,7 @@ export default function AttendanceSessionPage() {
               ))}
             </div>
 
-            <div className="flex gap-2">
+            <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto">
               <Button
                 variant="outline"
                 size="sm"
@@ -286,7 +287,8 @@ export default function AttendanceSessionPage() {
                 onClick={copyPrevious}
               >
                 <Copy className="size-4" aria-hidden />
-                Copy previous
+                <span className="hidden sm:inline">Copy previous</span>
+                <span className="sm:hidden">Copy</span>
               </Button>
               <Button
                 variant="outline"
@@ -312,17 +314,17 @@ export default function AttendanceSessionPage() {
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Find a student by name or roll number"
             aria-label="Find a student"
-            className="bg-white dark:bg-input/30"
+            className="bg-card dark:bg-input/30"
           />
 
-          <ul className="divide-y rounded-lg border bg-white dark:bg-card">
+          <ul className="divide-y rounded-lg border bg-card">
             {visible.map((entry) => (
               <li
                 key={entry.enrollment}
                 className="flex flex-wrap items-center justify-between gap-3 p-3"
               >
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="w-20 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <span className="w-12 shrink-0 font-mono text-xs text-muted-foreground tabular-nums sm:w-20">
                     {entry.rollNumber}
                   </span>
                   <span className="min-w-0">
@@ -344,7 +346,7 @@ export default function AttendanceSessionPage() {
                 </div>
 
                 <div
-                  className="flex gap-1"
+                  className="grid w-full grid-cols-4 gap-1 sm:flex sm:w-auto"
                   role="group"
                   aria-label={`Status for ${entry.fullName}`}
                 >
@@ -360,7 +362,7 @@ export default function AttendanceSessionPage() {
                         aria-pressed={active}
                         disabled={!canWrite}
                         className={cn(
-                          "h-8 px-2.5 text-xs",
+                          "h-9 px-1 text-xs sm:h-8 sm:px-2.5",
                           STATUS_STYLES[status]
                         )}
                         onClick={() => setStatus(entry.enrollment, status)}

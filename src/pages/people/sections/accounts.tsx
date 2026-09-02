@@ -534,7 +534,7 @@ function UserForm({ user, onClose }: { user?: AppUser; onClose: () => void }) {
       )}
 
       {user?.lastLogin && (
-        <div className="border bg-muted/40 p-3 text-sm">
+        <div className="border bg-band p-3 text-sm">
           <div className="font-semibold">Account details are locked</div>
           <p className="mt-1 text-muted-foreground">
             First sign-in has occurred. Last login:{" "}
@@ -547,7 +547,7 @@ function UserForm({ user, onClose }: { user?: AppUser; onClose: () => void }) {
         <Field label="Account access" error={errors.isActive}>
           <label
             htmlFor="u-active"
-            className="flex cursor-pointer items-start gap-3 border bg-background p-3"
+            className="flex cursor-pointer items-start gap-3 border bg-card p-3"
           >
             <Checkbox
               id="u-active"

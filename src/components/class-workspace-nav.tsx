@@ -61,10 +61,7 @@ export function ClassWorkspaceNav({
   )
 
   return (
-    <section
-      className="border border-slate-300 bg-background dark:border-slate-700"
-      aria-label="Class workspace"
-    >
+    <section className="border bg-card" aria-label="Class workspace">
       <div className="flex flex-wrap items-center justify-between gap-3 border-l-4 border-l-sky-500 bg-slate-900 px-4 py-3 text-white dark:bg-slate-950">
         <div className="min-w-0">
           <p className="mb-0.5 text-[10px] font-bold tracking-[0.14em] text-sky-300 uppercase">
@@ -94,7 +91,7 @@ export function ClassWorkspaceNav({
         </Badge>
       </div>
       <nav
-        className="flex overflow-x-auto border-t border-slate-700 bg-slate-100 dark:bg-slate-900"
+        className="flex overflow-x-auto border-t border-border bg-band"
         aria-label="Class sections"
       >
         {visibleItems.map(([label, Icon, href]) => (
@@ -102,9 +99,9 @@ export function ClassWorkspaceNav({
             key={label}
             to={href(value.allocation)}
             className={cn(
-              "flex h-10 shrink-0 items-center gap-1.5 border-r border-slate-300 px-3 text-sm font-semibold text-slate-600 hover:bg-white hover:text-slate-950 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white",
+              "flex h-10 shrink-0 items-center gap-1.5 border-r px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-card hover:text-foreground",
               active === label &&
-                "border-b-2 border-b-sky-600 bg-white text-slate-950 dark:bg-slate-800 dark:text-white"
+                "border-b-2 border-b-sky-500 bg-card text-foreground"
             )}
           >
             <Icon className="size-3.5" aria-hidden />

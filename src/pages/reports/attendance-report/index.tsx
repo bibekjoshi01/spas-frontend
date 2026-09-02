@@ -472,7 +472,8 @@ export default function AttendanceReportPage() {
           },
           {
             header: "Absent",
-            className: "text-center font-semibold tabular-nums text-red-700",
+            className:
+              "text-center font-semibold tabular-nums text-destructive",
             cell: (row) => row.absent,
           },
           {

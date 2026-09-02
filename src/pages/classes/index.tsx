@@ -84,7 +84,7 @@ export default function ClassesPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search classes"
-              className="bg-white pl-8 dark:bg-input/30"
+              className="bg-card pl-8 dark:bg-input/30"
               aria-label="Search classes"
             />
           </div>
@@ -117,7 +117,7 @@ export default function ClassesPage() {
               <section key={section.status} className="space-y-2">
                 <div
                   className={cn(
-                    "flex items-center justify-between gap-3 border border-l-4 border-slate-300 bg-slate-100 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900",
+                    "flex items-center justify-between gap-3 border border-l-4 bg-band px-3 py-2.5",
                     section.status === "RUNNING" && "border-l-emerald-600",
                     section.status === "UPCOMING" && "border-l-sky-600",
                     section.status === "COMPLETED" && "border-l-slate-500"
@@ -131,7 +131,7 @@ export default function ClassesPage() {
                       {section.description}
                     </p>
                   </div>
-                  <span className="border border-slate-300 bg-background px-2 py-0.5 text-sm font-semibold tabular-nums dark:border-slate-700">
+                  <span className="border bg-card px-2 py-0.5 text-sm font-semibold tabular-nums">
                     {items.length}
                   </span>
                 </div>

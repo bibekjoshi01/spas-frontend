@@ -114,7 +114,7 @@ export default function AssignmentsPage() {
             asChild
             variant="outline"
             size="sm"
-            className="bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900"
+            className="bg-card hover:bg-accent"
           >
             <Link to="/classes">
               <ArrowLeft className="size-4" aria-hidden />
