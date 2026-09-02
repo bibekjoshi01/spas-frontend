@@ -68,7 +68,7 @@ export default function AttendancePage() {
   const selectedDate = fromDateKey(params.get("date"))
   const selectedKey = toDateKey(selectedDate)
   const sessions = useGetAttendanceSessionsQuery(
-    { allocation: allocation ?? undefined, limit: 200 },
+    { allocation: allocation ?? undefined, limit: 0 },
     { skip: !allocation }
   )
 

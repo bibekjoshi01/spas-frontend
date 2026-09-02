@@ -28,7 +28,7 @@ export function ClassCard({ item, today }: ClassCardProps) {
   const isCompleted = item.semesterStatus === "COMPLETED"
 
   return (
-    <Card className="transition-colors hover:bg-muted/40">
+    <Card>
       <CardHeader className="space-y-2 pb-3">
         <div className="flex flex-wrap items-start gap-2">
           <div className="min-w-0 flex-1 basis-40 space-y-1">

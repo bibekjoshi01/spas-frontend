@@ -43,7 +43,7 @@ export const authSlice = createSlice({
         path: "/",
         secure: isSecureContext,
         sameSite: "Lax",
-        // "Keep me signed in" checked -> persists 7 days (matches backend
+        // "Keep me signed in" checked -> persists 10 days (matches backend
         // JWT_REFRESH lifetime), even across browser restarts.
         // Unchecked -> plain session cookie, cleared when the browser closes.
         ...(keepSignedIn ? { expires: 10 } : {}),

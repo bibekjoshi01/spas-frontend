@@ -55,7 +55,7 @@ export default function AttendanceSessionPage() {
     { skip: !allocation }
   )
   const history = useGetAttendanceSessionsQuery(
-    { allocation, limit: 200 },
+    { allocation, limit: 0 },
     { skip: !allocation }
   )
   const existingId = existing.data?.results?.find(
@@ -93,9 +93,13 @@ export default function AttendanceSessionPage() {
 
   const classInfo = classes.data?.find((item) => item.allocation === allocation)
   const semesterReadOnly = classInfo?.semesterStatus !== "RUNNING"
+  const sessionIsLoading =
+    existing.isLoading || Boolean(existingId && detail.isLoading)
+  const sessionError = existing.error ?? detail.error
   const canWrite =
     !semesterReadOnly &&
-    !existing.isLoading &&
+    !sessionIsLoading &&
+    !sessionError &&
     (existingId ? canEditAttendance : canAddAttendance)
 
   const saved = useMemo(() => {
@@ -244,10 +248,15 @@ export default function AttendanceSessionPage() {
       />
 
       <QueryState
-        isLoading={roster.isLoading || classes.isLoading}
-        error={roster.error}
+        isLoading={roster.isLoading || classes.isLoading || sessionIsLoading}
+        error={roster.error ?? classes.error ?? sessionError}
         isEmpty={(roster.data?.length ?? 0) === 0}
-        onRetry={roster.refetch}
+        onRetry={() => {
+          roster.refetch()
+          classes.refetch()
+          existing.refetch()
+          if (existingId) detail.refetch()
+        }}
         skeleton="table"
         emptyTitle="No students on this class"
         emptyMessage="Register students onto the class before taking attendance."

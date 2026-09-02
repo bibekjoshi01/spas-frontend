@@ -22,14 +22,25 @@ const refreshInstance = axios.create({
 // Token Refresh Queue
 let isTokenRefreshInProgress = false
 
-let tokenRefreshSubscribers: ((token: string) => void)[] = []
+let tokenRefreshSubscribers: Array<{
+  resolve: (token: string) => void
+  reject: (error: unknown) => void
+}> = []
 
-const subscribeToTokenRefresh = (callback: (token: string) => void) => {
-  tokenRefreshSubscribers.push(callback)
+const subscribeToTokenRefresh = (
+  resolve: (token: string) => void,
+  reject: (error: unknown) => void
+) => {
+  tokenRefreshSubscribers.push({ resolve, reject })
 }
 
 const notifyTokenRefreshed = (token: string) => {
-  tokenRefreshSubscribers.forEach((callback) => callback(token))
+  tokenRefreshSubscribers.forEach((subscriber) => subscriber.resolve(token))
+  tokenRefreshSubscribers = []
+}
+
+const notifyTokenRefreshFailed = (error: unknown) => {
+  tokenRefreshSubscribers.forEach((subscriber) => subscriber.reject(error))
   tokenRefreshSubscribers = []
 }
 
@@ -130,6 +141,7 @@ axiosInstance.interceptors.response.use(
             return axiosInstance(errorConfig)
           } catch (refreshError) {
             isTokenRefreshInProgress = false
+            notifyTokenRefreshFailed(refreshError)
 
             notifier.error("Session expired. Please login again.")
 
@@ -139,15 +151,15 @@ axiosInstance.interceptors.response.use(
           }
         }
 
-        return new Promise<AxiosResponse>((resolve) => {
-          subscribeToTokenRefresh((newToken) => {
-            errorConfig.headers = {
-              ...errorConfig.headers,
-              Authorization: `Bearer ${newToken}`,
-            }
+        return new Promise<string>((resolve, reject) => {
+          subscribeToTokenRefresh(resolve, reject)
+        }).then((newToken) => {
+          errorConfig.headers = {
+            ...errorConfig.headers,
+            Authorization: `Bearer ${newToken}`,
+          }
 
-            resolve(axiosInstance(errorConfig))
-          })
+          return axiosInstance(errorConfig)
         })
       }
 

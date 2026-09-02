@@ -43,6 +43,7 @@ import {
   useSaveAssignmentSubmissionsMutation,
   useUpdateAssignmentMutation,
 } from "@/lib/api"
+import { localDateKey } from "@/lib/utils/date"
 import { notifier } from "@/lib/utils/notifier"
 import { cn } from "@/lib/utils"
 
@@ -388,7 +389,7 @@ function CreateAssignmentDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const [createAssignment, { isLoading }] = useCreateAssignmentMutation()
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localDateKey()
   const [form, setForm] = useState({
     title: "",
     assignedDate: today,
@@ -536,6 +537,7 @@ function StatusDialog({
                 size="sm"
                 variant="outline"
                 className="text-xs"
+                disabled={existing.isLoading || !!existing.error}
                 onClick={() => {
                   if (!roster.data) return
                   const next: Record<number, AssignmentStatus> = {}
@@ -552,8 +554,12 @@ function StatusDialog({
         )}
 
         <QueryState
-          isLoading={roster.isLoading}
-          error={roster.error}
+          isLoading={roster.isLoading || existing.isLoading}
+          error={roster.error ?? existing.error}
+          onRetry={() => {
+            roster.refetch()
+            existing.refetch()
+          }}
           isEmpty={(roster.data?.length ?? 0) === 0}
           skeleton={<ListSkeleton rows={8} />}
           emptyTitle="No students registered"
@@ -614,7 +620,10 @@ function StatusDialog({
             Cancel
           </Button>
           {!readOnly && (
-            <Button onClick={submit} disabled={isSaving}>
+            <Button
+              onClick={submit}
+              disabled={isSaving || existing.isLoading || !!existing.error}
+            >
               {isSaving ? (
                 <InlineSpinner />
               ) : (

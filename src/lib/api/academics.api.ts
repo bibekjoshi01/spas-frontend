@@ -174,6 +174,7 @@ export const academicsApi = rootAPI.injectEndpoints({
         url: `${ACADEMICS}/programs/assignment-candidates`,
         params: params ?? {},
       }),
+      providesTags: ["User"],
     }),
     createProgram: build.mutation<
       MessageWithIdResponse,

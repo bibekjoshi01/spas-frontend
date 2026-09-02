@@ -17,6 +17,37 @@ export interface QueryError {
   data?: unknown
 }
 
+const CACHE_TAGS = [
+  // Aggregates
+  "Overview",
+  "ClassSummary",
+  "ClassStudents",
+  // Teaching
+  "AttendanceSession",
+  "Roster",
+  "Exam",
+  "ExamMarks",
+  "Assignment",
+  "AssignmentSubmissions",
+  "ClassPerformance",
+  // Academic structure
+  "Department",
+  "Program",
+  "Batch",
+  "BatchSemester",
+  "Subject",
+  "Allocation",
+  // People
+  "Student",
+  "SemesterEnrollment",
+  "SubjectEnrollment",
+  "User",
+  "Role",
+  "Permission",
+  "Profile",
+  "PerformanceWeights",
+] as const
+
 /**
  * RTK Query on top of the shared axios instance.
  *
@@ -26,7 +57,13 @@ export interface QueryError {
  */
 const axiosBaseQuery =
   ({ baseUrl }: { baseUrl: string } = { baseUrl: "" }) =>
-  async (args: QueryArgs, api: { dispatch: (action: unknown) => void }) => {
+  async (
+    args: QueryArgs,
+    api: {
+      dispatch: (action: unknown) => void
+      type: "query" | "mutation"
+    }
+  ) => {
     const { url, method = "GET", data, params, headers } = args
 
     try {
@@ -37,6 +74,16 @@ const axiosBaseQuery =
         params,
         headers,
       })
+
+      // A successful action can change embedded names, counts, eligibility,
+      // reports, and table rows outside its immediate resource. Invalidate all
+      // active server-data views so mounted tables refetch instead of relying
+      // on every mutation author to remember every downstream dependency.
+      const isImportPreview =
+        data instanceof FormData && data.get("commit") === "false"
+      if (api.type === "mutation" && !isImportPreview) {
+        api.dispatch(rootAPI.util.invalidateTags([...CACHE_TAGS]))
+      }
 
       return { data: result.data }
     } catch (error) {
@@ -71,41 +118,13 @@ export const rootAPI = createApi({
 
   baseQuery: axiosBaseQuery({ baseUrl: baseURL }),
 
-  tagTypes: [
-    // Aggregates
-    "Overview",
-    "ClassSummary",
-    "ClassStudents",
-    // Teaching
-    "AttendanceSession",
-    "Roster",
-    "Exam",
-    "ExamMarks",
-    "Assignment",
-    "AssignmentSubmissions",
-    "ClassPerformance",
-    // Academic structure
-    "Department",
-    "Program",
-    "Batch",
-    "BatchSemester",
-    "Subject",
-    "Allocation",
-    // People
-    "Student",
-    "SemesterEnrollment",
-    "SubjectEnrollment",
-    "User",
-    "Role",
-    "Permission",
-    "Profile",
-    "PerformanceWeights",
-  ],
+  tagTypes: CACHE_TAGS,
 
   // A teacher leaves a screen open all day; refetching when the tab regains
   // focus keeps attendance counts honest without a manual refresh.
   refetchOnFocus: true,
   refetchOnReconnect: true,
+  refetchOnMountOrArgChange: true,
 
   endpoints: () => ({}),
 })

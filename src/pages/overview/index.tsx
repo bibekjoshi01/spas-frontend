@@ -319,48 +319,54 @@ function ManagementTodayPanel({
         : "Program"
 
   return (
-    <section className="border bg-card">
-      <div className="flex items-center justify-between gap-3 border-b bg-band-accent px-3 py-2.5">
-        <div>
-          <h2 className="font-semibold">Today’s attendance</h2>
-          <p className="text-xs text-muted-foreground">
-            {levelLabel}-scoped records entered today.
-          </p>
+    <>
+      <section className="border bg-card">
+        <div className="flex items-center justify-between gap-3 border-b bg-band-accent px-3 py-2.5">
+          <div>
+            <h2 className="font-semibold">Today’s attendance</h2>
+            <p className="text-xs text-band-accent-foreground/70">
+              {levelLabel}-scoped records entered today.
+            </p>
+          </div>
+          <Badge variant="outline">{data.sessionsRecorded} sessions</Badge>
         </div>
-        <Badge variant="outline">{data.sessionsRecorded} sessions</Badge>
-      </div>
 
-      <div className="grid grid-cols-2 border-b bg-card sm:grid-cols-3">
-        <DailyMetric
-          icon={Activity}
-          label="Attendance rate"
-          value={formatPercentage(data.attendancePercentage)}
-        />
-        <DailyMetric icon={Users} label="Students marked" value={data.marked} />
-        <DailyMetric
-          icon={CalendarCheck}
-          label="Classes recorded"
-          value={`${data.classesRecorded}/${data.activeClasses}`}
-        />
-        <DailyMetric icon={UserCheck} label="Present" value={data.present} />
-        <DailyMetric
-          icon={UserX}
-          label="Absent"
-          value={data.absent}
-          tone="risk"
-        />
-        <DailyMetric
-          icon={Clock3}
-          label="Late / excused"
-          value={`${data.late} / ${data.excused}`}
-        />
-      </div>
+        <div className="grid grid-cols-2 bg-card sm:grid-cols-3">
+          <DailyMetric
+            icon={Activity}
+            label="Attendance rate"
+            value={formatPercentage(data.attendancePercentage)}
+          />
+          <DailyMetric
+            icon={Users}
+            label="Students marked"
+            value={data.marked}
+          />
+          <DailyMetric
+            icon={CalendarCheck}
+            label="Classes recorded"
+            value={`${data.classesRecorded}/${data.activeClasses}`}
+          />
+          <DailyMetric icon={UserCheck} label="Present" value={data.present} />
+          <DailyMetric
+            icon={UserX}
+            label="Absent"
+            value={data.absent}
+            tone="risk"
+          />
+          <DailyMetric
+            icon={Clock3}
+            label="Late / excused"
+            value={`${data.late} / ${data.excused}`}
+          />
+        </div>
+      </section>
 
-      <div className="mt-3 border-t">
+      <section className="border bg-card">
         <div className="flex items-center justify-between gap-3 border-b bg-band-warn px-3 py-2.5">
           <div>
             <h3 className="text-sm font-semibold">Classes to review</h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-band-warn-foreground/70">
               Active classes without a record today; this does not necessarily
               mean a class was scheduled.
             </p>
@@ -399,8 +405,8 @@ function ManagementTodayPanel({
             </p>
           )}
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   )
 }
 
@@ -416,7 +422,7 @@ function DailyMetric({
   tone?: "risk"
 }) {
   return (
-    <div className="border-r border-b p-2.5 last:border-r-0 sm:[&:nth-child(n+4)]:border-b-0">
+    <div className="border-r border-b p-2.5 last:border-r-0 sm:[&:nth-child(n+4)]:border-b-0 [&:nth-last-child(-n+2)]:border-b-0">
       <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
         <Icon className="size-3.5" aria-hidden />
         {label}

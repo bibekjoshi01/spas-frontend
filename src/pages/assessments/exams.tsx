@@ -658,8 +658,12 @@ function MarksDialog({
 
         <div className="min-h-0 overflow-hidden">
           <QueryState
-            isLoading={roster.isLoading}
-            error={roster.error}
+            isLoading={roster.isLoading || existing.isLoading}
+            error={roster.error ?? existing.error}
+            onRetry={() => {
+              roster.refetch()
+              existing.refetch()
+            }}
             isEmpty={(roster.data?.length ?? 0) === 0}
             skeleton="table"
             emptyTitle="No students registered"
@@ -782,7 +786,12 @@ function MarksDialog({
             {readOnly ? "Close" : "Cancel"}
           </Button>
           {!readOnly && (
-            <Button onClick={submit} disabled={isSaving || invalid}>
+            <Button
+              onClick={submit}
+              disabled={
+                isSaving || invalid || existing.isLoading || !!existing.error
+              }
+            >
               {isSaving ? (
                 <InlineSpinner />
               ) : (

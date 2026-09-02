@@ -41,7 +41,7 @@ function clampPercent(value: number) {
 }
 
 export default function PerformanceSettings() {
-  const { data, isLoading, isError } = useGetPerformanceWeightsQuery()
+  const { data, isLoading, isError, refetch } = useGetPerformanceWeightsQuery()
   const [update, { isLoading: isSaving }] =
     useUpdatePerformanceWeightsMutation()
   const [changes, setChanges] = useState<Partial<typeof DEFAULTS>>({})
@@ -85,7 +85,10 @@ export default function PerformanceSettings() {
       <PageHeader
         title="Performance Settings"
         actions={
-          <Button onClick={save} disabled={!valid || isLoading || isSaving}>
+          <Button
+            onClick={save}
+            disabled={!valid || isLoading || isError || isSaving}
+          >
             <Save className="size-4" aria-hidden />
             {isSaving ? "Saving…" : "Save settings"}
           </Button>
@@ -107,9 +110,15 @@ export default function PerformanceSettings() {
         </div>
 
         {isError ? (
-          <p className="px-4 py-6 text-sm text-destructive">
-            Could not load performance settings.
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-destructive">
+            <p>
+              Could not load performance settings. Nothing can be saved until
+              they load.
+            </p>
+            <Button type="button" variant="outline" size="sm" onClick={refetch}>
+              Try again
+            </Button>
+          </div>
         ) : (
           <div className="divide-y bg-card">
             {FIELDS.map(([key, label, description]) => (
@@ -135,6 +144,7 @@ export default function PerformanceSettings() {
                       min={0}
                       max={100}
                       value={values[key]}
+                      disabled={isError}
                       onChange={(event) =>
                         setChanges((current) => ({
                           ...current,
@@ -213,6 +223,7 @@ export default function PerformanceSettings() {
                 max={100}
                 step={0.5}
                 value={eligibility}
+                disabled={isError}
                 onChange={(event) =>
                   setThreshold(clampPercent(Number(event.target.value)))
                 }
