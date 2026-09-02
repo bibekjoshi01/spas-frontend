@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { type KeyboardEvent, useMemo, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import { ArrowLeft, Save, Search, X } from "lucide-react"
 
@@ -27,6 +27,12 @@ import {
 import { notifier } from "@/lib/utils/notifier"
 
 type Draft = { score: string; remarks: string }
+
+const isInvalidScore = (score: string) => {
+  if (score === "") return false
+  const value = Number(score)
+  return !Number.isInteger(value) || value < 1 || value > 10
+}
 
 export default function ClassPerformancePage() {
   const canEditPerformance = useHasPermission("edit_class_performance")
@@ -72,6 +78,9 @@ export default function ClassPerformancePage() {
         draft.remarks !== row.remarks)
     )
   })
+  const hasInvalidScores = Object.values(drafts).some((draft) =>
+    isInvalidScore(draft.score)
+  )
 
   const update = (
     enrollment: number,
@@ -86,7 +95,7 @@ export default function ClassPerformancePage() {
   }
 
   const submit = async () => {
-    if (!allocation || !dirty.length) return
+    if (!allocation || !dirty.length || hasInvalidScores) return
     try {
       const result = await save({
         allocation,
@@ -104,6 +113,22 @@ export default function ClassPerformancePage() {
         apiErrorMessage(error, "Could not save class performance.")
       )
     }
+  }
+
+  const focusNextScoreInput = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter" || event.nativeEvent.isComposing) return
+
+    event.preventDefault()
+    const inputs = Array.from(
+      event.currentTarget
+        .closest("tbody")
+        ?.querySelectorAll<HTMLInputElement>(
+          'input[data-performance-entry="true"]:not(:disabled)'
+        ) ?? []
+    )
+    const nextInput = inputs[inputs.indexOf(event.currentTarget) + 1]
+    nextInput?.focus()
+    nextInput?.select()
   }
 
   return (
@@ -166,7 +191,9 @@ export default function ClassPerformancePage() {
         <Button
           size="sm"
           className="lg:ml-auto"
-          disabled={!canChange || !dirty.length || saving.isLoading}
+          disabled={
+            !canChange || !dirty.length || hasInvalidScores || saving.isLoading
+          }
           onClick={submit}
         >
           <Save className="size-4" aria-hidden />
@@ -215,6 +242,7 @@ export default function ClassPerformancePage() {
                   remarks: row.remarks,
                 }
                 const draft = { ...original, ...drafts[row.enrollment] }
+                const invalidScore = isInvalidScore(draft.score)
                 return (
                   <TableRow
                     key={row.enrollment}
@@ -234,35 +262,54 @@ export default function ClassPerformancePage() {
                       {row.fullName}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Input
-                          type="number"
-                          min={1}
-                          max={10}
-                          value={draft.score}
-                          disabled={!canChange}
-                          onChange={(event) =>
-                            update(
-                              row.enrollment,
-                              original,
-                              "score",
-                              event.target.value
-                            )
-                          }
-                          aria-label={`Class performance for ${row.fullName}`}
-                          className="w-24 tabular-nums"
-                        />
-                        {!isReadOnly && draft.score && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              update(row.enrollment, original, "score", "")
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            data-performance-entry="true"
+                            min={1}
+                            max={10}
+                            step={1}
+                            value={draft.score}
+                            disabled={!canChange}
+                            onChange={(event) =>
+                              update(
+                                row.enrollment,
+                                original,
+                                "score",
+                                event.target.value
+                              )
                             }
-                            aria-label={`Clear rating for ${row.fullName}`}
+                            onKeyDown={focusNextScoreInput}
+                            aria-label={`Class performance for ${row.fullName}`}
+                            aria-invalid={invalidScore}
+                            aria-describedby={
+                              invalidScore
+                                ? `score-error-${row.enrollment}`
+                                : undefined
+                            }
+                            className="w-24 tabular-nums"
+                          />
+                          {!isReadOnly && draft.score && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                update(row.enrollment, original, "score", "")
+                              }
+                              aria-label={`Clear rating for ${row.fullName}`}
+                            >
+                              <X className="size-4" />
+                            </Button>
+                          )}
+                        </div>
+                        {invalidScore && (
+                          <p
+                            id={`score-error-${row.enrollment}`}
+                            className="mt-1 text-xs text-destructive"
                           >
-                            <X className="size-4" />
-                          </Button>
+                            Invalid value
+                          </p>
                         )}
                       </div>
                     </TableCell>

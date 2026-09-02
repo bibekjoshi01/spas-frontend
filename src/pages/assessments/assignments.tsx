@@ -524,7 +524,7 @@ function StatusDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[94vh] w-[min(96vw,64rem)] max-w-4xl overflow-hidden">
+      <DialogContent className="max-h-[94dvh] w-[calc(100vw-1rem)] max-w-none overflow-hidden p-3 sm:w-[calc(100vw-2rem)] sm:max-w-[72rem] sm:p-6">
         <DialogHeader>
           <DialogTitle>{assignment.title}</DialogTitle>
         </DialogHeader>
@@ -565,14 +565,14 @@ function StatusDialog({
           emptyTitle="No students registered"
           emptyMessage="Register students onto this class first."
         >
-          <ul className="max-h-[72vh] divide-y overflow-y-auto rounded-lg border">
+          <ul className="max-h-[72dvh] divide-y overflow-y-auto rounded-lg border bg-table-surface">
             {roster.data?.map((student) => (
               <li
                 key={student.enrollment}
                 className="flex items-center justify-between gap-3 p-2.5"
               >
                 <div className="flex min-w-0 items-center gap-2">
-                  <span className="w-9 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
+                  <span className="w-40 shrink-0 font-mono text-xs break-all text-muted-foreground tabular-nums">
                     {student.rollNumber}
                   </span>
                   <span className="truncate text-sm">{student.fullName}</span>
