@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { lazy, Suspense, useMemo, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import {
   Download,
@@ -18,6 +18,8 @@ import { useHasPermission } from "@/hooks/use-has-permissions"
 import { useRememberedClass } from "@/hooks/use-remembered-class"
 import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
+import { ReportDialogFallback } from "@/components/report-dialog-fallback"
+import { SubjectRecordSkeleton } from "@/components/skeletons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -48,9 +50,14 @@ import {
   useGetClassesQuery,
   useGetClassStudentsQuery,
 } from "@/lib/api"
-import { StudentDetailDialog } from "./student-detail-dialog"
 import { exportRosterPdf } from "@/lib/pdf-reports"
 import { formatPercentage } from "@/lib/utils"
+
+// A report is a screen's worth of code and it is opened from a row, so it
+// downloads on that click rather than with the list behind it.
+const StudentDetailDialog = lazy(async () => ({
+  default: (await import("./student-detail-dialog")).StudentDetailDialog,
+}))
 
 const ELIGIBILITY_LABEL = {
   eligible: "Eligible",
@@ -486,11 +493,25 @@ export default function RosterPage() {
         </div>
       </QueryState>
       {allocation && detailEnrollment && (
-        <StudentDetailDialog
-          allocation={allocation}
-          enrollment={detailEnrollment}
-          onClose={closeDetail}
-        />
+        <Suspense
+          fallback={
+            <ReportDialogFallback
+              title="Loading student record…"
+              description="Fetching this student's record for the subject."
+              overlayClassName="z-[90]"
+              className="z-[100]"
+              onClose={closeDetail}
+            >
+              <SubjectRecordSkeleton />
+            </ReportDialogFallback>
+          }
+        >
+          <StudentDetailDialog
+            allocation={allocation}
+            enrollment={detailEnrollment}
+            onClose={closeDetail}
+          />
+        </Suspense>
       )}
     </div>
   )

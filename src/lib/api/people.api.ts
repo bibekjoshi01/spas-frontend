@@ -129,6 +129,9 @@ export const peopleApi = rootAPI.injectEndpoints({
       invalidatesTags: (_result, _error, arg) => [
         "Student",
         { type: "Student", id: arg.id },
+        // Editing can move a student to another batch, which changes the head
+        // count on the batch they left and the one they joined.
+        "Batch",
       ],
     }),
 
@@ -171,12 +174,26 @@ export const peopleApi = rootAPI.injectEndpoints({
         method: "PATCH",
         data: body,
       }),
-      invalidatesTags: ["User"],
+      // A staff name is printed as a department head, a coordinator and the
+      // teacher of every class they hold.
+      invalidatesTags: [
+        "User",
+        "Department",
+        "Program",
+        "Allocation",
+        "ClassSummary",
+      ],
     }),
 
     deleteUser: build.mutation<MessageResponse, number>({
       query: (id) => ({ url: `${USERS}/users/${id}`, method: "DELETE" }),
-      invalidatesTags: ["User"],
+      invalidatesTags: [
+        "User",
+        "Department",
+        "Program",
+        "Allocation",
+        "ClassSummary",
+      ],
     }),
 
     /** Pass `assignable: true` to leave out the internal roles. */

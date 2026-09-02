@@ -8,6 +8,7 @@ import { useHasPermission } from "@/hooks/use-has-permissions"
 import { useRememberedClass } from "@/hooks/use-remembered-class"
 import { PageHeader } from "@/components/page-header"
 import { InlineSpinner, QueryState } from "@/components/query-state"
+import { ListSkeleton } from "@/components/skeletons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -554,7 +555,7 @@ function StatusDialog({
           isLoading={roster.isLoading}
           error={roster.error}
           isEmpty={(roster.data?.length ?? 0) === 0}
-          skeleton="table"
+          skeleton={<ListSkeleton rows={8} />}
           emptyTitle="No students registered"
           emptyMessage="Register students onto this class first."
         >

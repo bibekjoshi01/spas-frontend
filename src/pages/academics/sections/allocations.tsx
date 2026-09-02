@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { lazy, Suspense, useMemo, useState } from "react"
 import { Eye, Pencil, Plus, Trash2, UserPlus } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
@@ -6,6 +6,8 @@ import { FilterBar } from "@/components/filter-bar"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { QueryState } from "@/components/query-state"
 import { ResourceList, RowActions } from "@/components/resource-list"
+import { ReportDialogFallback } from "@/components/report-dialog-fallback"
+import { ListSkeleton } from "@/components/skeletons"
 import { RowActionsMenu } from "@/components/row-actions-menu"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -44,7 +46,11 @@ import {
 import { withCurrentOption } from "@/lib/utils"
 import { notifier } from "@/lib/utils/notifier"
 
-import { AllocationReportDialog } from "./allocation-report-dialog"
+// A report is a screen's worth of code and it is opened from a row, so it
+// downloads on that click rather than with the list behind it.
+const AllocationReportDialog = lazy(async () => ({
+  default: (await import("./allocation-report-dialog")).AllocationReportDialog,
+}))
 
 /**
  * Allocations — who teaches what, to which batch.
@@ -439,10 +445,22 @@ export function AllocationsSection() {
         />
       )}
       {reporting && (
-        <AllocationReportDialog
-          allocation={reporting}
-          onClose={() => setReporting(null)}
-        />
+        <Suspense
+          fallback={
+            <ReportDialogFallback
+              title={`${reporting.subject.code} — ${reporting.subject.name}`}
+              description="Loading the class performance report…"
+              overlayClassName="z-[80]"
+              className="z-[90]"
+              onClose={() => setReporting(null)}
+            />
+          }
+        >
+          <AllocationReportDialog
+            allocation={reporting}
+            onClose={() => setReporting(null)}
+          />
+        </Suspense>
       )}
 
       <ConfirmDialog
@@ -868,7 +886,7 @@ function EnrolStudentsDialog({
         isLoading={students.isLoading || enrollments.isLoading}
         error={students.error ?? enrollments.error}
         isEmpty={all.length === 0}
-        skeleton="table"
+        skeleton={<ListSkeleton />}
         emptyTitle="No students in this batch"
         emptyMessage="Admit students to the batch first."
       >

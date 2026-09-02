@@ -1,8 +1,13 @@
-import { useMemo, useState } from "react"
+import { lazy, Suspense, useMemo, useState } from "react"
 import { FileDown, Search } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { InlineSpinner, QueryState } from "@/components/query-state"
+import { ReportDialogFallback } from "@/components/report-dialog-fallback"
+import {
+  ClassReportSkeleton,
+  SubjectRecordSkeleton,
+} from "@/components/skeletons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -31,7 +36,13 @@ import { useEligibilityThreshold } from "@/hooks/use-eligibility-threshold"
 import { exportAllocationPerformancePdf } from "@/lib/pdf-reports"
 import { formatPercentage } from "@/lib/utils"
 import { notifier } from "@/lib/utils/notifier"
-import { StudentDetailDialog } from "@/pages/roster/student-detail-dialog"
+
+// The per-student drill-down is a screen in its own right, so it downloads
+// when a name is clicked rather than riding along with this report.
+const StudentDetailDialog = lazy(async () => ({
+  default: (await import("@/pages/roster/student-detail-dialog"))
+    .StudentDetailDialog,
+}))
 
 export function AllocationReportDialog({
   allocation,
@@ -142,7 +153,7 @@ export function AllocationReportDialog({
             isFetching={students.isFetching && !students.isLoading}
             error={students.error}
             onRetry={students.refetch}
-            skeleton="table"
+            skeleton={<ClassReportSkeleton />}
           >
             <div className="space-y-3">
               <div className="grid gap-3 sm:grid-cols-3">
@@ -157,7 +168,7 @@ export function AllocationReportDialog({
                 />
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 border bg-muted/30 p-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 border bg-white p-2 dark:bg-slate-950">
                 <div className="relative w-full sm:w-80">
                   <Search
                     className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
@@ -275,11 +286,25 @@ export function AllocationReportDialog({
       </Dialog>
 
       {detailEnrollment !== null && (
-        <StudentDetailDialog
-          allocation={allocation.id}
-          enrollment={detailEnrollment}
-          onClose={() => setDetailEnrollment(null)}
-        />
+        <Suspense
+          fallback={
+            <ReportDialogFallback
+              title="Loading student record…"
+              description="Fetching this student's record for the subject."
+              overlayClassName="z-[90]"
+              className="z-[100]"
+              onClose={() => setDetailEnrollment(null)}
+            >
+              <SubjectRecordSkeleton />
+            </ReportDialogFallback>
+          }
+        >
+          <StudentDetailDialog
+            allocation={allocation.id}
+            enrollment={detailEnrollment}
+            onClose={() => setDetailEnrollment(null)}
+          />
+        </Suspense>
       )}
     </>
   )
@@ -298,8 +323,8 @@ function Metric({
     <div
       className={
         danger
-          ? "border border-l-4 border-l-red-500 bg-background p-3"
-          : "border bg-background p-3"
+          ? "border border-l-4 border-l-red-500 bg-white p-3 dark:bg-slate-950"
+          : "border bg-white p-3 dark:bg-slate-950"
       }
     >
       <div className="text-xs font-bold text-muted-foreground">{label}</div>

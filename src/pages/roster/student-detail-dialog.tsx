@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { InlineSpinner, QueryState } from "@/components/query-state"
+import { SubjectRecordSkeleton } from "@/components/skeletons"
 import {
   ASSIGNMENT_LABELS,
   EXAM_TYPE_LABELS,
@@ -95,13 +96,13 @@ export function StudentDetailDialog({
           error={detail.error}
           isEmpty={!data}
           onRetry={detail.refetch}
-          skeleton="table"
+          skeleton={<SubjectRecordSkeleton />}
           emptyTitle="Student record unavailable"
           emptyMessage="This student may no longer be enrolled in the selected class."
         >
           {data && (
             <div className="space-y-5">
-              <section className="border bg-muted/30 p-3">
+              <section className="border bg-white p-3 dark:bg-slate-950">
                 <h3 className="mb-2 font-semibold">Student and contact</h3>
                 <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
                   <Detail
@@ -123,7 +124,7 @@ export function StudentDetailDialog({
                   count={data.attendance?.held ?? 0}
                 />
                 {data.attendance ? (
-                  <div className="grid border sm:grid-cols-3 lg:grid-cols-6">
+                  <div className="grid border bg-white sm:grid-cols-3 lg:grid-cols-6 dark:bg-slate-950">
                     <Metric label="Present" value={data.attendance.present} />
                     <Metric label="Absent" value={data.attendance.absent} />
                     <Metric label="Excused" value={data.attendance.excused} />
@@ -135,7 +136,7 @@ export function StudentDetailDialog({
                     />
                   </div>
                 ) : (
-                  <p className="border p-3 text-sm text-muted-foreground">
+                  <p className="border bg-white p-3 text-sm text-muted-foreground dark:bg-slate-950">
                     Attendance summary is unavailable.
                   </p>
                 )}
@@ -201,7 +202,7 @@ export function StudentDetailDialog({
                   title="Class performance"
                   count={data.classPerformance ? 1 : 0}
                 />
-                <div className="border p-3 text-sm">
+                <div className="border bg-white p-3 text-sm dark:bg-slate-950">
                   {data.classPerformance ? (
                     <div className="flex flex-wrap items-start gap-3">
                       <Badge className="text-sm">

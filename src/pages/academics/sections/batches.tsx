@@ -4,6 +4,7 @@ import { ChevronRight, Pencil, Plus, Trash2, X } from "lucide-react"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { QueryState } from "@/components/query-state"
+import { ListSkeleton } from "@/components/skeletons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DatePickerInput } from "@/components/ui/date-time-picker"
@@ -279,7 +280,7 @@ function BatchRow({
             isLoading={semesters.isLoading}
             error={semesters.error}
             isEmpty={semesters.data?.results.length === 0}
-            skeleton="table"
+            skeleton={<ListSkeleton rows={4} />}
             emptyTitle="No semesters yet"
             emptyMessage="Open the first semester to start enrolling students."
           >

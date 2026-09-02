@@ -264,7 +264,7 @@ export default function AttendanceSessionPage() {
                 : "You can view this attendance, but your role does not permit changing it."}
             </div>
           )}
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/40 p-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/10 p-3">
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <Users className="size-4 text-muted-foreground" aria-hidden />
               {ATTENDANCE_STATUSES.map((status) => (
@@ -312,16 +312,17 @@ export default function AttendanceSessionPage() {
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Find a student by name or roll number"
             aria-label="Find a student"
+            className="bg-white text-slate-950 placeholder:text-slate-500 dark:bg-white dark:text-slate-950 dark:placeholder:text-slate-500"
           />
 
-          <ul className="divide-y rounded-lg border">
+          <ul className="divide-y rounded-lg border bg-white">
             {visible.map((entry) => (
               <li
                 key={entry.enrollment}
                 className="flex flex-wrap items-center justify-between gap-3 p-3"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="w-10 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
+                  <span className="w-20 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
                     {entry.rollNumber}
                   </span>
                   <span className="min-w-0">

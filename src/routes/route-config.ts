@@ -40,6 +40,13 @@ export interface AppRoute {
   /** At least one management role; superusers bypass this list. */
   allowedRoles?: string[]
   superuserOnly?: boolean
+  /**
+   * The shape the router draws while this route's chunk downloads.
+   *
+   * It should match the skeleton the screen itself shows while its data loads,
+   * so a cold navigation reads as one wait rather than two.
+   */
+  skeleton?: "list" | "dashboard"
   title: string
   showInSidebar: boolean
 }
@@ -49,6 +56,7 @@ export const privateRoutes: AppRoute[] = [
   {
     path: "/dashboard",
     element: Overview,
+    skeleton: "dashboard",
     title: "Dashboard",
     showInSidebar: true,
   },

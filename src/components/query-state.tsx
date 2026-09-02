@@ -1,8 +1,9 @@
-import type { ReactNode } from "react"
+import type { ReactElement, ReactNode } from "react"
 import { AlertCircle, Inbox, RefreshCw } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { TableSkeleton } from "@/components/skeletons"
 import { apiErrorMessage } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
@@ -19,8 +20,12 @@ interface QueryStateProps {
   error?: unknown
   isEmpty?: boolean
   onRetry?: () => void
-  /** What the skeleton should imitate while loading. */
-  skeleton?: "cards" | "table" | "stats"
+  /**
+   * What to draw while loading: one of the stock shapes, or a skeleton built
+   * for this screen in particular. A report whose layout nothing stock
+   * resembles should pass its own — see `@/components/skeletons`.
+   */
+  skeleton?: SkeletonVariant | ReactElement
   emptyTitle?: string
   emptyMessage?: string
   emptyAction?: ReactNode
@@ -45,7 +50,13 @@ export function QueryState({
   emptyAction,
   children,
 }: QueryStateProps) {
-  if (isLoading) return <LoadingSkeleton variant={skeleton} />
+  if (isLoading) {
+    return typeof skeleton === "string" ? (
+      <LoadingSkeleton variant={skeleton} />
+    ) : (
+      skeleton
+    )
+  }
 
   if (error) {
     return (
@@ -109,11 +120,9 @@ export function BusyOverlay({ label = "Loading" }: { label?: string }) {
   )
 }
 
-function LoadingSkeleton({
-  variant,
-}: {
-  variant: "cards" | "table" | "stats"
-}) {
+type SkeletonVariant = "cards" | "table" | "stats"
+
+function LoadingSkeleton({ variant }: { variant: SkeletonVariant }) {
   if (variant === "stats") {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -124,16 +133,7 @@ function LoadingSkeleton({
     )
   }
 
-  if (variant === "table") {
-    return (
-      <div className="space-y-2 rounded-lg border p-4">
-        <Skeleton className="h-9 w-full" />
-        {Array.from({ length: 6 }).map((_, index) => (
-          <Skeleton key={index} className="h-12 w-full" />
-        ))}
-      </div>
-    )
-  }
+  if (variant === "table") return <TableSkeleton />
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

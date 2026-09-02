@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { lazy, Suspense, useState } from "react"
 import { Eye, Pencil, Plus, Trash2, Upload } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
@@ -6,6 +6,8 @@ import { ImportDialog } from "@/components/import-dialog"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { ResourceList, RowActions } from "@/components/resource-list"
 import { RowActionsMenu } from "@/components/row-actions-menu"
+import { ReportDialogFallback } from "@/components/report-dialog-fallback"
+import { StudentReportSkeleton } from "@/components/skeletons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,7 +34,12 @@ import {
 } from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
 
-import { ManagementStudentReportDialog } from "../management-student-report-dialog"
+// A report is a screen's worth of code and it is opened from a row, so it
+// downloads on that click rather than with the list behind it.
+const ManagementStudentReportDialog = lazy(async () => ({
+  default: (await import("../management-student-report-dialog"))
+    .ManagementStudentReportDialog,
+}))
 
 const STATUS_LABEL: Record<Student["status"], string> = {
   STUDYING: "Studying",
@@ -306,10 +313,24 @@ export function StudentsSection() {
         <StudentForm student={editing} onClose={() => setEditing(null)} />
       )}
       {reporting && (
-        <ManagementStudentReportDialog
-          studentId={reporting.id}
-          onClose={() => setReporting(null)}
-        />
+        <Suspense
+          fallback={
+            <ReportDialogFallback
+              title={reporting.fullName}
+              description="Loading the complete academic performance record…"
+              overlayClassName="z-[90]"
+              className="z-[100]"
+              onClose={() => setReporting(null)}
+            >
+              <StudentReportSkeleton />
+            </ReportDialogFallback>
+          }
+        >
+          <ManagementStudentReportDialog
+            studentId={reporting.id}
+            onClose={() => setReporting(null)}
+          />
+        </Suspense>
       )}
 
       <ConfirmDialog

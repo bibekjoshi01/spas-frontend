@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   DEFAULT_ELIGIBILITY_THRESHOLD,
   useGetPerformanceWeightsQuery,
@@ -127,38 +128,55 @@ export default function PerformanceSettings() {
                     {description}
                   </p>
                 </div>
-                <div className="relative">
-                  <Input
-                    id={key}
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={values[key]}
-                    disabled={isLoading}
-                    onChange={(event) =>
-                      setChanges((current) => ({
-                        ...current,
-                        [key]: clampPercent(Number(event.target.value)),
-                      }))
-                    }
-                    className="pr-8 text-right font-semibold tabular-nums"
-                  />
-                  <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-sm text-muted-foreground">
-                    %
-                  </span>
-                </div>
+                {isLoading ? (
+                  <Skeleton className="h-9 w-full" />
+                ) : (
+                  <div className="relative">
+                    <Input
+                      id={key}
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={values[key]}
+                      onChange={(event) =>
+                        setChanges((current) => ({
+                          ...current,
+                          [key]: clampPercent(Number(event.target.value)),
+                        }))
+                      }
+                      className="pr-8 text-right font-semibold tabular-nums"
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-sm text-muted-foreground">
+                      %
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
 
         <div
-          className={`flex items-center justify-between border-t px-4 py-3 text-sm font-bold ${valid ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}
+          className={`flex items-center justify-between border-t px-4 py-3 text-sm font-bold ${
+            isLoading
+              ? "bg-muted text-muted-foreground"
+              : valid
+                ? "bg-emerald-50 text-emerald-800"
+                : "bg-red-50 text-red-800"
+          }`}
         >
-          <span>
-            {valid ? "Ready to save" : "Weights must total exactly 100%"}
-          </span>
-          <span className="tabular-nums">Total: {formatPercentage(total)}</span>
+          {isLoading ? (
+            <span>Loading the saved settings…</span>
+          ) : (
+            <>
+              <span>
+                {valid ? "Ready to save" : "Weights must total exactly 100%"}
+              </span>
+              <span className="tabular-nums">
+                Total: {formatPercentage(total)}
+              </span>
+            </>
+          )}
         </div>
       </section>
 
@@ -190,24 +208,27 @@ export default function PerformanceSettings() {
               Most colleges apply 75%.
             </p>
           </div>
-          <div className="relative">
-            <Input
-              id="eligibility"
-              type="number"
-              min={0}
-              max={100}
-              step={0.5}
-              value={eligibility}
-              disabled={isLoading}
-              onChange={(event) =>
-                setThreshold(clampPercent(Number(event.target.value)))
-              }
-              className="pr-8 text-right font-semibold tabular-nums"
-            />
-            <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-sm text-muted-foreground">
-              %
-            </span>
-          </div>
+          {isLoading ? (
+            <Skeleton className="h-9 w-full" />
+          ) : (
+            <div className="relative">
+              <Input
+                id="eligibility"
+                type="number"
+                min={0}
+                max={100}
+                step={0.5}
+                value={eligibility}
+                onChange={(event) =>
+                  setThreshold(clampPercent(Number(event.target.value)))
+                }
+                className="pr-8 text-right font-semibold tabular-nums"
+              />
+              <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-sm text-muted-foreground">
+                %
+              </span>
+            </div>
+          )}
         </div>
       </section>
     </div>

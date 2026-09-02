@@ -21,6 +21,7 @@ import {
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
+import { DashboardSkeleton } from "@/components/skeletons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -79,7 +80,7 @@ export default function OverviewPage() {
         isFetching={isFetching && !isLoading}
         error={error}
         onRetry={refetch}
-        skeleton="stats"
+        skeleton={<DashboardSkeleton />}
       >
         {data && (
           <div className="space-y-6">
@@ -300,7 +301,7 @@ function ManagementTodayPanel({
         : "Program"
 
   return (
-    <section className="border bg-background">
+    <section className="border bg-white">
       <div className="flex items-center justify-between gap-3 border-b bg-violet-50 px-3 py-2.5 dark:bg-violet-950/40">
         <div>
           <h2 className="font-semibold">Today’s attendance</h2>
@@ -448,7 +449,7 @@ function TeacherWorkQueue({ items }: { items: WorkItem[] }) {
       </div>
 
       {visible.length ? (
-        <div className="divide-y">
+        <div className="divide-y bg-white">
           {visible.map((item) => {
             const Icon = workIcon(item.kind)
             return (
@@ -480,14 +481,14 @@ function TeacherWorkQueue({ items }: { items: WorkItem[] }) {
           })}
         </div>
       ) : (
-        <div className="flex items-center gap-2 px-3 py-5 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 bg-white px-3 py-5 text-sm text-muted-foreground">
           <CheckCircle2 className="size-4 text-emerald-600" aria-hidden />
           Your active class records are complete.
         </div>
       )}
 
       {items.length > visible.length && (
-        <div className="border-t bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+        <div className="border-t bg-white px-3 py-2 text-xs text-muted-foreground">
           Showing the first {visible.length} of {items.length} tasks. Open a
           class workspace for its full completion checklist.
         </div>

@@ -68,16 +68,20 @@ export function DepartmentsSection() {
         }}
         filters={
           <Select
-            value={filters.is_active}
+            value={filters.is_active === "all" ? "" : filters.is_active}
             onValueChange={(value) => setFilters({ is_active: value })}
           >
-            <SelectTrigger className="w-40" aria-label="Filter by status">
-              <SelectValue />
+            <SelectTrigger
+              className="w-32"
+              aria-label="Filter by status"
+              clearable={filters.is_active !== "all"}
+              onClear={() => setFilters({ is_active: "all" })}
+            >
+              <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Active and inactive</SelectItem>
-              <SelectItem value="true">Active only</SelectItem>
-              <SelectItem value="false">Inactive only</SelectItem>
+              <SelectItem value="true">Active</SelectItem>
+              <SelectItem value="false">Inactive</SelectItem>
             </SelectContent>
           </Select>
         }

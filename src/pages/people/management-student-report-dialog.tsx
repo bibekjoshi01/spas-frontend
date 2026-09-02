@@ -10,6 +10,7 @@ import {
 
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { InlineSpinner, QueryState } from "@/components/query-state"
+import { StudentReportSkeleton } from "@/components/skeletons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -129,7 +130,7 @@ export function ManagementStudentReportDialog({
           error={report.error}
           isEmpty={!data}
           onRetry={report.refetch}
-          skeleton="table"
+          skeleton={<StudentReportSkeleton />}
           emptyTitle="Student report unavailable"
           emptyMessage="This student is outside your management scope or has no accessible record."
         >

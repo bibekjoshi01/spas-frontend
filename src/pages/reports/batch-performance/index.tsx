@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { lazy, Suspense, useMemo, useState } from "react"
 import { FileDown, Mail } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
@@ -6,6 +6,8 @@ import { FilterBar } from "@/components/filter-bar"
 import { PageHeader } from "@/components/page-header"
 import { InlineSpinner } from "@/components/query-state"
 import { ResourceList } from "@/components/resource-list"
+import { ReportDialogFallback } from "@/components/report-dialog-fallback"
+import { StudentReportSkeleton } from "@/components/skeletons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -30,7 +32,12 @@ import { exportBatchSemesterPerformancePdf } from "@/lib/pdf-reports"
 import { formatPercentage } from "@/lib/utils"
 import { notifier } from "@/lib/utils/notifier"
 
-import { ManagementStudentReportDialog } from "@/pages/people/management-student-report-dialog"
+// A report is a screen's worth of code and it is opened from a row, so it
+// downloads on that click rather than with the list behind it.
+const ManagementStudentReportDialog = lazy(async () => ({
+  default: (await import("@/pages/people/management-student-report-dialog"))
+    .ManagementStudentReportDialog,
+}))
 
 export default function BatchPerformanceReportPage() {
   const batches = useGetBatchesQuery(ALL)
@@ -378,10 +385,24 @@ export default function BatchPerformanceReportPage() {
       />
 
       {studentId !== null && (
-        <ManagementStudentReportDialog
-          studentId={studentId}
-          onClose={() => setStudentId(null)}
-        />
+        <Suspense
+          fallback={
+            <ReportDialogFallback
+              title="Student report"
+              description="Loading the complete academic performance record…"
+              overlayClassName="z-[90]"
+              className="z-[100]"
+              onClose={() => setStudentId(null)}
+            >
+              <StudentReportSkeleton />
+            </ReportDialogFallback>
+          }
+        >
+          <ManagementStudentReportDialog
+            studentId={studentId}
+            onClose={() => setStudentId(null)}
+          />
+        </Suspense>
       )}
     </div>
   )

@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom"
 
 import MainLayout from "@/components/layout/main-layout"
 import MinimalLayout from "@/components/layout/minimal-layout"
+import { PageSkeleton } from "@/components/skeletons"
 
 import Login from "@/pages/auth/login"
 import ForgotPassword from "@/pages/auth/forgot-password"
@@ -70,14 +71,7 @@ export const router = createBrowserRouter([
                       superuserOnly={route.superuserOnly}
                     >
                       <Suspense
-                        fallback={
-                          <div
-                            className="p-4 text-sm text-muted-foreground"
-                            role="status"
-                          >
-                            Loading page…
-                          </div>
-                        }
+                        fallback={<PageSkeleton variant={route.skeleton} />}
                       >
                         <Component />
                       </Suspense>

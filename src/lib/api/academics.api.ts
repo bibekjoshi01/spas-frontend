@@ -90,6 +90,30 @@ export interface Allocation {
   isActive: boolean
 }
 
+/**
+ * The listings that keep their own copy of a program's identity.
+ *
+ * Every one of these embeds the program's code or name in its rows, so a
+ * rename — or a program moving to another department — leaves them showing
+ * something that is no longer true until they are refetched.
+ */
+const PROGRAM_DEPENDENTS = [
+  "Batch",
+  "BatchSemester",
+  "Subject",
+  "Allocation",
+  "Student",
+  "ClassSummary",
+] as const
+
+/** The listings that embed a batch's year. */
+const BATCH_DEPENDENTS = [
+  "BatchSemester",
+  "Allocation",
+  "Student",
+  "ClassSummary",
+] as const
+
 /** The academic structure a head or coordinator maintains. */
 export const academicsApi = rootAPI.injectEndpoints({
   endpoints: (build) => ({
@@ -125,14 +149,14 @@ export const academicsApi = rootAPI.injectEndpoints({
         method: "PATCH",
         data: body,
       }),
-      invalidatesTags: ["Department"],
+      invalidatesTags: ["Department", "Program"],
     }),
     deleteDepartment: build.mutation<MessageResponse, number>({
       query: (id) => ({
         url: `${ACADEMICS}/departments/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Department"],
+      invalidatesTags: ["Department", "Program"],
     }),
 
     getPrograms: build.query<Paginated<Program>, ListParams | void>({
@@ -162,7 +186,9 @@ export const academicsApi = rootAPI.injectEndpoints({
       }
     >({
       query: (data) => ({ url: `${ACADEMICS}/programs`, method: "POST", data }),
-      invalidatesTags: ["Program"],
+      // The departments table counts programs, so it is stale the moment one
+      // is added, moved to another department, or archived.
+      invalidatesTags: ["Program", "Department"],
     }),
     updateProgram: build.mutation<
       MessageWithIdResponse,
@@ -173,11 +199,11 @@ export const academicsApi = rootAPI.injectEndpoints({
         method: "PATCH",
         data: body,
       }),
-      invalidatesTags: ["Program"],
+      invalidatesTags: ["Program", "Department", ...PROGRAM_DEPENDENTS],
     }),
     deleteProgram: build.mutation<MessageResponse, number>({
       query: (id) => ({ url: `${ACADEMICS}/programs/${id}`, method: "DELETE" }),
-      invalidatesTags: ["Program"],
+      invalidatesTags: ["Program", "Department"],
     }),
 
     getBatches: build.query<Paginated<Batch>, ListParams | void>({
@@ -203,7 +229,7 @@ export const academicsApi = rootAPI.injectEndpoints({
         method: "PATCH",
         data: body,
       }),
-      invalidatesTags: ["Batch"],
+      invalidatesTags: ["Batch", ...BATCH_DEPENDENTS],
     }),
     deleteBatch: build.mutation<MessageResponse, number>({
       query: (id) => ({
@@ -313,7 +339,7 @@ export const academicsApi = rootAPI.injectEndpoints({
         method: "PATCH",
         data: body,
       }),
-      invalidatesTags: ["Subject"],
+      invalidatesTags: ["Subject", "Allocation", "ClassSummary"],
     }),
     deleteSubject: build.mutation<MessageResponse, number>({
       query: (id) => ({ url: `${ACADEMICS}/subjects/${id}`, method: "DELETE" }),
@@ -396,6 +422,9 @@ export const academicsApi = rootAPI.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, arg) => [
         "SubjectEnrollment",
+        // The allocations table carries the enrolled count, so registering
+        // students onto a class changes a row the reader is looking at.
+        "Allocation",
         "ClassSummary",
         "Overview",
         { type: "Roster", id: arg.allocation },
