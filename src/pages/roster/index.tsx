@@ -20,6 +20,11 @@ import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
 import { ReportDialogFallback } from "@/components/report-dialog-fallback"
 import { SubjectRecordSkeleton } from "@/components/skeletons"
+import { StudentNameSortButton } from "@/components/student-name-sort"
+import {
+  sortStudentsByName,
+  type StudentNameSortDirection,
+} from "@/lib/utils/student-sort"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -92,6 +97,7 @@ export default function RosterPage() {
   )
   const [search, setSearch] = useState("")
   const [standingFilter, setStandingFilter] = useState("all")
+  const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
   const [detailEnrollment, setDetailEnrollment] = useState<number | null>(
     Number(params.get("student")) || null
   )
@@ -133,7 +139,7 @@ export default function RosterPage() {
   const visible = useMemo(() => {
     if (!students.data) return []
     const term = search.trim().toLowerCase()
-    return students.data.filter((row) => {
+    const filtered = students.data.filter((row) => {
       const matchesSearch =
         !term ||
         row.fullName.toLowerCase().includes(term) ||
@@ -155,7 +161,8 @@ export default function RosterPage() {
       }
       return standing === standingFilter
     })
-  }, [students.data, search, standingFilter, threshold])
+    return sortStudentsByName(filtered, nameSort)
+  }, [nameSort, students.data, search, standingFilter, threshold])
 
   const atRisk = students.data?.filter(
     (row) =>
@@ -361,7 +368,12 @@ export default function RosterPage() {
             <TableHeader>
               <TableRow className="border-b-2 border-table-header-border bg-table-header hover:bg-table-header">
                 <TableHead className="w-16">Roll</TableHead>
-                <TableHead>Student</TableHead>
+                <TableHead>
+                  <StudentNameSortButton
+                    direction={nameSort}
+                    onChange={setNameSort}
+                  />
+                </TableHead>
                 <TableHead className="min-w-52">Contact info</TableHead>
                 <TableHead className="w-56">Attendance</TableHead>
                 <TableHead className="w-32 text-right">Internal</TableHead>

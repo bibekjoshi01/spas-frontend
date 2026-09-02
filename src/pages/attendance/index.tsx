@@ -14,6 +14,11 @@ import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
 import { PageHeader } from "@/components/page-header"
 import { InlineSpinner, QueryState } from "@/components/query-state"
+import { StudentNameSortButton } from "@/components/student-name-sort"
+import {
+  sortStudentsByName,
+  type StudentNameSortDirection,
+} from "@/lib/utils/student-sort"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -390,6 +395,11 @@ function InlineSessionDetail({
   session: AttendanceSessionSummary
 }) {
   const detail = useGetAttendanceSessionQuery(session.id)
+  const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
+  const records = useMemo(
+    () => sortStudentsByName(detail.data?.records ?? [], nameSort),
+    [detail.data?.records, nameSort]
+  )
 
   return (
     <div className="border-t bg-band p-3">
@@ -411,13 +421,18 @@ function InlineSessionDetail({
               <tr>
                 <th className="w-14 px-3 py-2 font-semibold">#</th>
                 <th className="w-28 px-3 py-2 font-semibold">Roll</th>
-                <th className="px-3 py-2 font-semibold">Student</th>
+                <th className="px-3 py-2 font-semibold">
+                  <StudentNameSortButton
+                    direction={nameSort}
+                    onChange={setNameSort}
+                  />
+                </th>
                 <th className="w-40 px-3 py-2 font-semibold">Phone</th>
                 <th className="w-32 px-3 py-2 font-semibold">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {detail.data?.records.map((record, index) => (
+              {records.map((record, index) => (
                 <tr key={record.id}>
                   <td className="px-3 py-2 text-muted-foreground tabular-nums">
                     {index + 1}

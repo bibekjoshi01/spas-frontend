@@ -8,6 +8,11 @@ import { useHasPermission } from "@/hooks/use-has-permissions"
 import { useRememberedClass } from "@/hooks/use-remembered-class"
 import { PageHeader } from "@/components/page-header"
 import { InlineSpinner, QueryState } from "@/components/query-state"
+import { StudentNameSortButton } from "@/components/student-name-sort"
+import {
+  sortStudentsByName,
+  type StudentNameSortDirection,
+} from "@/lib/utils/student-sort"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -571,6 +576,11 @@ function MarksDialog({
   const [edits, setEdits] = useState<
     Record<number, { marks: string; absent: boolean }>
   >({})
+  const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
+  const sortedRoster = useMemo(
+    () => sortStudentsByName(roster.data ?? [], nameSort),
+    [nameSort, roster.data]
+  )
 
   const saved = useMemo(() => {
     const map: Record<number, { marks: string; absent: boolean }> = {}
@@ -683,7 +693,10 @@ function MarksDialog({
                       scope="col"
                       className="min-w-64 px-3 py-2 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
                     >
-                      Student
+                      <StudentNameSortButton
+                        direction={nameSort}
+                        onChange={setNameSort}
+                      />
                     </th>
                     <th
                       scope="col"
@@ -700,7 +713,7 @@ function MarksDialog({
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {roster.data?.map((student) => {
+                  {sortedRoster.map((student) => {
                     const entry = entries[student.enrollment] ?? {
                       marks: "",
                       absent: false,

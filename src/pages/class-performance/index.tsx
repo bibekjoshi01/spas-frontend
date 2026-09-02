@@ -6,6 +6,11 @@ import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
 import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
+import { StudentNameSortButton } from "@/components/student-name-sort"
+import {
+  sortStudentsByName,
+  type StudentNameSortDirection,
+} from "@/lib/utils/student-sort"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useHasPermission } from "@/hooks/use-has-permissions"
@@ -44,6 +49,7 @@ export default function ClassPerformancePage() {
   )
   const [search, setSearch] = useState("")
   const [drafts, setDrafts] = useState<Record<number, Draft>>({})
+  const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
   const allocation = chosenId ?? initial
   const ratings = useGetClassPerformanceQuery(allocation as number, {
     skip: !allocation,
@@ -56,19 +62,16 @@ export default function ClassPerformancePage() {
   const focusEnrollment = Number(params.get("student")) || null
   const visible = useMemo(() => {
     const term = search.trim().toLowerCase()
-    return (ratings.data ?? [])
-      .filter(
+    return sortStudentsByName(
+      (ratings.data ?? []).filter(
         (row) =>
           !term ||
           row.fullName.toLowerCase().includes(term) ||
           row.rollNumber.toLowerCase().includes(term)
-      )
-      .sort((left, right) => {
-        if (left.enrollment === focusEnrollment) return -1
-        if (right.enrollment === focusEnrollment) return 1
-        return 0
-      })
-  }, [focusEnrollment, ratings.data, search])
+      ),
+      nameSort
+    )
+  }, [nameSort, ratings.data, search])
 
   const dirty = (ratings.data ?? []).filter((row) => {
     const draft = drafts[row.enrollment]
@@ -230,7 +233,12 @@ export default function ClassPerformancePage() {
               <TableRow className="border-b-2 border-table-header-border bg-table-header hover:bg-table-header">
                 <TableHead className="w-14">#</TableHead>
                 <TableHead className="w-28">Roll</TableHead>
-                <TableHead>Student</TableHead>
+                <TableHead>
+                  <StudentNameSortButton
+                    direction={nameSort}
+                    onChange={setNameSort}
+                  />
+                </TableHead>
                 <TableHead className="w-44">Rating (1–10)</TableHead>
                 <TableHead className="min-w-80">Remarks</TableHead>
               </TableRow>

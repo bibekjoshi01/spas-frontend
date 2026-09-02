@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
 import { Navigate, Outlet, useLocation } from "react-router-dom"
 
 import { auth } from "@/lib/redux/auth"
@@ -10,7 +10,10 @@ import {
   setProfile,
 } from "@/pages/auth/redux/auth.slice"
 
-let validationRequest: ReturnType<typeof fetchMe> | null = null
+let validationRequest: {
+  accessToken: string
+  promise: ReturnType<typeof fetchMe>
+} | null = null
 
 export default function AuthGuard() {
   const dispatch = useAppDispatch()
@@ -18,22 +21,39 @@ export default function AuthGuard() {
   const { isAuthenticated, sessionStatus } = useAppSelector(
     (state) => state.auth
   )
-  const hasAccessToken = Boolean(auth.getAccess())
-  const validationStarted = useRef(false)
+  const accessToken = auth.getAccess()
+  const hasAccessToken = Boolean(accessToken)
 
   useEffect(() => {
-    if (!hasAccessToken || validationStarted.current) return
+    if (!accessToken) return
 
-    validationStarted.current = true
+    let cancelled = false
+
     dispatch(sessionCheckStarted())
-    validationRequest ??= fetchMe().finally(() => {
-      validationRequest = null
-    })
+    if (!validationRequest || validationRequest.accessToken !== accessToken) {
+      const promise = fetchMe().finally(() => {
+        if (validationRequest?.promise === promise) validationRequest = null
+      })
+      validationRequest = { accessToken, promise }
+    }
 
-    validationRequest
-      .then((profile) => dispatch(setProfile(profile)))
-      .catch(() => dispatch(sessionInvalidated()))
-  }, [dispatch, hasAccessToken])
+    const request = validationRequest.promise
+    request
+      .then((profile) => {
+        if (!cancelled && auth.getAccess() === accessToken) {
+          dispatch(setProfile(profile))
+        }
+      })
+      .catch(() => {
+        if (!cancelled && auth.getAccess() === accessToken) {
+          dispatch(sessionInvalidated())
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [accessToken, dispatch])
 
   if (!hasAccessToken) {
     return <Navigate to="/login" replace state={{ from: location }} />

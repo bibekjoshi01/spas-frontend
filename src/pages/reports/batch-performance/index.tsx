@@ -8,6 +8,11 @@ import { InlineSpinner } from "@/components/query-state"
 import { ResourceList } from "@/components/resource-list"
 import { ReportDialogFallback } from "@/components/report-dialog-fallback"
 import { StudentReportSkeleton } from "@/components/skeletons"
+import { StudentNameSortButton } from "@/components/student-name-sort"
+import {
+  studentNameOrdering,
+  type StudentNameSortDirection,
+} from "@/lib/utils/student-sort"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -45,6 +50,7 @@ export default function BatchPerformanceReportPage() {
   const [batch, setBatch] = useState("all")
   const [semesterId, setSemesterId] = useState("")
   const [studentId, setStudentId] = useState<number | null>(null)
+  const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
   const [loadExport] = useLazyGetBatchSemesterPerformanceReportQuery()
   // Covers the render as well as the fetch: pulling every row is only half the
   // wait, and a button that springs back while the PDF is still drawing invites
@@ -53,7 +59,7 @@ export default function BatchPerformanceReportPage() {
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
     attention: "all",
-    ordering: "risk",
+    ordering: "full_name",
   })
 
   const visibleSemesters = useMemo(
@@ -79,7 +85,20 @@ export default function BatchPerformanceReportPage() {
     { ...params, batchSemester: Number(effectiveSemesterId) },
     { skip: !effectiveSemesterId }
   )
-  const data = report.data
+  // Do not keep rows from the previously selected batch on screen while the
+  // newly selected batch-semester is loading.
+  const data = report.currentData
+
+  const selectBatch = (value: string) => {
+    setBatch(value)
+    setSemesterId("")
+    setOffset(0)
+  }
+
+  const selectSemester = (value: string) => {
+    setSemesterId(value)
+    setOffset(0)
+  }
 
   const exportPdf = async () => {
     if (!effectiveSemesterId) return
@@ -162,13 +181,7 @@ export default function BatchPerformanceReportPage() {
                 // neither can be taken off the toolbar.
                 pinned: true,
                 control: (
-                  <Select
-                    value={batch}
-                    onValueChange={(value) => {
-                      setBatch(value)
-                      setSemesterId("")
-                    }}
-                  >
+                  <Select value={batch} onValueChange={selectBatch}>
                     <SelectTrigger className="w-52" aria-label="Select batch">
                       <SelectValue placeholder="Select batch" />
                     </SelectTrigger>
@@ -192,7 +205,7 @@ export default function BatchPerformanceReportPage() {
                 control: (
                   <Select
                     value={effectiveSemesterId}
-                    onValueChange={setSemesterId}
+                    onValueChange={selectSemester}
                   >
                     <SelectTrigger
                       className="w-64"
@@ -238,17 +251,33 @@ export default function BatchPerformanceReportPage() {
                 id: "ordering",
                 label: "Sort order",
                 defaultVisible: false,
-                isActive: filters.ordering !== "risk",
-                onReset: () => setFilters({ ordering: "risk" }),
+                isActive: filters.ordering !== "full_name",
+                onReset: () => {
+                  setNameSort("default")
+                  setFilters({ ordering: "full_name" })
+                },
                 control: (
                   <Select
                     value={filters.ordering}
-                    onValueChange={(ordering) => setFilters({ ordering })}
+                    onValueChange={(ordering) => {
+                      setNameSort(
+                        ordering === "-full_name"
+                          ? "desc"
+                          : ordering === "full_name"
+                            ? "default"
+                            : "default"
+                      )
+                      setFilters({ ordering })
+                    }}
                   >
                     <SelectTrigger className="w-48" aria-label="Sort report">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="full_name">Student name</SelectItem>
+                      <SelectItem value="-full_name">
+                        Student name descending
+                      </SelectItem>
                       <SelectItem value="risk">Attention first</SelectItem>
                       <SelectItem value="-overall_percentage">
                         Highest performance
@@ -262,8 +291,12 @@ export default function BatchPerformanceReportPage() {
           />
         }
         clearFilters={{
-          visible: filters.attention !== "all" || filters.ordering !== "risk",
-          onClear: () => setFilters({ attention: "all", ordering: "risk" }),
+          visible:
+            filters.attention !== "all" || filters.ordering !== "full_name",
+          onClear: () => {
+            setNameSort("default")
+            setFilters({ attention: "all", ordering: "full_name" })
+          },
         }}
         action={
           <Button
@@ -295,7 +328,17 @@ export default function BatchPerformanceReportPage() {
             cell: (_row, index) => offset + index + 1,
           },
           {
-            header: "Student",
+            header: (
+              <StudentNameSortButton
+                direction={nameSort}
+                onChange={(direction) => {
+                  setNameSort(direction)
+                  setFilters({
+                    ordering: studentNameOrdering(direction) || "full_name",
+                  })
+                }}
+              />
+            ),
             cell: (row) => (
               <button
                 className="text-left"

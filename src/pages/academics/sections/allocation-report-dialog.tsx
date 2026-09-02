@@ -4,6 +4,11 @@ import { FileDown, Search } from "lucide-react"
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { InlineSpinner, QueryState } from "@/components/query-state"
 import { ReportDialogFallback } from "@/components/report-dialog-fallback"
+import { StudentNameSortButton } from "@/components/student-name-sort"
+import {
+  sortStudentsByName,
+  type StudentNameSortDirection,
+} from "@/lib/utils/student-sort"
 import {
   ClassReportSkeleton,
   SubjectRecordSkeleton,
@@ -55,6 +60,7 @@ export function AllocationReportDialog({
   const threshold = useEligibilityThreshold()
   const [search, setSearch] = useState("")
   const [attentionOnly, setAttentionOnly] = useState(false)
+  const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
   const [detailEnrollment, setDetailEnrollment] = useState<number | null>(null)
   // Drawing a roster-sized PDF outlasts the click, so the button reports its own
   // progress rather than only greying out.
@@ -62,7 +68,7 @@ export function AllocationReportDialog({
 
   const rows = useMemo(() => {
     const needle = search.trim().toLowerCase()
-    return (students.data ?? []).filter((row) => {
+    const filtered = (students.data ?? []).filter((row) => {
       if (
         needle &&
         !`${row.fullName} ${row.rollNumber} ${row.registrationNumber} ${row.phoneNo}`
@@ -81,7 +87,8 @@ export function AllocationReportDialog({
         )
       )
     })
-  }, [attentionOnly, search, students.data, threshold])
+    return sortStudentsByName(filtered, nameSort)
+  }, [attentionOnly, nameSort, search, students.data, threshold])
 
   const evidenced = (students.data ?? []).filter(
     (row) => row.performancePercentage !== null
@@ -197,7 +204,12 @@ export function AllocationReportDialog({
                   <TableHeader>
                     <TableRow className="bg-table-header">
                       <TableHead>#</TableHead>
-                      <TableHead>Student</TableHead>
+                      <TableHead>
+                        <StudentNameSortButton
+                          direction={nameSort}
+                          onChange={setNameSort}
+                        />
+                      </TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead>Attendance</TableHead>
                       <TableHead>Assessment</TableHead>

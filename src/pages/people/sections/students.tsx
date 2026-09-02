@@ -8,6 +8,11 @@ import { ResourceList, RowActions } from "@/components/resource-list"
 import { RowActionsMenu } from "@/components/row-actions-menu"
 import { ReportDialogFallback } from "@/components/report-dialog-fallback"
 import { StudentReportSkeleton } from "@/components/skeletons"
+import { StudentNameSortButton } from "@/components/student-name-sort"
+import {
+  studentNameOrdering,
+  type StudentNameSortDirection,
+} from "@/lib/utils/student-sort"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -56,6 +61,7 @@ export function StudentsSection() {
     search: "",
     batch: "all",
     status: "all",
+    ordering: "",
   })
   const { data, isLoading, isFetching, error, refetch } =
     useGetStudentsQuery(params)
@@ -66,6 +72,7 @@ export function StudentsSection() {
   const [editing, setEditing] = useState<Student | null>(null)
   const [archiving, setArchiving] = useState<Student | null>(null)
   const [reporting, setReporting] = useState<Student | null>(null)
+  const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
   const [
     archive,
     { isLoading: isArchiving, error: archiveError, reset: resetArchive },
@@ -174,7 +181,17 @@ export function StudentsSection() {
             cell: (row) => row.rollNumber,
           },
           {
-            header: "Name",
+            header: (
+              <StudentNameSortButton
+                direction={nameSort}
+                onChange={(direction) => {
+                  setNameSort(direction)
+                  setFilters({
+                    ordering: studentNameOrdering(direction),
+                  })
+                }}
+              />
+            ),
             cell: (row) => <span className="font-medium">{row.fullName}</span>,
           },
           {

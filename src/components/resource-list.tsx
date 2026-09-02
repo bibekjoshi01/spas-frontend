@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils"
 
 export interface Column<T> {
   /** Header text. Empty renders a blank header, for an actions column. */
-  header: string
+  header: ReactNode
   className?: string
   cell: (row: T, rowIndex: number) => ReactNode
 }

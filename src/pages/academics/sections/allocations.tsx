@@ -8,6 +8,11 @@ import { QueryState } from "@/components/query-state"
 import { ResourceList, RowActions } from "@/components/resource-list"
 import { ReportDialogFallback } from "@/components/report-dialog-fallback"
 import { ListSkeleton } from "@/components/skeletons"
+import { StudentNameSortButton } from "@/components/student-name-sort"
+import {
+  sortStudentsByName,
+  type StudentNameSortDirection,
+} from "@/lib/utils/student-sort"
 import { RowActionsMenu } from "@/components/row-actions-menu"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -841,10 +846,11 @@ function EnrolStudentsDialog({
   })
   const [enrol, state] = useEnrolStudentsOnClassMutation()
   const [selected, setSelected] = useState<number[]>([])
+  const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
 
   const all: Student[] = useMemo(
-    () => students.data?.results ?? [],
-    [students.data]
+    () => sortStudentsByName(students.data?.results ?? [], nameSort),
+    [nameSort, students.data]
   )
   const enrolledIds = useMemo(
     () => new Set(enrollments.data?.results.map((row) => row.student.id) ?? []),
@@ -910,6 +916,14 @@ function EnrolStudentsDialog({
           </Button>
 
           <ul className="max-h-72 space-y-1 overflow-y-auto rounded-md border p-2">
+            <li className="sticky top-0 z-10 flex items-center bg-table-header px-2 py-1.5 text-sm text-table-header-foreground">
+              <span className="mr-2 w-4" />
+              <span className="w-24 shrink-0">Roll</span>
+              <StudentNameSortButton
+                direction={nameSort}
+                onChange={setNameSort}
+              />
+            </li>
             {all.map((student) => {
               const isEnrolled = enrolledIds.has(student.id)
               return (

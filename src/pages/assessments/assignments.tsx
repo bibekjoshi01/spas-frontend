@@ -9,6 +9,11 @@ import { useRememberedClass } from "@/hooks/use-remembered-class"
 import { PageHeader } from "@/components/page-header"
 import { InlineSpinner, QueryState } from "@/components/query-state"
 import { ListSkeleton } from "@/components/skeletons"
+import { StudentNameSortButton } from "@/components/student-name-sort"
+import {
+  sortStudentsByName,
+  type StudentNameSortDirection,
+} from "@/lib/utils/student-sort"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -488,6 +493,11 @@ function StatusDialog({
   const [save, { isLoading: isSaving }] = useSaveAssignmentSubmissionsMutation()
   // Saved statuses are derived; only edits are state.
   const [edits, setEdits] = useState<Record<number, AssignmentStatus>>({})
+  const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
+  const sortedRoster = useMemo(
+    () => sortStudentsByName(roster.data ?? [], nameSort),
+    [nameSort, roster.data]
+  )
 
   const saved = useMemo(() => {
     const map: Record<number, AssignmentStatus> = {}
@@ -566,7 +576,14 @@ function StatusDialog({
           emptyMessage="Register students onto this class first."
         >
           <ul className="max-h-[72dvh] divide-y overflow-y-auto rounded-lg border bg-table-surface">
-            {roster.data?.map((student) => (
+            <li className="sticky top-0 z-10 flex items-center border-b bg-table-header p-2.5 text-table-header-foreground">
+              <span className="w-40 shrink-0">Roll</span>
+              <StudentNameSortButton
+                direction={nameSort}
+                onChange={setNameSort}
+              />
+            </li>
+            {sortedRoster.map((student) => (
               <li
                 key={student.enrollment}
                 className="flex items-center justify-between gap-3 p-2.5"

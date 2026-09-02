@@ -5,6 +5,11 @@ import { CalendarDays, Check, Copy, Phone, Save, Users } from "lucide-react"
 import { PageHeader } from "@/components/page-header"
 import { UnsavedChangesGuard } from "@/components/unsaved-changes-guard"
 import { InlineSpinner, QueryState } from "@/components/query-state"
+import { StudentNameSortButton } from "@/components/student-name-sort"
+import {
+  sortStudentsByName,
+  type StudentNameSortDirection,
+} from "@/lib/utils/student-sort"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -90,6 +95,7 @@ export default function AttendanceSessionPage() {
   // unsaved marks and there is no effect syncing one into the other.
   const [edits, setEdits] = useState<Record<number, AttendanceStatus>>({})
   const [search, setSearch] = useState("")
+  const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
 
   const classInfo = classes.data?.find((item) => item.allocation === allocation)
   const semesterReadOnly = classInfo?.semesterStatus !== "RUNNING"
@@ -119,15 +125,15 @@ export default function AttendanceSessionPage() {
   const visible = useMemo(() => {
     if (!roster.data) return []
     const term = search.trim().toLowerCase()
-    if (!term) return roster.data
-
-    return roster.data.filter(
+    const filtered = roster.data.filter(
       (entry) =>
+        !term ||
         entry.fullName.toLowerCase().includes(term) ||
         entry.rollNumber.toLowerCase().includes(term) ||
         entry.phoneNo.includes(term)
     )
-  }, [roster.data, search])
+    return sortStudentsByName(filtered, nameSort)
+  }, [nameSort, roster.data, search])
 
   const counts = useMemo(() => {
     const tally: Record<AttendanceStatus, number> = {
@@ -327,6 +333,13 @@ export default function AttendanceSessionPage() {
           />
 
           <ul className="divide-y rounded-lg border bg-card">
+            <li className="sticky top-0 z-10 flex items-center border-b bg-table-header px-3 py-2 text-table-header-foreground">
+              <span className="w-12 shrink-0 sm:w-20">Roll</span>
+              <StudentNameSortButton
+                direction={nameSort}
+                onChange={setNameSort}
+              />
+            </li>
             {visible.map((entry) => (
               <li
                 key={entry.enrollment}

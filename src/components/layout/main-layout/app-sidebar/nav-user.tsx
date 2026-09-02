@@ -45,6 +45,7 @@ export default function NavUser() {
   const { theme, toggleTheme } = useTheme()
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const profile = useAppSelector((state) => state.auth.profile)
   const isSuperUser = useAppSelector((state) => state.auth.isSuperUser)
@@ -60,6 +61,8 @@ export default function NavUser() {
     : (profile?.roles.map((item) => item.name).join(", ") ?? "Member")
 
   async function handleLogout() {
+    if (isLoggingOut) return
+    setIsLoggingOut(true)
     try {
       const refreshToken = auth.getRefresh()
       if (refreshToken) await logoutRequest(refreshToken)
@@ -123,9 +126,13 @@ export default function NavUser() {
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem variant="destructive" onClick={handleLogout}>
+            <DropdownMenuItem
+              variant="destructive"
+              disabled={isLoggingOut}
+              onClick={handleLogout}
+            >
               <LogOut />
-              Logout
+              {isLoggingOut ? "Signing out…" : "Logout"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

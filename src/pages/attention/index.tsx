@@ -1,8 +1,14 @@
+import { useState } from "react"
 import { Mail } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { PageHeader } from "@/components/page-header"
 import { ResourceList } from "@/components/resource-list"
+import { StudentNameSortButton } from "@/components/student-name-sort"
+import {
+  studentNameOrdering,
+  type StudentNameSortDirection,
+} from "@/lib/utils/student-sort"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -26,8 +32,9 @@ export default function AttendanceAttentionPage() {
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
     batch: "all",
-    ordering: "attendance_percentage",
+    ordering: "full_name",
   })
+  const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
   const { data, isLoading, isFetching, error, refetch } =
     useGetAttendanceAttentionQuery(params)
   const threshold = useEligibilityThreshold()
@@ -75,12 +82,25 @@ export default function AttendanceAttentionPage() {
             </Select>
             <Select
               value={filters.ordering}
-              onValueChange={(ordering) => setFilters({ ordering })}
+              onValueChange={(ordering) => {
+                setNameSort(
+                  ordering === "-full_name"
+                    ? "desc"
+                    : ordering === "full_name"
+                      ? "default"
+                      : "default"
+                )
+                setFilters({ ordering })
+              }}
             >
               <SelectTrigger className="w-52" aria-label="Sort attendance">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="full_name">Student name</SelectItem>
+                <SelectItem value="-full_name">
+                  Student name descending
+                </SelectItem>
                 <SelectItem value="attendance_percentage">
                   Lowest attendance first
                 </SelectItem>
@@ -96,11 +116,11 @@ export default function AttendanceAttentionPage() {
           </>
         }
         clearFilters={{
-          visible:
-            filters.batch !== "all" ||
-            filters.ordering !== "attendance_percentage",
-          onClear: () =>
-            setFilters({ batch: "all", ordering: "attendance_percentage" }),
+          visible: filters.batch !== "all" || filters.ordering !== "full_name",
+          onClear: () => {
+            setNameSort("default")
+            setFilters({ batch: "all", ordering: "full_name" })
+          },
         }}
         emptyTitle="No students need attendance follow-up"
         emptyMessage={`No active student in your management scope is below ${formatPercentage(threshold)} attendance.`}
@@ -111,7 +131,17 @@ export default function AttendanceAttentionPage() {
             cell: (_row, index) => offset + index + 1,
           },
           {
-            header: "Student",
+            header: (
+              <StudentNameSortButton
+                direction={nameSort}
+                onChange={(direction) => {
+                  setNameSort(direction)
+                  setFilters({
+                    ordering: studentNameOrdering(direction) || "full_name",
+                  })
+                }}
+              />
+            ),
             cell: (row) => (
               <div>
                 <div className="font-semibold">{row.fullName}</div>
