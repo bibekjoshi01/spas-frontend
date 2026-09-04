@@ -87,118 +87,122 @@ export default function AuditPage() {
         emptyMessage="Your account has no permissions that open an audit trail."
       >
         <div className="space-y-3">
-          <div className="rounded-sm border bg-card p-2">
-            <FilterBar
-              pageKey="audit"
-              filters={[
-                {
-                  id: "resource",
-                  label: "Record type",
-                  // The trail is *of* one kind of record; without one there is
-                  // nothing to show, so it never leaves the toolbar.
-                  pinned: true,
-                  control: (
-                    <Select
-                      value={filters.resource}
-                      onValueChange={(resource) => setFilters({ resource })}
-                    >
-                      <SelectTrigger
-                        className="w-56"
-                        aria-label="Choose a record type"
+          {/* FilterBar renders a fragment and takes its layout from the parent,
+              which is the row ResourceList gives it on every other screen. */}
+          <div className="flex flex-wrap items-stretch gap-3 rounded-sm border bg-card p-2 sm:items-center">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 [&_[data-slot=select-trigger]]:max-w-full">
+              <FilterBar
+                pageKey="audit"
+                filters={[
+                  {
+                    id: "resource",
+                    label: "Record type",
+                    // The trail is *of* one kind of record; without one there is
+                    // nothing to show, so it never leaves the toolbar.
+                    pinned: true,
+                    control: (
+                      <Select
+                        value={filters.resource}
+                        onValueChange={(resource) => setFilters({ resource })}
                       >
-                        <SelectValue placeholder="Choose a record type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {options.map((row) => (
-                          <SelectItem key={row.slug} value={row.slug}>
-                            {row.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ),
-                },
-                {
-                  id: "actor",
-                  label: "Changed by",
-                  isActive: filters.actor !== "all",
-                  onReset: () => setFilters({ actor: "all" }),
-                  control: (
-                    <Select
-                      value={filters.actor}
-                      onValueChange={(actor) => setFilters({ actor })}
-                    >
-                      <SelectTrigger
-                        className="w-52"
-                        aria-label="Filter by who made the change"
+                        <SelectTrigger
+                          className="w-56"
+                          aria-label="Choose a record type"
+                        >
+                          <SelectValue placeholder="Choose a record type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {options.map((row) => (
+                            <SelectItem key={row.slug} value={row.slug}>
+                              {row.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ),
+                  },
+                  {
+                    id: "actor",
+                    label: "Changed by",
+                    isActive: filters.actor !== "all",
+                    onReset: () => setFilters({ actor: "all" }),
+                    control: (
+                      <Select
+                        value={filters.actor}
+                        onValueChange={(actor) => setFilters({ actor })}
                       >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Anyone</SelectItem>
-                        {staff.data?.results.map((row) => (
-                          <SelectItem key={row.id} value={String(row.id)}>
-                            {row.fullName || row.username}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ),
-                },
-                {
-                  id: "action",
-                  label: "Change type",
-                  isActive: filters.action !== "all",
-                  onReset: () => setFilters({ action: "all" }),
-                  control: (
-                    <Select
-                      value={filters.action}
-                      onValueChange={(action) => setFilters({ action })}
-                    >
-                      <SelectTrigger
-                        className="w-40"
-                        aria-label="Filter by change type"
+                        <SelectTrigger
+                          className="w-52"
+                          aria-label="Filter by who made the change"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Anyone</SelectItem>
+                          {staff.data?.results.map((row) => (
+                            <SelectItem key={row.id} value={String(row.id)}>
+                              {row.fullName || row.username}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ),
+                  },
+                  {
+                    id: "action",
+                    label: "Change type",
+                    isActive: filters.action !== "all",
+                    onReset: () => setFilters({ action: "all" }),
+                    control: (
+                      <Select
+                        value={filters.action}
+                        onValueChange={(action) => setFilters({ action })}
                       >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All changes</SelectItem>
-                        {ACTIONS.map((row) => (
-                          <SelectItem key={row.value} value={row.value}>
-                            {row.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ),
-                },
-                {
-                  id: "range",
-                  label: "Date range",
-                  isActive: Boolean(filters.from || filters.to),
-                  onReset: () => setFilters({ from: "", to: "" }),
-                  control: (
-                    <>
-                      <DatePickerInput
-                        className="w-44"
-                        value={filters.from}
-                        max={filters.to || localDateKey()}
-                        onValueChange={(from) => setFilters({ from })}
-                        aria-label="Changes from"
-                      />
-                      <DatePickerInput
-                        className="w-44"
-                        value={filters.to}
-                        min={filters.from || undefined}
-                        max={localDateKey()}
-                        onValueChange={(to) => setFilters({ to })}
-                        aria-label="Changes up to"
-                      />
-                    </>
-                  ),
-                },
-              ]}
-            />
+                        <SelectTrigger
+                          className="w-40"
+                          aria-label="Filter by change type"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All changes</SelectItem>
+                          {ACTIONS.map((row) => (
+                            <SelectItem key={row.value} value={row.value}>
+                              {row.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ),
+                  },
+                  {
+                    id: "range",
+                    label: "Date range",
+                    isActive: Boolean(filters.from || filters.to),
+                    onReset: () => setFilters({ from: "", to: "" }),
+                    control: (
+                      <>
+                        <DatePickerInput
+                          className="w-44"
+                          value={filters.from}
+                          max={filters.to || localDateKey()}
+                          onValueChange={(from) => setFilters({ from })}
+                          aria-label="Changes from"
+                        />
+                        <DatePickerInput
+                          className="w-44"
+                          value={filters.to}
+                          min={filters.from || undefined}
+                          max={localDateKey()}
+                          onValueChange={(to) => setFilters({ to })}
+                          aria-label="Changes up to"
+                        />
+                      </>
+                    ),
+                  },
+                ]}
+              />
+            </div>
           </div>
 
           <AuditTrail
