@@ -493,7 +493,7 @@ export default function AttendanceSessionPage() {
                 </div>
                 <p className="mt-3 text-base font-semibold text-foreground">
                   {reasonStudent
-                    ? `${reasonStudent.fullName} (Roll No. ${reasonStudent.rollNumber})`
+                    ? `${reasonStudent.fullName} (${reasonStudent.rollNumber})`
                     : "Student"}
                 </p>
               </div>
@@ -528,7 +528,7 @@ export default function AttendanceSessionPage() {
                 rows={7}
                 autoFocus
                 placeholder="For example: Medical leave supported by a doctor's note"
-                className="min-h-36 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="min-h-36 w-full resize-y rounded-md border border-input bg-card px-3 py-2 text-sm shadow-xs transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
               />
               <p className="text-right text-xs text-muted-foreground tabular-nums">
                 {(reasons[reasonEnrollment] ?? "").length}/500
