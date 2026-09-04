@@ -1,10 +1,9 @@
 import { useMemo, useState } from "react"
-import { FileDown } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { FilterBar } from "@/components/filter-bar"
 import { PageHeader } from "@/components/page-header"
-import { InlineSpinner } from "@/components/query-state"
+import { ExportMenu } from "@/components/export-menu"
 import { ResourceList } from "@/components/resource-list"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -29,6 +28,8 @@ import {
   useLazyGetManagementAttendanceReportQuery,
 } from "@/lib/api"
 import { exportManagementAttendanceReportPdf } from "@/lib/pdf-reports"
+import { exportSpreadsheet, type ExportFormat } from "@/lib/spreadsheet-export"
+import { attendanceExportTable } from "@/lib/spreadsheet-reports"
 import { formatPercentage } from "@/lib/utils"
 import { formatDisplayDate, localDateKey } from "@/lib/utils/date"
 import { notifier } from "@/lib/utils/notifier"
@@ -44,7 +45,7 @@ export default function AttendanceReportPage() {
   // Covers the render as well as the fetch: pulling every row is only half the
   // wait, and a button that springs back while the PDF is still drawing invites
   // a second click.
-  const [exporting, setExporting] = useState(false)
+  const [exporting, setExporting] = useState<ExportFormat | null>(null)
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
     start_date: dateDaysAgo(6),
@@ -105,20 +106,28 @@ export default function AttendanceReportPage() {
   const setPreset = (days: number) =>
     setFilters({ start_date: dateDaysAgo(days - 1), end_date: today })
 
-  const exportPdf = async () => {
-    setExporting(true)
+  const exportReport = async (format: ExportFormat) => {
+    setExporting(format)
     try {
       const complete = await loadExport({
         ...params,
         limit: 0,
+        offset: 0,
         startDate: filters.start_date,
         endDate: filters.end_date,
       }).unwrap()
-      await exportManagementAttendanceReportPdf(complete)
+      if (complete.results.length !== complete.count) {
+        throw new Error("Attendance export is incomplete.")
+      }
+      if (format === "pdf") {
+        await exportManagementAttendanceReportPdf(complete)
+      } else {
+        await exportSpreadsheet(format, attendanceExportTable(complete))
+      }
     } catch {
       notifier.error("Could not export this attendance report.")
     } finally {
-      setExporting(false)
+      setExporting(null)
     }
   }
 
@@ -411,19 +420,11 @@ export default function AttendanceReportPage() {
             }),
         }}
         action={
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!data?.count || exporting}
-            onClick={() => void exportPdf()}
-          >
-            {exporting ? (
-              <InlineSpinner />
-            ) : (
-              <FileDown className="size-4" aria-hidden />
-            )}
-            {exporting ? "Preparing PDF…" : "Export PDF"}
-          </Button>
+          <ExportMenu
+            exporting={exporting}
+            disabled={!data?.count}
+            onExport={(format) => void exportReport(format)}
+          />
         }
         emptyTitle="No attendance sessions found"
         emptyMessage="No held classes match this date range and filter selection."

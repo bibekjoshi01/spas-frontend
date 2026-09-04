@@ -1,10 +1,10 @@
 import { lazy, Suspense, useMemo, useState } from "react"
-import { FileDown, Mail } from "lucide-react"
+import { Mail } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { FilterBar } from "@/components/filter-bar"
 import { PageHeader } from "@/components/page-header"
-import { InlineSpinner } from "@/components/query-state"
+import { ExportMenu } from "@/components/export-menu"
 import { ResourceList } from "@/components/resource-list"
 import { ReportDialogFallback } from "@/components/report-dialog-fallback"
 import { StudentReportSkeleton } from "@/components/skeletons"
@@ -34,6 +34,8 @@ import {
   useLazyGetBatchSemesterPerformanceReportQuery,
 } from "@/lib/api"
 import { exportBatchSemesterPerformancePdf } from "@/lib/pdf-reports"
+import { exportSpreadsheet, type ExportFormat } from "@/lib/spreadsheet-export"
+import { batchPerformanceExportTable } from "@/lib/spreadsheet-reports"
 import { formatPercentage } from "@/lib/utils"
 import { notifier } from "@/lib/utils/notifier"
 
@@ -55,7 +57,7 @@ export default function BatchPerformanceReportPage() {
   // Covers the render as well as the fetch: pulling every row is only half the
   // wait, and a button that springs back while the PDF is still drawing invites
   // a second click.
-  const [exporting, setExporting] = useState(false)
+  const [exporting, setExporting] = useState<ExportFormat | null>(null)
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
     attention: "all",
@@ -100,21 +102,28 @@ export default function BatchPerformanceReportPage() {
     setOffset(0)
   }
 
-  const exportPdf = async () => {
+  const exportReport = async (format: ExportFormat) => {
     if (!effectiveSemesterId) return
-    setExporting(true)
+    setExporting(format)
     try {
       const complete = await loadExport({
         batchSemester: Number(effectiveSemesterId),
         limit: 0,
+        offset: 0,
+        ...(filters.search ? { search: filters.search } : {}),
         ordering: filters.ordering,
         ...(filters.attention === "true" ? { attention: true } : {}),
       }).unwrap()
-      await exportBatchSemesterPerformancePdf(complete)
+      if (complete.results.length !== complete.count) {
+        throw new Error("Batch export is incomplete.")
+      }
+      if (format === "pdf") await exportBatchSemesterPerformancePdf(complete)
+      else
+        await exportSpreadsheet(format, batchPerformanceExportTable(complete))
     } catch {
       notifier.error("Could not export this batch report.")
     } finally {
-      setExporting(false)
+      setExporting(null)
     }
   }
 
@@ -299,19 +308,11 @@ export default function BatchPerformanceReportPage() {
           },
         }}
         action={
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={!effectiveSemesterId || exporting || !data?.count}
-            onClick={() => void exportPdf()}
-          >
-            {exporting ? (
-              <InlineSpinner />
-            ) : (
-              <FileDown className="size-4" aria-hidden />
-            )}
-            {exporting ? "Preparing PDF…" : "Export PDF"}
-          </Button>
+          <ExportMenu
+            exporting={exporting}
+            disabled={!effectiveSemesterId || !data?.count}
+            onExport={(format) => void exportReport(format)}
+          />
         }
         emptyTitle={
           effectiveSemesterId ? "No students found" : "Select a semester"

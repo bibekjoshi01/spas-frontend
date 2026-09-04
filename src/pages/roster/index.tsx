@@ -1,16 +1,9 @@
 import { lazy, Suspense, useMemo, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
-import {
-  Download,
-  EllipsisVertical,
-  Eye,
-  PencilLine,
-  Search,
-  FileDown,
-  X,
-} from "lucide-react"
+import { EllipsisVertical, Eye, PencilLine, Search, X } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
+import { ExportMenu } from "@/components/export-menu"
 import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
 import { useEligibilityThreshold } from "@/hooks/use-eligibility-threshold"
@@ -56,7 +49,10 @@ import {
   useGetClassStudentsQuery,
 } from "@/lib/api"
 import { exportRosterPdf } from "@/lib/pdf-reports"
+import { exportSpreadsheet, type ExportFormat } from "@/lib/spreadsheet-export"
+import { rosterExportTable } from "@/lib/spreadsheet-reports"
 import { formatPercentage } from "@/lib/utils"
+import { notifier } from "@/lib/utils/notifier"
 
 // A report is a screen's worth of code and it is opened from a row, so it
 // downloads on that click rather than with the list behind it.
@@ -98,6 +94,7 @@ export default function RosterPage() {
   const [search, setSearch] = useState("")
   const [standingFilter, setStandingFilter] = useState("all")
   const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
+  const [exporting, setExporting] = useState<ExportFormat | null>(null)
   const [detailEnrollment, setDetailEnrollment] = useState<number | null>(
     Number(params.get("student")) || null
   )
@@ -169,6 +166,25 @@ export default function RosterPage() {
       row.performancePercentage !== null &&
       eligibilityFor(row.performancePercentage, threshold) === "at-risk"
   ).length
+
+  const exportRoster = async (format: ExportFormat) => {
+    if (!chosen || !visible.length) return
+    setExporting(format)
+    try {
+      if (format === "pdf") {
+        await exportRosterPdf(chosen, visible, threshold)
+      } else {
+        await exportSpreadsheet(
+          format,
+          rosterExportTable(chosen, visible, threshold)
+        )
+      }
+    } catch {
+      notifier.error("Could not export this class roster.")
+    } finally {
+      setExporting(null)
+    }
+  }
 
   const choose = (next: number) => {
     setChosenId(next)
@@ -243,28 +259,11 @@ export default function RosterPage() {
                 </Link>
               </Button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!visible.length}
-              onClick={() => exportCsv(visible, chosen?.code ?? "class")}
-            >
-              <Download className="size-4" aria-hidden />
-              <span className="hidden sm:inline">Export CSV</span>
-              <span className="sm:hidden">CSV</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
+            <ExportMenu
+              exporting={exporting}
               disabled={!visible.length || !chosen}
-              onClick={() =>
-                chosen && void exportRosterPdf(chosen, visible, threshold)
-              }
-            >
-              <FileDown className="size-4" aria-hidden />
-              <span className="hidden sm:inline">Export PDF</span>
-              <span className="sm:hidden">PDF</span>
-            </Button>
+              onExport={(format) => void exportRoster(format)}
+            />
           </>
         }
       />
@@ -593,55 +592,4 @@ function RecentAttendance({
       })}
     </div>
   )
-}
-
-function exportCsv(rows: ClassStudent[], classCode: string) {
-  const header = [
-    "Roll",
-    "Registration",
-    "Name",
-    "Email",
-    "Primary phone",
-    "Alternate phone",
-    "Attended",
-    "Held",
-    "Attendance %",
-    "Internal",
-    "Internal total",
-    "Assignments done",
-    "Assignments total",
-    "Class performance / 10",
-  ]
-
-  const body = rows.map((row) => [
-    row.rollNumber,
-    row.registrationNumber,
-    row.fullName,
-    row.email,
-    row.phoneNo,
-    row.alternatePhoneNo,
-    row.attendance.attended,
-    row.attendance.held,
-    Math.round(row.attendance.percentage * 100) / 100,
-    row.internalMarks.obtained,
-    row.internalMarks.total,
-    row.assignments.done,
-    row.assignments.total,
-    row.classPerformance.score ?? "",
-  ])
-
-  const csv = [header, ...body]
-    .map((line) =>
-      line.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-    )
-    .join("\n")
-
-  const url = URL.createObjectURL(
-    new Blob([csv], { type: "text/csv;charset=utf-8" })
-  )
-  const link = document.createElement("a")
-  link.href = url
-  link.download = `${classCode}-students.csv`
-  link.click()
-  URL.revokeObjectURL(url)
 }

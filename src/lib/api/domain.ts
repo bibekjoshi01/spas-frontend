@@ -268,6 +268,7 @@ export interface AttendanceRecord {
   fullName: string
   phoneNo: string
   status: AttendanceStatus
+  excuseReason: string
 }
 
 export interface AttendanceSessionSummary {
