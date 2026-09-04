@@ -16,6 +16,7 @@ import { loginSuccess } from "../../redux/auth.slice"
 import { loginRequest } from "../../redux/auth.api"
 import { notifier } from "@/lib/utils/notifier"
 import { apiErrorMessage } from "@/lib/api"
+import { landingPathFor } from "@/routes/route-config"
 
 export function LoginForm() {
   const navigate = useNavigate()
@@ -57,9 +58,11 @@ export function LoginForm() {
       )
 
       navigate(
-        response.roles.some((role) => role.codename === "STUDENT")
-          ? "/student"
-          : "/dashboard"
+        landingPathFor(
+          response.permissions,
+          response.isSuperuser,
+          response.roles.map((role) => role.codename)
+        )
       )
     } catch (error) {
       notifier.error(
