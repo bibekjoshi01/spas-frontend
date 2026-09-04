@@ -56,6 +56,7 @@ export default function NavUser() {
       window.matchMedia("(prefers-color-scheme: dark)").matches)
 
   const fullName = profile?.fullName ?? "Profile"
+  const isStudent = profile?.roles.some((item) => item.codename === "STUDENT")
   const role = isSuperUser
     ? "System administrator"
     : (profile?.roles.map((item) => item.name).join(", ") ?? "Member")
@@ -114,10 +115,12 @@ export default function NavUser() {
               {isDark ? "Light mode" : "Dark mode"}
             </DropdownMenuItem>
 
-            <DropdownMenuItem onClick={() => setIsEditProfileOpen(true)}>
-              <UserPen />
-              Edit profile
-            </DropdownMenuItem>
+            {!isStudent && (
+              <DropdownMenuItem onClick={() => setIsEditProfileOpen(true)}>
+                <UserPen />
+                Edit profile
+              </DropdownMenuItem>
+            )}
 
             <DropdownMenuItem onClick={() => setIsChangePasswordOpen(true)}>
               <KeyRound />

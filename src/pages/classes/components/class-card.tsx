@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
+import { TrendBadge } from "@/components/attendance-trend"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -82,7 +83,10 @@ export function ClassCard({ item, today }: ClassCardProps) {
         </div>
 
         <div className="space-y-1.5">
-          <p className="text-xs text-muted-foreground">Attendance</p>
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="text-xs text-muted-foreground">Attendance</p>
+            <TrendBadge trend={item.trend} />
+          </div>
           <AttendanceMeter percentage={item.attendancePercentage} />
         </div>
 

@@ -9,6 +9,7 @@ import {
   sessionInvalidated,
   setProfile,
 } from "@/pages/auth/redux/auth.slice"
+import InitialPasswordChange from "@/pages/auth/initial-password-change"
 
 let validationRequest: {
   accessToken: string
@@ -18,7 +19,7 @@ let validationRequest: {
 export default function AuthGuard() {
   const dispatch = useAppDispatch()
   const location = useLocation()
-  const { isAuthenticated, sessionStatus } = useAppSelector(
+  const { isAuthenticated, sessionStatus, profile } = useAppSelector(
     (state) => state.auth
   )
   const accessToken = auth.getAccess()
@@ -75,6 +76,10 @@ export default function AuthGuard() {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />
+  }
+
+  if (profile?.mustChangePassword) {
+    return <InitialPasswordChange />
   }
 
   return <Outlet />

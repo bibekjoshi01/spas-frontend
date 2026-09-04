@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   DEFAULT_ELIGIBILITY_THRESHOLD,
   useGetPerformanceWeightsQuery,
   useUpdatePerformanceWeightsMutation,
+  useGetStudentPortalSettingsQuery,
+  useUpdateStudentPortalSettingsMutation,
 } from "@/lib/api"
 import { formatPercentage } from "@/lib/utils"
 import { notifier } from "@/lib/utils/notifier"
@@ -46,6 +49,9 @@ export default function PerformanceSettings() {
     useUpdatePerformanceWeightsMutation()
   const [changes, setChanges] = useState<Partial<typeof DEFAULTS>>({})
   const [threshold, setThreshold] = useState<number | null>(null)
+  const portal = useGetStudentPortalSettingsQuery()
+  const [updatePortal, { isLoading: isSavingPortal }] =
+    useUpdateStudentPortalSettingsMutation()
 
   const values = {
     attendanceWeight: data?.attendanceWeight ?? DEFAULTS.attendanceWeight,
@@ -233,6 +239,67 @@ export default function PerformanceSettings() {
                 %
               </span>
             </div>
+          )}
+        </div>
+      </section>
+
+      <section
+        className="border bg-card"
+        aria-labelledby="student-login-heading"
+      >
+        <div className="border-b bg-band-info px-4 py-3">
+          <h2
+            id="student-login-heading"
+            className="text-base font-bold text-band-info-foreground"
+          >
+            Student portal
+          </h2>
+          <p className="mt-1 text-sm text-band-info-foreground/70">
+            Control whether students at this college can sign in and view their
+            own academic record.
+          </p>
+        </div>
+        <div className="flex items-center justify-between gap-4 px-4 py-5">
+          <div>
+            <Label htmlFor="student-login" className="font-semibold">
+              Enable student login
+            </Label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              When disabled, student credentials are rejected and portal data
+              remains inaccessible.
+            </p>
+          </div>
+          {portal.isLoading ? (
+            <Skeleton className="h-6 w-11" />
+          ) : portal.isError ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={portal.refetch}
+            >
+              Retry
+            </Button>
+          ) : (
+            <Checkbox
+              className="shrink-0"
+              id="student-login"
+              checked={portal.data?.loginEnabled ?? false}
+              disabled={portal.isError || isSavingPortal}
+              onCheckedChange={async (checked) => {
+                const loginEnabled = checked === true
+                try {
+                  await updatePortal({ loginEnabled }).unwrap()
+                  notifier.success(
+                    loginEnabled
+                      ? "Student login enabled."
+                      : "Student login disabled."
+                  )
+                } catch {
+                  notifier.error("Could not update student login.")
+                }
+              }}
+            />
           )}
         </div>
       </section>

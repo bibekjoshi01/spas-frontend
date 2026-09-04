@@ -43,8 +43,36 @@ export interface ClassSummary {
   studentCount: number
   classesHeld: number
   attendancePercentage: number
+  /** Present on the class listing; the dashboard payload omits it. */
+  trend?: AttendanceTrend | null
   /** Present only on the dashboard payload. */
   recorded?: boolean
+}
+
+export type TrendDirection = "RISING" | "FALLING" | "STEADY"
+
+/** One week of a running attendance line. */
+export interface TrendPoint {
+  week: string
+  held: number
+  attended: number
+  /** The standing as it stood that week, not that week in isolation. */
+  percentage: number
+}
+
+/**
+ * Attendance over time, alongside the lifetime figure.
+ *
+ * `overallPercentage` is what eligibility is measured on and moves slowly;
+ * `recentPercentage` is the trailing few weeks and moves at once, so the two
+ * together say whether a standing is climbing back or still dropping.
+ */
+export interface AttendanceTrend {
+  points: TrendPoint[]
+  overallPercentage: number | null
+  recentPercentage: number | null
+  direction: TrendDirection | null
+  recentWeeks: number
 }
 
 /** One student on a class, with the available performance parameters rolled up. */
@@ -111,6 +139,7 @@ export interface ClassStudentDetail {
     excused: number
     late: number
     percentage: number
+    trend: AttendanceTrend | null
   } | null
   assessments: Array<{
     examId: number
@@ -351,6 +380,7 @@ export interface Student {
   rollNumber: string
   registrationNumber: string
   fullName: string
+  username: string
   batch: {
     id: number
     year: number
@@ -398,6 +428,7 @@ export interface DashboardOverview {
     subjectCode: string
     semester: number
     attendancePercentage: number
+    trend: AttendanceTrend | null
   }>
   workQueue: Array<{
     key: string

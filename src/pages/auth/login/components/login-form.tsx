@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom"
 import { loginSuccess } from "../../redux/auth.slice"
 import { loginRequest } from "../../redux/auth.api"
 import { notifier } from "@/lib/utils/notifier"
+import { apiErrorMessage } from "@/lib/api"
 
 export function LoginForm() {
   const navigate = useNavigate()
@@ -55,9 +56,15 @@ export function LoginForm() {
         })
       )
 
-      navigate("/dashboard")
-    } catch {
-      notifier.error("Invalid email or password.")
+      navigate(
+        response.roles.some((role) => role.codename === "STUDENT")
+          ? "/student"
+          : "/dashboard"
+      )
+    } catch (error) {
+      notifier.error(
+        apiErrorMessage(error, "Could not sign in. Please try again.")
+      )
     }
   }
 

@@ -17,7 +17,8 @@ export default function LandingRedirect() {
     <Navigate
       to={landingPathFor(
         profile?.permissions ?? [],
-        profile?.isSuperuser ?? false
+        profile?.isSuperuser ?? false,
+        profile?.roles.map((role) => role.codename) ?? []
       )}
       replace
     />

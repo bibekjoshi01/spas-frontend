@@ -46,6 +46,7 @@ const CACHE_TAGS = [
   "Permission",
   "Profile",
   "PerformanceWeights",
+  "StudentPortal",
 ] as const
 
 /**

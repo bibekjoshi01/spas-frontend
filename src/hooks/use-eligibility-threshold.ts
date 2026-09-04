@@ -12,9 +12,14 @@ import {
  * default stands in, which is what the server uses for a college that has never
  * opened its settings screen.
  */
-export function useEligibilityThreshold(): number {
-  const { data } = useGetPerformanceWeightsQuery()
+export function useEligibilityThreshold(override?: number): number {
+  const { data } = useGetPerformanceWeightsQuery(undefined, {
+    skip: override !== undefined,
+  })
   const threshold = Number(data?.attendanceEligibilityThreshold)
 
-  return Number.isFinite(threshold) ? threshold : DEFAULT_ELIGIBILITY_THRESHOLD
+  return (
+    override ??
+    (Number.isFinite(threshold) ? threshold : DEFAULT_ELIGIBILITY_THRESHOLD)
+  )
 }

@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { AttendanceTrendSummary } from "@/components/attendance-trend"
 import { QueryState } from "@/components/query-state"
 import { SubjectRecordSkeleton } from "@/components/skeletons"
 import {
@@ -133,6 +134,13 @@ export function StudentDetailDialog({
                   <p className="border bg-card p-3 text-sm text-muted-foreground">
                     Attendance summary is unavailable.
                   </p>
+                )}
+
+                {data.attendance?.trend && (
+                  <AttendanceTrendSummary
+                    trend={data.attendance.trend}
+                    className="border border-t-0 bg-card p-3"
+                  />
                 )}
               </section>
 

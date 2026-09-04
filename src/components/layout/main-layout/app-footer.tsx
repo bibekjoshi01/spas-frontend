@@ -3,16 +3,28 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { FOOTER_NAV_ITEMS } from "@/lib/constants/nav-items"
 import { useAppSelector } from "@/lib/redux/hooks"
+import { useIsSuperUser, usePermissions } from "@/hooks/use-has-permissions"
 import { cn } from "@/lib/utils"
 
 export function AppFooter() {
   const navigate = useNavigate()
   const location = useLocation()
   const roles = useAppSelector((state) => state.auth.profile?.roles ?? [])
+  const permissions = usePermissions()
+  const isSuperuser = useIsSuperUser()
   const items = FOOTER_NAV_ITEMS.filter(
     (item) =>
       item.showInSidebar !== false &&
-      (!item.role || roles.some((role) => role.codename === item.role))
+      (!item.permission ||
+        permissions.includes(item.permission) ||
+        isSuperuser) &&
+      (!item.role || roles.some((role) => role.codename === item.role)) &&
+      (!item.allowedRoles ||
+        isSuperuser ||
+        roles.some((role) => item.allowedRoles?.includes(role.codename))) &&
+      (!item.deniedRoles ||
+        !roles.some((role) => item.deniedRoles?.includes(role.codename))) &&
+      (!item.superuserOnly || isSuperuser)
   )
 
   const handleClick = (href: string) => {

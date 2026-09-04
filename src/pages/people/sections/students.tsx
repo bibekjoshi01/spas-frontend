@@ -205,6 +205,11 @@ export function StudentsSection() {
             cell: (row) => row.registrationNumber || "—",
           },
           {
+            header: "Login username",
+            className: "font-mono text-xs text-muted-foreground",
+            cell: (row) => row.username,
+          },
+          {
             header: "Contact",
             className: "text-muted-foreground",
             cell: (row) => (

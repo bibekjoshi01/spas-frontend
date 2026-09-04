@@ -25,6 +25,7 @@ const People = lazy(() => import("@/pages/people/students"))
 const Accounts = lazy(() => import("@/pages/people/accounts"))
 const PerformanceSettings = lazy(() => import("@/pages/settings/performance"))
 const AuditTrailPage = lazy(() => import("@/pages/audit"))
+const StudentDashboard = lazy(() => import("@/pages/student"))
 
 export interface AppRoute {
   path: string
@@ -40,6 +41,7 @@ export interface AppRoute {
   role?: string
   /** At least one management role; superusers bypass this list. */
   allowedRoles?: string[]
+  deniedRoles?: string[]
   superuserOnly?: boolean
   /**
    * The shape the router draws while this route's chunk downloads.
@@ -59,6 +61,15 @@ export const privateRoutes: AppRoute[] = [
     element: Overview,
     skeleton: "dashboard",
     title: "Dashboard",
+    showInSidebar: true,
+    deniedRoles: ["STUDENT"],
+  },
+  {
+    path: "/student",
+    element: StudentDashboard,
+    role: "STUDENT",
+    skeleton: "dashboard",
+    title: "My Performance",
     showInSidebar: true,
   },
   {
@@ -233,7 +244,9 @@ export const privateRoutes: AppRoute[] = [
  */
 export function landingPathFor(
   _permissions: string[],
-  _isSuperuser: boolean
+  _isSuperuser: boolean,
+  roles: string[] = []
 ): string {
+  if (roles.includes("STUDENT")) return "/student"
   return "/dashboard"
 }

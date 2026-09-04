@@ -18,6 +18,16 @@ export const auth = {
     })
   },
 
+  setTokens(tokens: { access: string; refresh: string }) {
+    this.setAccess(tokens.access)
+    Cookies.set("refresh", tokens.refresh, {
+      secure: window.location.protocol === "https:",
+      sameSite: "Lax",
+      path: "/",
+      expires: 10,
+    })
+  },
+
   clear() {
     Cookies.remove("access", { path: "/" })
     Cookies.remove("refresh", { path: "/" })

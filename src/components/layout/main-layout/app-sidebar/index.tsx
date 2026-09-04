@@ -29,6 +29,8 @@ export default function AppSidebar() {
       (!item.allowedRoles ||
         isSuperUser ||
         roles.some((role) => item.allowedRoles?.includes(role.codename))) &&
+      (!item.deniedRoles ||
+        !roles.some((role) => item.deniedRoles?.includes(role.codename))) &&
       (!item.superuserOnly || isSuperUser)
   )
 

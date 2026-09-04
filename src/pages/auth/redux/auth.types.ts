@@ -24,6 +24,7 @@ export interface IUserProfile {
   alternatePhoneNo: string
   photo: string | null
   isSuperuser: boolean
+  mustChangePassword: boolean
   roles: IRole[]
   permissions: string[]
 }

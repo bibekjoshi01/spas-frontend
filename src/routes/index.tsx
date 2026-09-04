@@ -68,6 +68,7 @@ export const router = createBrowserRouter([
                       permission={route.permission}
                       role={route.role}
                       allowedRoles={route.allowedRoles}
+                      deniedRoles={route.deniedRoles}
                       superuserOnly={route.superuserOnly}
                     >
                       <Suspense

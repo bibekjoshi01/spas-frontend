@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
+import { TrendBadge } from "@/components/attendance-trend"
 import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
 import { DashboardSkeleton } from "@/components/skeletons"
@@ -243,6 +244,10 @@ export default function OverviewPage() {
                           <AttendanceMeter
                             percentage={student.attendancePercentage}
                           />
+                          {/* Two students at the same percentage need opposite
+                              conversations depending on which way they are
+                              going, so the list says which. */}
+                          <TrendBadge trend={student.trend} />
                         </div>
                       ))}
                     </div>

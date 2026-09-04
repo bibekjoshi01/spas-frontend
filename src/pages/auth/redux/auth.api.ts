@@ -57,8 +57,12 @@ export async function updateProfileRequest(
 export async function changePasswordRequest(payload: {
   currentPassword: string
   newPassword: string
-}): Promise<void> {
-  await axiosInstance.post(`${USER_ROOT}/account/change-password`, payload)
+}): Promise<ITokens> {
+  const { data } = await axiosInstance.post<{ tokens: ITokens }>(
+    `${USER_ROOT}/account/change-password`,
+    payload
+  )
+  return data.tokens
 }
 
 export async function requestPasswordReset(persona: string): Promise<string> {

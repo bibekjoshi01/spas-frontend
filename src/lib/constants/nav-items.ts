@@ -29,6 +29,7 @@ export interface NavItem {
   permission?: string
   role?: string
   allowedRoles?: string[]
+  deniedRoles?: string[]
   superuserOnly?: boolean
   showInSidebar?: boolean
   breadcrumb: string
@@ -43,6 +44,15 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/dashboard",
     breadcrumb: "Dashboard",
     icon: LayoutDashboard,
+    section: "Workspace",
+    deniedRoles: ["STUDENT"],
+  },
+  {
+    label: "My Performance",
+    href: "/student",
+    role: "STUDENT",
+    breadcrumb: "My Performance",
+    icon: GraduationCap,
     section: "Workspace",
   },
   {

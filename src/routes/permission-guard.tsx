@@ -11,6 +11,7 @@ interface PermissionGuardProps {
   permission?: string
   role?: string
   allowedRoles?: string[]
+  deniedRoles?: string[]
   superuserOnly?: boolean
   children: React.ReactNode
 }
@@ -19,6 +20,7 @@ export default function PermissionGuard({
   permission,
   role,
   allowedRoles,
+  deniedRoles,
   superuserOnly = false,
   children,
 }: PermissionGuardProps) {
@@ -30,11 +32,15 @@ export default function PermissionGuard({
     !allowedRoles ||
     isSuperuser ||
     roles.some((item) => allowedRoles.includes(item.codename))
+  const hasDeniedRole = deniedRoles?.some((codename) =>
+    roles.some((item) => item.codename === codename)
+  )
 
   if (
     !hasPermission ||
     !hasRole ||
     !hasAllowedRole ||
+    hasDeniedRole ||
     (superuserOnly && !isSuperuser)
   ) {
     return <Navigate to="/401" replace />

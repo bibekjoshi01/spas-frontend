@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { apiErrorMessage } from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
+import { auth } from "@/lib/redux/auth"
 import { changePasswordRequest } from "@/pages/auth/redux/auth.api"
 
 interface ChangePasswordDialogProps {
@@ -68,7 +69,9 @@ function ChangePasswordForm({
     setError(null)
     setIsSaving(true)
     try {
-      await changePasswordRequest({ currentPassword, newPassword })
+      auth.setTokens(
+        await changePasswordRequest({ currentPassword, newPassword })
+      )
       notifier.success("Password changed successfully.")
       onDone()
     } catch (requestError) {

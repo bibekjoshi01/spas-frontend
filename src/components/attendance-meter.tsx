@@ -16,6 +16,7 @@ const TEXT_TONE = {
 
 interface AttendanceMeterProps {
   percentage: number
+  threshold?: number
   /** Renders the number beside the bar. */
   showValue?: boolean
   className?: string
@@ -29,10 +30,11 @@ interface AttendanceMeterProps {
  */
 export function AttendanceMeter({
   percentage,
+  threshold: thresholdOverride,
   showValue = true,
   className,
 }: AttendanceMeterProps) {
-  const threshold = useEligibilityThreshold()
+  const threshold = useEligibilityThreshold(thresholdOverride)
   const tone = eligibilityFor(percentage, threshold)
   const clamped = Math.max(0, Math.min(100, percentage))
   // Eligibility still uses the exact API value; only its presentation is
