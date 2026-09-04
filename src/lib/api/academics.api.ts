@@ -33,13 +33,29 @@ export interface Program {
   isActive: boolean
 }
 
+export type BatchStatus = "UPCOMING" | "RUNNING" | "GRADUATED"
+
 export interface Batch {
   id: number
   uuid: string
   year: number
   program: { id: number; name: string; code: string }
   studentCount: number
+  status: BatchStatus
+  graduatedOn: string | null
   isActive: boolean
+}
+
+/** What graduating a batch is about to change, before it changes it. */
+export interface BatchGraduationPreview {
+  batch: string
+  semestersTotal: number
+  semestersCompleted: number
+  canGraduate: boolean
+  blocker: string | null
+  studentsTotal: number
+  studentsToGraduate: number
+  studentsAlreadyLeft: number
 }
 
 export interface BatchSemester {
@@ -240,6 +256,25 @@ export const academicsApi = rootAPI.injectEndpoints({
         data: body,
       }),
       invalidatesTags: ["Batch", ...BATCH_DEPENDENTS],
+    }),
+    getBatchGraduationPreview: build.query<BatchGraduationPreview, number>({
+      query: (id) => ({ url: `${ACADEMICS}/batches/${id}/graduation-preview` }),
+    }),
+    graduateBatch: build.mutation<MessageResponse, number>({
+      query: (id) => ({
+        url: `${ACADEMICS}/batches/${id}/graduate`,
+        method: "POST",
+      }),
+      // Graduating rewrites student standing across the cohort, so everything
+      // that reads a student or a batch has to be refetched.
+      invalidatesTags: ["Batch", "Student", "Overview", "ClassSummary"],
+    }),
+    undoBatchGraduation: build.mutation<MessageResponse, number>({
+      query: (id) => ({
+        url: `${ACADEMICS}/batches/${id}/undo-graduation`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Batch", "Student", "Overview", "ClassSummary"],
     }),
     deleteBatch: build.mutation<MessageResponse, number>({
       query: (id) => ({
@@ -471,6 +506,9 @@ export const {
   useUpdateProgramMutation,
   useDeleteProgramMutation,
   useGetBatchesQuery,
+  useGetBatchGraduationPreviewQuery,
+  useGraduateBatchMutation,
+  useUndoBatchGraduationMutation,
   useCreateBatchMutation,
   useUpdateBatchMutation,
   useDeleteBatchMutation,

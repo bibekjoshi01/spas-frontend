@@ -1,10 +1,18 @@
 import { useState } from "react"
-import { ChevronRight, Pencil, Plus, Trash2, X } from "lucide-react"
+import {
+  ChevronRight,
+  GraduationCap,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { QueryState } from "@/components/query-state"
 import { ListSkeleton } from "@/components/skeletons"
+import { GraduateBatchDialog } from "./graduate-batch-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DatePickerInput } from "@/components/ui/date-time-picker"
@@ -66,6 +74,7 @@ export function BatchesSection() {
   const [isCreating, setIsCreating] = useState(false)
   const [editing, setEditing] = useState<Batch | null>(null)
   const [archiving, setArchiving] = useState<Batch | null>(null)
+  const [graduating, setGraduating] = useState<Batch | null>(null)
   const [expanded, setExpanded] = useState<number | null>(null)
   const [archive, archiveState] = useDeleteBatchMutation()
 
@@ -142,12 +151,19 @@ export function BatchesSection() {
               canDelete={canDelete}
               onEdit={() => setEditing(batch)}
               onArchive={() => setArchiving(batch)}
+              onGraduate={() => setGraduating(batch)}
             />
           ))}
         </div>
       </QueryState>
 
       {isCreating && <BatchForm onClose={() => setIsCreating(false)} />}
+      {graduating && (
+        <GraduateBatchDialog
+          batch={graduating}
+          onClose={() => setGraduating(null)}
+        />
+      )}
       {editing && (
         <BatchForm batch={editing} onClose={() => setEditing(null)} />
       )}
@@ -186,6 +202,7 @@ function BatchRow({
   canDelete,
   onEdit,
   onArchive,
+  onGraduate,
 }: {
   batch: Batch
   isOpen: boolean
@@ -194,6 +211,7 @@ function BatchRow({
   canDelete: boolean
   onEdit: () => void
   onArchive: () => void
+  onGraduate: () => void
 }) {
   const semesters = useGetBatchSemestersQuery(
     { batch: batch.id, limit: 0 },
@@ -241,6 +259,12 @@ function BatchRow({
             <span className="text-sm text-muted-foreground">
               {batch.program.name}
             </span>
+            {batch.status === "GRADUATED" && (
+              <Badge variant="outline" className="gap-1">
+                <GraduationCap className="size-3" aria-hidden />
+                Graduated
+              </Badge>
+            )}
           </div>
           <span className="text-sm text-muted-foreground tabular-nums">
             {batch.studentCount} students
@@ -257,6 +281,17 @@ function BatchRow({
                 onClick={onEdit}
               >
                 <Pencil className="size-4" aria-hidden />
+              </Button>
+            )}
+            {canEdit && batch.status !== "GRADUATED" && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Graduate ${batch.program.code} ${batch.year}`}
+                onClick={onGraduate}
+              >
+                <GraduationCap className="size-4" aria-hidden />
               </Button>
             )}
             {canDelete && (

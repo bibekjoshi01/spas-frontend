@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   ClipboardList,
   GraduationCap,
+  History,
   LayoutDashboard,
   Layers,
   ShieldCheck,
@@ -204,6 +205,16 @@ export const NAV_ITEMS: NavItem[] = [
     breadcrumb: "Accounts & Roles",
     icon: ShieldCheck,
     section: "People",
+  },
+  {
+    label: "Audit Trail",
+    href: "/audit",
+    // Which trails open is decided again per record type by the permission
+    // that admits someone to those records; this only shows the screen.
+    permission: "view_user",
+    breadcrumb: "Audit Trail",
+    icon: History,
+    section: "Administration",
   },
   {
     label: "Performance Settings",

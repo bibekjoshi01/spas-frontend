@@ -45,6 +45,16 @@ export const ALL: ListParams = { limit: 0 }
  */
 export const ACTIVE_ONLY: ListParams = { limit: 0, is_active: true }
 
+/**
+ * The batches a picker offers: cohorts that have not finished.
+ *
+ * A college running five programs adds five batches a year and never removes
+ * one, so by year five a plain list is fifty entries of which thirty are
+ * history. Graduated batches stay readable everywhere they are listed — they
+ * are only kept out of the pickers used to create new work.
+ */
+export const STUDYING_BATCHES: ListParams = { limit: 0, status: "RUNNING" }
+
 /** Pulls a human-readable message out of an RTK Query error. */
 export function apiErrorMessage(
   error: unknown,

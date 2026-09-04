@@ -1,9 +1,10 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Mail } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { PageHeader } from "@/components/page-header"
 import { ResourceList } from "@/components/resource-list"
+import { Combobox } from "@/components/ui/combobox"
 import { StudentNameSortButton } from "@/components/student-name-sort"
 import {
   studentNameOrdering,
@@ -21,19 +22,40 @@ import { useEligibilityThreshold } from "@/hooks/use-eligibility-threshold"
 import { usePagedQuery } from "@/hooks/use-paged-query"
 import {
   ALL,
+  STUDYING_BATCHES,
   type AttendanceAttention,
   useGetAttendanceAttentionQuery,
   useGetBatchesQuery,
+  useGetProgramsQuery,
 } from "@/lib/api"
 import { formatPercentage } from "@/lib/utils"
 
 export default function AttendanceAttentionPage() {
-  const batches = useGetBatchesQuery(ALL)
+  const programs = useGetProgramsQuery(ALL)
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
+    program: "all",
     batch: "all",
     ordering: "full_name",
   })
+  // Program narrows the batch list before it is drawn, so the picker stays a
+  // handful of options however many years the college has been running.
+  const batches = useGetBatchesQuery({
+    ...STUDYING_BATCHES,
+    ...(filters.program !== "all" ? { program: filters.program } : {}),
+  })
+  const batchOptions = useMemo(
+    () => [
+      { value: "all", label: "All batches" },
+      ...(batches.data?.results ?? []).map((batch) => ({
+        value: String(batch.id),
+        label: `${batch.program.code} · Batch ${batch.year}`,
+        hint: `${batch.studentCount} students`,
+        group: batch.program.name,
+      })),
+    ],
+    [batches.data]
+  )
   const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
   const { data, isLoading, isFetching, error, refetch } =
     useGetAttendanceAttentionQuery(params)
@@ -65,21 +87,34 @@ export default function AttendanceAttentionPage() {
         filters={
           <>
             <Select
-              value={filters.batch}
-              onValueChange={(batch) => setFilters({ batch })}
+              value={filters.program}
+              onValueChange={(program) =>
+                // Dropping the program drops the batch it scoped with it.
+                setFilters({ program, batch: "all" })
+              }
             >
-              <SelectTrigger className="w-52" aria-label="Filter by batch">
-                <SelectValue placeholder="All batches" />
+              <SelectTrigger className="w-52" aria-label="Filter by program">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All batches</SelectItem>
-                {batches.data?.results.map((batch) => (
-                  <SelectItem key={batch.id} value={String(batch.id)}>
-                    {batch.program.code} · Batch {batch.year}
+                <SelectItem value="all">All programs</SelectItem>
+                {programs.data?.results.map((row) => (
+                  <SelectItem key={row.id} value={String(row.id)}>
+                    {row.code} — {row.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
+            <Combobox
+              className="w-52"
+              aria-label="Filter by batch"
+              value={filters.batch}
+              onValueChange={(batch) => setFilters({ batch: batch || "all" })}
+              placeholder="All batches"
+              searchPlaceholder="Search batches"
+              options={batchOptions}
+            />
             <Select
               value={filters.ordering}
               onValueChange={(ordering) => {
@@ -116,10 +151,13 @@ export default function AttendanceAttentionPage() {
           </>
         }
         clearFilters={{
-          visible: filters.batch !== "all" || filters.ordering !== "full_name",
+          visible:
+            filters.batch !== "all" ||
+            filters.program !== "all" ||
+            filters.ordering !== "full_name",
           onClear: () => {
             setNameSort("default")
-            setFilters({ batch: "all", ordering: "full_name" })
+            setFilters({ batch: "all", program: "all", ordering: "full_name" })
           },
         }}
         emptyTitle="No students need attendance follow-up"

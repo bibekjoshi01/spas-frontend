@@ -6,6 +6,7 @@ import { FilterBar } from "@/components/filter-bar"
 import { PageHeader } from "@/components/page-header"
 import { ExportMenu } from "@/components/export-menu"
 import { ResourceList } from "@/components/resource-list"
+import { Combobox } from "@/components/ui/combobox"
 import { ReportDialogFallback } from "@/components/report-dialog-fallback"
 import { StudentReportSkeleton } from "@/components/skeletons"
 import { StudentNameSortButton } from "@/components/student-name-sort"
@@ -31,6 +32,7 @@ import {
   useGetBatchSemestersQuery,
   useGetBatchSemesterPerformanceReportQuery,
   useGetBatchesQuery,
+  useGetProgramsQuery,
   useLazyGetBatchSemesterPerformanceReportQuery,
 } from "@/lib/api"
 import { exportBatchSemesterPerformancePdf } from "@/lib/pdf-reports"
@@ -46,10 +48,28 @@ const ManagementStudentReportDialog = lazy(async () => ({
     .ManagementStudentReportDialog,
 }))
 
+const SEMESTER_STATUS: Record<string, string> = {
+  UPCOMING: "Upcoming",
+  RUNNING: "Running now",
+  COMPLETED: "Completed",
+}
+
 export default function BatchPerformanceReportPage() {
-  const batches = useGetBatchesQuery(ALL)
-  const semesters = useGetBatchSemestersQuery(ALL)
+  const programs = useGetProgramsQuery(ALL)
+  const [program, setProgram] = useState("all")
   const [batch, setBatch] = useState("all")
+  // Both lists are narrowed by the server rather than fetched whole and
+  // filtered here: a college five years in has hundreds of semesters, and none
+  // of the ones outside the chosen batch are ever drawn.
+  const batches = useGetBatchesQuery({
+    ...ALL,
+    ...(program !== "all" ? { program } : {}),
+  })
+  const semesters = useGetBatchSemestersQuery({
+    ...ALL,
+    ...(batch !== "all" ? { batch } : {}),
+    ...(program !== "all" ? { batch__program: program } : {}),
+  })
   const [semesterId, setSemesterId] = useState("")
   const [studentId, setStudentId] = useState<number | null>(null)
   const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
@@ -90,6 +110,39 @@ export default function BatchPerformanceReportPage() {
   // Do not keep rows from the previously selected batch on screen while the
   // newly selected batch-semester is loading.
   const data = report.currentData
+
+  const batchOptions = useMemo(
+    () => [
+      { value: "all", label: "All authorized batches" },
+      ...(batches.data?.results ?? []).map((row) => ({
+        value: String(row.id),
+        label: `${row.program.code} · Batch ${row.year}`,
+        hint: `${row.studentCount} students`,
+        group: row.program.name,
+      })),
+    ],
+    [batches.data]
+  )
+
+  const semesterOptions = useMemo(
+    () =>
+      visibleSemesters.map((row) => ({
+        value: String(row.id),
+        label: `Semester ${row.semester} · ${row.batch.program.code} ${row.batch.year}`,
+        hint: SEMESTER_STATUS[row.status] ?? row.status,
+        group: `${row.batch.program.code} · Batch ${row.batch.year}`,
+      })),
+    [visibleSemesters]
+  )
+
+  const selectProgram = (value: string) => {
+    // Dropping the program drops what it scoped, or the toolbar would name a
+    // batch from a program that is no longer selected.
+    setProgram(value)
+    setBatch("all")
+    setSemesterId("")
+    setOffset(0)
+  }
 
   const selectBatch = (value: string) => {
     setBatch(value)
@@ -184,23 +237,23 @@ export default function BatchPerformanceReportPage() {
             pageKey="reports.batch-performance"
             filters={[
               {
-                id: "batch",
-                label: "Batch",
-                // Batch and semester name the report rather than narrow it, so
-                // neither can be taken off the toolbar.
-                pinned: true,
+                id: "program",
+                label: "Program",
+                isActive: program !== "all",
+                onReset: () => selectProgram("all"),
                 control: (
-                  <Select value={batch} onValueChange={selectBatch}>
-                    <SelectTrigger className="w-52" aria-label="Select batch">
-                      <SelectValue placeholder="Select batch" />
+                  <Select value={program} onValueChange={selectProgram}>
+                    <SelectTrigger
+                      className="w-52"
+                      aria-label="Filter by program"
+                    >
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">
-                        All authorized batches
-                      </SelectItem>
-                      {batches.data?.results.map((row) => (
+                      <SelectItem value="all">All programs</SelectItem>
+                      {programs.data?.results.map((row) => (
                         <SelectItem key={row.id} value={String(row.id)}>
-                          {row.program.code} · Batch {row.year}
+                          {row.code} — {row.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -208,29 +261,37 @@ export default function BatchPerformanceReportPage() {
                 ),
               },
               {
+                id: "batch",
+                label: "Batch",
+                // Batch and semester name the report rather than narrow it, so
+                // neither can be taken off the toolbar.
+                pinned: true,
+                control: (
+                  <Combobox
+                    className="w-52"
+                    aria-label="Select batch"
+                    value={batch}
+                    onValueChange={(value) => selectBatch(value || "all")}
+                    placeholder="All authorized batches"
+                    searchPlaceholder="Search batches"
+                    options={batchOptions}
+                  />
+                ),
+              },
+              {
                 id: "semester",
                 label: "Semester",
                 pinned: true,
                 control: (
-                  <Select
+                  <Combobox
+                    className="w-64"
+                    aria-label="Select semester"
                     value={effectiveSemesterId}
                     onValueChange={selectSemester}
-                  >
-                    <SelectTrigger
-                      className="w-64"
-                      aria-label="Select semester"
-                    >
-                      <SelectValue placeholder="Select semester" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {visibleSemesters.map((row) => (
-                        <SelectItem key={row.id} value={String(row.id)}>
-                          {row.batch.program.code} · Batch {row.batch.year} ·
-                          Semester {row.semester} · {row.status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select semester"
+                    searchPlaceholder="Search semesters"
+                    options={semesterOptions}
+                  />
                 ),
               },
               {

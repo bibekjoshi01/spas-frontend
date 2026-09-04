@@ -1,10 +1,11 @@
-import { lazy, Suspense, useState } from "react"
+import { lazy, Suspense, useMemo, useState } from "react"
 import { Eye, Pencil, Plus, Trash2, Upload } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { ImportDialog } from "@/components/import-dialog"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { ResourceList, RowActions } from "@/components/resource-list"
+import { Combobox } from "@/components/ui/combobox"
 import { RowActionsMenu } from "@/components/row-actions-menu"
 import { ReportDialogFallback } from "@/components/report-dialog-fallback"
 import { StudentReportSkeleton } from "@/components/skeletons"
@@ -27,12 +28,14 @@ import { useHasPermission } from "@/hooks/use-has-permissions"
 import { usePagedQuery } from "@/hooks/use-paged-query"
 import {
   ALL,
+  STUDYING_BATCHES,
   type Student,
   fieldErrorsFrom,
   formErrorFrom,
   useCreateStudentMutation,
   useDeleteStudentMutation,
   useGetBatchesQuery,
+  useGetProgramsQuery,
   useImportStudentsMutation,
   useGetStudentsQuery,
   useUpdateStudentMutation,
@@ -55,16 +58,38 @@ const STATUS_LABEL: Record<Student["status"], string> = {
 
 /** The student directory — everyone admitted, regardless of class. */
 export function StudentsSection() {
-  const batches = useGetBatchesQuery(ALL)
+  const programs = useGetProgramsQuery(ALL)
   const [importStudents] = useImportStudentsMutation()
   const { params, offset, setOffset, filters, setFilters } = usePagedQuery({
     search: "",
+    batch__program: "all",
     batch: "all",
     status: "all",
     ordering: "",
   })
+  // Program narrows the batch list before it is drawn, so a college five years
+  // in picks from that programme's four batches rather than everyone's fifty.
+  const batches = useGetBatchesQuery({
+    ...ALL,
+    ...(filters["batch__program"] && filters["batch__program"] !== "all"
+      ? { program: filters["batch__program"] }
+      : {}),
+  })
   const { data, isLoading, isFetching, error, refetch } =
     useGetStudentsQuery(params)
+
+  const batchOptions = useMemo(
+    () => [
+      { value: "all", label: "All batches" },
+      ...(batches.data?.results ?? []).map((row) => ({
+        value: String(row.id),
+        label: `${row.program.code} ${row.year}`,
+        hint: `${row.studentCount} students`,
+        group: row.program.name,
+      })),
+    ],
+    [batches.data]
+  )
 
   const [isCreating, setIsCreating] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
@@ -102,21 +127,35 @@ export function StudentsSection() {
         filters={
           <>
             <Select
-              value={filters.batch}
-              onValueChange={(value) => setFilters({ batch: value })}
+              value={filters["batch__program"]}
+              onValueChange={(value) =>
+                // Dropping the programme drops the batch it scoped, or the
+                // filter bar would show a batch from a programme not selected.
+                setFilters({ batch__program: value, batch: "all" })
+              }
             >
-              <SelectTrigger className="w-48" aria-label="Filter by batch">
+              <SelectTrigger className="w-52" aria-label="Filter by program">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All batches</SelectItem>
-                {batches.data?.results.map((row) => (
+                <SelectItem value="all">All programs</SelectItem>
+                {programs.data?.results.map((row) => (
                   <SelectItem key={row.id} value={String(row.id)}>
-                    {row.program.code} {row.year}
+                    {row.code} — {row.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
+            <Combobox
+              className="w-52"
+              aria-label="Filter by batch"
+              value={filters.batch}
+              onValueChange={(value) => setFilters({ batch: value || "all" })}
+              placeholder="All batches"
+              searchPlaceholder="Search batches"
+              options={batchOptions}
+            />
 
             <Select
               value={filters.status}
@@ -137,7 +176,10 @@ export function StudentsSection() {
           </>
         }
         clearFilters={{
-          visible: filters.batch !== "all" || filters.status !== "all",
+          visible:
+            filters.batch !== "all" ||
+            filters.status !== "all" ||
+            filters["batch__program"] !== "all",
           onClear: () => setFilters({ batch: "all", status: "all" }),
         }}
         action={
@@ -389,7 +431,9 @@ function StudentForm({
   student?: Student
   onClose: () => void
 }) {
-  const batches = useGetBatchesQuery(ALL)
+  // Nobody is admitted into a cohort that has already graduated, so the form
+  // does not offer one. The directory filter above still lists them all.
+  const batches = useGetBatchesQuery(STUDYING_BATCHES)
   const [create, createState] = useCreateStudentMutation()
   const [update, updateState] = useUpdateStudentMutation()
 
