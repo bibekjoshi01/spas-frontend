@@ -4,15 +4,13 @@ import {
   CalendarCheck,
   ClipboardCheck,
   ClipboardList,
-  FileDown,
   Star,
 } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
-import { InlineSpinner, QueryState } from "@/components/query-state"
+import { QueryState } from "@/components/query-state"
 import { StudentReportSkeleton } from "@/components/skeletons"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -36,6 +34,9 @@ import {
   useGetManagementStudentReportQuery,
 } from "@/lib/api"
 import { exportManagementStudentReportPdf } from "@/lib/pdf-reports"
+import { ExportMenu } from "@/components/export-menu"
+import { exportSpreadsheet, type ExportFormat } from "@/lib/spreadsheet-export"
+import { managementStudentExportTable } from "@/lib/spreadsheet-reports"
 import { formatPercentage } from "@/lib/utils"
 import { formatDisplayDate } from "@/lib/utils/date"
 import { notifier } from "@/lib/utils/notifier"
@@ -59,7 +60,7 @@ export function ManagementStudentReportDialog({
   const data = report.data
   // The full record is a slow read and the PDF is drawn from it, so the button
   // reports its own progress rather than only greying out.
-  const [exporting, setExporting] = useState(false)
+  const [exporting, setExporting] = useState<ExportFormat | null>(null)
   const [selection, setSelection] = useState<{
     studentId: number
     semester: number
@@ -78,15 +79,16 @@ export function ManagementStudentReportDialog({
     : (defaultSemester?.semester ?? null)
   const semester = semesters.find((group) => group.semester === activeSemester)
 
-  const exportPdf = async () => {
+  const exportReport = async (format: ExportFormat) => {
     if (!data) return
-    setExporting(true)
+    setExporting(format)
     try {
-      await exportManagementStudentReportPdf(data)
+      if (format === "pdf") await exportManagementStudentReportPdf(data)
+      else await exportSpreadsheet(format, managementStudentExportTable(data))
     } catch {
       notifier.error("Could not export this student report.")
     } finally {
-      setExporting(false)
+      setExporting(null)
     }
   }
 
@@ -108,19 +110,12 @@ export function ManagementStudentReportDialog({
                   : "Loading the complete academic performance record…"}
               </DialogDescription>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!data || exporting}
-              onClick={() => void exportPdf()}
-            >
-              {exporting ? (
-                <InlineSpinner />
-              ) : (
-                <FileDown className="size-4" aria-hidden />
-              )}
-              {exporting ? "Preparing PDF…" : "Export full PDF"}
-            </Button>
+            <ExportMenu
+              exporting={exporting}
+              disabled={!data}
+              label="Export full report"
+              onExport={(format) => void exportReport(format)}
+            />
           </div>
         </DialogHeader>
 

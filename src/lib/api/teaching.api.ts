@@ -224,7 +224,11 @@ export const teachingApi = rootAPI.injectEndpoints({
         allocation: number
         date: string
         period?: number
-        entries: Array<{ enrollment: number; status: AttendanceStatus }>
+        entries: Array<{
+          enrollment: number
+          status: AttendanceStatus
+          excuseReason?: string
+        }>
       }
     >({
       query: (body) => ({

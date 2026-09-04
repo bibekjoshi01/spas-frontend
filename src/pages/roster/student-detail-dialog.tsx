@@ -1,8 +1,7 @@
 import { useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { FileDown } from "lucide-react"
+import { ExportMenu } from "@/components/export-menu"
 import {
   Dialog,
   DialogContent,
@@ -18,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { InlineSpinner, QueryState } from "@/components/query-state"
+import { QueryState } from "@/components/query-state"
 import { SubjectRecordSkeleton } from "@/components/skeletons"
 import {
   ASSIGNMENT_LABELS,
@@ -26,6 +25,8 @@ import {
   useGetClassStudentDetailQuery,
 } from "@/lib/api"
 import { exportStudentDetailPdf } from "@/lib/pdf-reports"
+import { exportSpreadsheet, type ExportFormat } from "@/lib/spreadsheet-export"
+import { classStudentExportTable } from "@/lib/spreadsheet-reports"
 import { formatPercentage } from "@/lib/utils"
 import { notifier } from "@/lib/utils/notifier"
 
@@ -42,17 +43,18 @@ export function StudentDetailDialog({
   const data = detail.data
   // Drawing the PDF outlasts the fetch it is drawn from, so the button reports
   // its own progress rather than only greying out.
-  const [exporting, setExporting] = useState(false)
+  const [exporting, setExporting] = useState<ExportFormat | null>(null)
 
-  const exportPdf = async () => {
+  const exportReport = async (format: ExportFormat) => {
     if (!data) return
-    setExporting(true)
+    setExporting(format)
     try {
-      await exportStudentDetailPdf(data)
+      if (format === "pdf") await exportStudentDetailPdf(data)
+      else await exportSpreadsheet(format, classStudentExportTable(data))
     } catch {
       notifier.error("Could not export this student record.")
     } finally {
-      setExporting(false)
+      setExporting(null)
     }
   }
 
@@ -74,19 +76,11 @@ export function StudentDetailDialog({
                   : "Loading this student's subject record…"}
               </DialogDescription>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!data || exporting}
-              onClick={() => void exportPdf()}
-            >
-              {exporting ? (
-                <InlineSpinner />
-              ) : (
-                <FileDown className="size-4" aria-hidden />
-              )}
-              {exporting ? "Preparing PDF…" : "Export PDF"}
-            </Button>
+            <ExportMenu
+              exporting={exporting}
+              disabled={!data}
+              onExport={(format) => void exportReport(format)}
+            />
           </div>
         </DialogHeader>
 

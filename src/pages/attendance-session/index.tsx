@@ -1,6 +1,15 @@
 import { useMemo, useState } from "react"
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
-import { CalendarDays, Check, Copy, Phone, Save, Users } from "lucide-react"
+import {
+  CalendarDays,
+  Check,
+  Copy,
+  MessageSquareText,
+  Phone,
+  Save,
+  Users,
+  X,
+} from "lucide-react"
 
 import { PageHeader } from "@/components/page-header"
 import { UnsavedChangesGuard } from "@/components/unsaved-changes-guard"
@@ -94,6 +103,8 @@ export default function AttendanceSessionPage() {
   // during render and the edits sit on top, so a refetch never discards
   // unsaved marks and there is no effect syncing one into the other.
   const [edits, setEdits] = useState<Record<number, AttendanceStatus>>({})
+  const [reasonEdits, setReasonEdits] = useState<Record<number, string>>({})
+  const [reasonEnrollment, setReasonEnrollment] = useState<number | null>(null)
   const [search, setSearch] = useState("")
   const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
 
@@ -117,7 +128,19 @@ export default function AttendanceSessionPage() {
   }, [detail.data])
 
   const statuses = useMemo(() => ({ ...saved, ...edits }), [saved, edits])
-  const isDirty = Object.keys(edits).length > 0
+  const savedReasons = useMemo(() => {
+    const map: Record<number, string> = {}
+    detail.data?.records.forEach((row) => {
+      map[row.enrollment] = row.excuseReason
+    })
+    return map
+  }, [detail.data])
+  const reasons = useMemo(
+    () => ({ ...savedReasons, ...reasonEdits }),
+    [reasonEdits, savedReasons]
+  )
+  const isDirty =
+    Object.keys(edits).length > 0 || Object.keys(reasonEdits).length > 0
   const isComplete =
     (roster.data?.length ?? 0) > 0 &&
     roster.data?.every((entry) => Boolean(statuses[entry.enrollment]))
@@ -150,6 +173,14 @@ export default function AttendanceSessionPage() {
 
   const setStatus = (enrollment: number, status: AttendanceStatus) => {
     setEdits((current) => ({ ...current, [enrollment]: status }))
+    if (status === "EXCUSED") {
+      setReasonEnrollment(enrollment)
+    } else {
+      setReasonEdits((current) => ({ ...current, [enrollment]: "" }))
+      setReasonEnrollment((current) =>
+        current === enrollment ? null : current
+      )
+    }
   }
 
   const markAll = (status: AttendanceStatus) => {
@@ -159,6 +190,12 @@ export default function AttendanceSessionPage() {
       next[entry.enrollment] = status
     })
     setEdits(next)
+    if (status !== "EXCUSED") {
+      setReasonEdits(
+        Object.fromEntries(roster.data.map((entry) => [entry.enrollment, ""]))
+      )
+      setReasonEnrollment(null)
+    }
   }
 
   const copyPrevious = () => {
@@ -169,6 +206,13 @@ export default function AttendanceSessionPage() {
         previousDetail.data.records
           .filter((record) => allowed.has(record.enrollment))
           .map((record) => [record.enrollment, record.status])
+      )
+    )
+    setReasonEdits(
+      Object.fromEntries(
+        previousDetail.data.records
+          .filter((record) => allowed.has(record.enrollment))
+          .map((record) => [record.enrollment, record.excuseReason])
       )
     )
     notifier.info(
@@ -187,11 +231,17 @@ export default function AttendanceSessionPage() {
         entries: roster.data.map((entry) => ({
           enrollment: entry.enrollment,
           status: statuses[entry.enrollment]!,
+          excuseReason:
+            statuses[entry.enrollment] === "EXCUSED"
+              ? reasons[entry.enrollment] || ""
+              : "",
         })),
       }).unwrap()
 
       notifier.success(`Attendance saved for ${result.marked} students.`)
       setEdits({})
+      setReasonEdits({})
+      setReasonEnrollment(null)
     } catch (error) {
       notifier.error(apiErrorMessage(error, "Could not save attendance."))
     }
@@ -411,6 +461,68 @@ export default function AttendanceSessionPage() {
           )}
         </div>
       </QueryState>
+
+      {reasonEnrollment !== null &&
+        statuses[reasonEnrollment] === "EXCUSED" && (
+          <aside
+            className="fixed inset-y-0 right-0 z-40 flex w-full max-w-sm flex-col border-l bg-background shadow-xl"
+            aria-label="Excuse reason"
+          >
+            <div className="flex items-start justify-between gap-3 border-b p-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 font-semibold">
+                  <MessageSquareText
+                    className="size-4 text-sky-600"
+                    aria-hidden
+                  />
+                  Excuse reason
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {roster.data?.find(
+                    (entry) => entry.enrollment === reasonEnrollment
+                  )?.fullName ?? "Student"}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Close excuse reason"
+                onClick={() => setReasonEnrollment(null)}
+              >
+                <X className="size-4" aria-hidden />
+              </Button>
+            </div>
+            <div className="space-y-2 p-4">
+              <label htmlFor="excuse-reason" className="text-sm font-medium">
+                Comment or reason{" "}
+                <span className="text-muted-foreground">(optional)</span>
+              </label>
+              <textarea
+                id="excuse-reason"
+                value={reasons[reasonEnrollment] ?? ""}
+                onChange={(event) =>
+                  setReasonEdits((current) => ({
+                    ...current,
+                    [reasonEnrollment]: event.target.value,
+                  }))
+                }
+                maxLength={500}
+                rows={7}
+                autoFocus
+                placeholder="For example: Medical leave supported by a doctor's note"
+                className="min-h-36 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              />
+              <p className="text-right text-xs text-muted-foreground tabular-nums">
+                {(reasons[reasonEnrollment] ?? "").length}/500
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Saved with this student’s attendance record. Choosing another
+                status removes the reason.
+              </p>
+            </div>
+          </aside>
+        )}
     </div>
   )
 }

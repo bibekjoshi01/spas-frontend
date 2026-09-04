@@ -1,8 +1,9 @@
 import { lazy, Suspense, useMemo, useState } from "react"
-import { FileDown, Search } from "lucide-react"
+import { Search } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
-import { InlineSpinner, QueryState } from "@/components/query-state"
+import { ExportMenu } from "@/components/export-menu"
+import { QueryState } from "@/components/query-state"
 import { ReportDialogFallback } from "@/components/report-dialog-fallback"
 import { StudentNameSortButton } from "@/components/student-name-sort"
 import {
@@ -39,6 +40,8 @@ import {
 } from "@/lib/api"
 import { useEligibilityThreshold } from "@/hooks/use-eligibility-threshold"
 import { exportAllocationPerformancePdf } from "@/lib/pdf-reports"
+import { exportSpreadsheet, type ExportFormat } from "@/lib/spreadsheet-export"
+import { allocationExportTable } from "@/lib/spreadsheet-reports"
 import { formatPercentage } from "@/lib/utils"
 import { notifier } from "@/lib/utils/notifier"
 
@@ -64,7 +67,7 @@ export function AllocationReportDialog({
   const [detailEnrollment, setDetailEnrollment] = useState<number | null>(null)
   // Drawing a roster-sized PDF outlasts the click, so the button reports its own
   // progress rather than only greying out.
-  const [exporting, setExporting] = useState(false)
+  const [exporting, setExporting] = useState<ExportFormat | null>(null)
 
   const rows = useMemo(() => {
     const needle = search.trim().toLowerCase()
@@ -108,14 +111,21 @@ export function AllocationReportDialog({
     )
   ).length
 
-  const exportPdf = async () => {
-    setExporting(true)
+  const exportReport = async (format: ExportFormat) => {
+    setExporting(format)
     try {
-      await exportAllocationPerformancePdf(allocation, rows, threshold)
+      if (format === "pdf") {
+        await exportAllocationPerformancePdf(allocation, rows, threshold)
+      } else {
+        await exportSpreadsheet(
+          format,
+          allocationExportTable(allocation, rows, threshold)
+        )
+      }
     } catch {
       notifier.error("Could not export this subject report.")
     } finally {
-      setExporting(false)
+      setExporting(null)
     }
   }
 
@@ -139,19 +149,11 @@ export function AllocationReportDialog({
                   {allocation.teacher.fullName}
                 </DialogDescription>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!rows.length || exporting}
-                onClick={() => void exportPdf()}
-              >
-                {exporting ? (
-                  <InlineSpinner />
-                ) : (
-                  <FileDown className="size-4" aria-hidden />
-                )}
-                {exporting ? "Preparing PDF…" : "Export PDF"}
-              </Button>
+              <ExportMenu
+                exporting={exporting}
+                disabled={!rows.length}
+                onExport={(format) => void exportReport(format)}
+              />
             </div>
           </DialogHeader>
 
