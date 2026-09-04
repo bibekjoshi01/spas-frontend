@@ -14,6 +14,7 @@ import {
 import { PageHeader } from "@/components/page-header"
 import { UnsavedChangesGuard } from "@/components/unsaved-changes-guard"
 import { InlineSpinner, QueryState } from "@/components/query-state"
+import { RecordHistory } from "@/components/record-history"
 import { StudentNameSortButton } from "@/components/student-name-sort"
 import {
   sortStudentsByName,
@@ -458,6 +459,16 @@ export default function AttendanceSessionPage() {
             <p className="text-center text-xs text-muted-foreground">
               You have unsaved changes.
             </p>
+          )}
+
+          {/* A register edited after the fact is exactly what an audit asks
+              about, so the answer sits on the register itself. */}
+          {existingId && (
+            <RecordHistory
+              resource="attendance-session"
+              objectId={existingId}
+              label="Who changed this register"
+            />
           )}
         </div>
       </QueryState>

@@ -24,6 +24,7 @@ const Allocations = lazy(() => import("@/pages/academics/allocations"))
 const People = lazy(() => import("@/pages/people/students"))
 const Accounts = lazy(() => import("@/pages/people/accounts"))
 const PerformanceSettings = lazy(() => import("@/pages/settings/performance"))
+const AuditTrailPage = lazy(() => import("@/pages/audit"))
 
 export interface AppRoute {
   path: string
@@ -204,6 +205,15 @@ export const privateRoutes: AppRoute[] = [
     element: Accounts,
     permission: "view_user",
     title: "Accounts & Roles",
+    showInSidebar: true,
+  },
+  {
+    path: "/audit",
+    element: AuditTrailPage,
+    // Every trail is gated again by the permission that opens its records, so
+    // this only decides who sees the screen at all.
+    permission: "view_user",
+    title: "Audit Trail",
     showInSidebar: true,
   },
   {
