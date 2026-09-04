@@ -26,9 +26,107 @@
     <link rel="icon" type="image/svg+xml" href="/spas-mark.svg" />
     <link rel="manifest" href="/site.webmanifest" />
     <title>SPAS · Academic Operations</title>
+    <script>
+      // Runs before first paint. ThemeProvider reads the same key later and
+      // agrees with whatever is set here, so nothing flips once React mounts.
+      ;(function () {
+        try {
+          var stored = localStorage.getItem("theme") || "light"
+          var dark =
+            stored === "dark" ||
+            (stored === "system" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches)
+          document.documentElement.classList.add(dark ? "dark" : "light")
+        } catch (error) {
+          document.documentElement.classList.add("light")
+        }
+      })()
+    </script>
+
+    <style>
+      /* Token values copied from index.css: this paints before that loads. */
+      html.light {
+        --boot-bg: oklch(0.968 0.003 255);
+        --boot-fg: oklch(0.145 0 0);
+        --boot-muted: oklch(0.556 0 0);
+        --boot-accent: oklch(0.31 0.09 253);
+      }
+      html.dark {
+        --boot-bg: oklch(0.175 0.012 265);
+        --boot-fg: oklch(0.97 0.005 265);
+        --boot-muted: oklch(0.76 0.022 265);
+        --boot-accent: oklch(0.56 0.185 265);
+      }
+      html {
+        background: var(--boot-bg);
+      }
+      .boot {
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        background: var(--boot-bg);
+        color: var(--boot-fg);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      .boot-inner {
+        text-align: center;
+      }
+      .boot-spinner {
+        width: 1.25rem;
+        height: 1.25rem;
+        margin: 0 auto 0.75rem;
+        border: 2px solid var(--boot-accent);
+        border-top-color: transparent;
+        border-radius: 9999px;
+        animation: boot-spin 0.7s linear infinite;
+      }
+      .boot-title {
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+      .boot-note {
+        margin: 0.25rem 0 0;
+        font-size: 0.75rem;
+        color: var(--boot-muted);
+      }
+      @keyframes boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-spinner {
+          animation-duration: 2s;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      What the browser shows before React exists.
+
+      #root was empty, so a deep link painted white for the whole main-bundle
+      download — the longest wait in the app had nothing in it. This is the same
+      spinner AuthGuard renders immediately afterwards, so the handover from
+      HTML to React is one continuous state rather than blank, then spinner.
+
+      Everything is inline: an external stylesheet would be another round trip
+      before the thing that exists to cover a round trip.
+    -->
+    <div id="root">
+      <div class="boot">
+        <div class="boot-inner">
+          <div class="boot-spinner"></div>
+          <p class="boot-title">Opening your workspace…</p>
+          <p class="boot-note">Checking access and permissions</p>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
