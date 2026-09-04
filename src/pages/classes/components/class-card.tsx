@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import { ScheduleSummary } from "@/components/class-schedule-field"
 import {
   CalendarCheck,
   CalendarDays,
@@ -58,9 +59,10 @@ export function ClassCard({ item, today }: ClassCardProps) {
           <p className="flex min-w-0 items-center justify-end gap-1.5 text-right">
             <Clock3 className="size-3.5 shrink-0" aria-hidden />
             <span className="truncate">
-              {item.startTime && item.endTime
-                ? `${formatTime(item.startTime)}–${formatTime(item.endTime)}`
-                : "Class time not set"}
+              <ScheduleSummary
+                meetings={item.meetings}
+                formatTime={formatTime}
+              />
             </span>
           </p>
         </div>

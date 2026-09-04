@@ -14,10 +14,20 @@ import {
   type StudentNameSortDirection,
 } from "@/lib/utils/student-sort"
 import { RowActionsMenu } from "@/components/row-actions-menu"
+import {
+  ClassScheduleField,
+  ScheduleSummary,
+} from "@/components/class-schedule-field"
+import {
+  emptySchedule,
+  meetingsFrom,
+  scheduleFrom,
+  scheduleIsValid,
+  type ScheduleState,
+} from "@/lib/utils/class-schedule"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { TimePickerInput } from "@/components/ui/date-time-picker"
 
 import {
   Select,
@@ -362,12 +372,14 @@ export function AllocationsSection() {
           },
           { header: "Teacher", cell: (row) => row.teacher.fullName },
           {
-            header: "Class time",
-            className: "whitespace-nowrap tabular-nums text-muted-foreground",
-            cell: (row) =>
-              row.startTime && row.endTime
-                ? `${formatTime(row.startTime)}–${formatTime(row.endTime)}`
-                : "—",
+            header: "Timetable",
+            className: "whitespace-nowrap text-xs tabular-nums",
+            cell: (row) => (
+              <ScheduleSummary
+                meetings={row.meetings}
+                formatTime={formatTime}
+              />
+            ),
           },
           {
             header: "Roster",
@@ -503,9 +515,8 @@ function AllocationForm({ onClose }: { onClose: () => void }) {
     batchSemester: "",
     subject: "",
     teacher: "",
-    startTime: "",
-    endTime: "",
   })
+  const [schedule, setSchedule] = useState<ScheduleState>(emptySchedule)
 
   const chosenSemester = semesters.data?.results.find(
     (row) => String(row.id) === form.batchSemester
@@ -535,7 +546,12 @@ function AllocationForm({ onClose }: { onClose: () => void }) {
       description="One subject, taught to one batch in one semester, by one teacher."
       formError={formErrorFrom(state.error)}
       isSubmitting={state.isLoading}
-      canSubmit={Boolean(form.batchSemester && form.subject && form.teacher)}
+      canSubmit={Boolean(
+        form.batchSemester &&
+        form.subject &&
+        form.teacher &&
+        scheduleIsValid(schedule)
+      )}
       submitLabel="Allocate"
       contentClassName="max-h-[90dvh] sm:max-w-2xl"
       onSubmit={async () => {
@@ -544,8 +560,7 @@ function AllocationForm({ onClose }: { onClose: () => void }) {
             batchSemester: Number(form.batchSemester),
             subject: Number(form.subject),
             teacher: Number(form.teacher),
-            startTime: form.startTime || null,
-            endTime: form.endTime || null,
+            meetings: meetingsFrom(schedule),
           }).unwrap()
           notifier.success("Subject allocated.")
           onClose()
@@ -621,36 +636,11 @@ function AllocationForm({ onClose }: { onClose: () => void }) {
           </Select>
         </Field>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          label="Start time"
-          htmlFor="allocation-start-time"
-          error={errors.startTime}
-          hint="Optional"
-        >
-          <TimePickerInput
-            id="allocation-start-time"
-            value={form.startTime}
-            max={form.endTime || undefined}
-            onValueChange={(startTime) => setForm({ ...form, startTime })}
-            aria-label="Start time"
-          />
-        </Field>
-        <Field
-          label="End time"
-          htmlFor="allocation-end-time"
-          error={errors.endTime}
-          hint="Optional"
-        >
-          <TimePickerInput
-            id="allocation-end-time"
-            value={form.endTime}
-            min={form.startTime || undefined}
-            onValueChange={(endTime) => setForm({ ...form, endTime })}
-            aria-label="End time"
-          />
-        </Field>
-      </div>
+      <ClassScheduleField
+        value={schedule}
+        onChange={setSchedule}
+        error={errors.meetings}
+      />
     </FormDialog>
   )
 }
@@ -669,9 +659,10 @@ function AllocationEditForm({
     batchSemester: String(allocation.batchSemester.id),
     subject: String(allocation.subject.id),
     teacher: String(allocation.teacher.id),
-    startTime: allocation.startTime ?? "",
-    endTime: allocation.endTime ?? "",
   })
+  const [schedule, setSchedule] = useState<ScheduleState>(() =>
+    scheduleFrom(allocation.meetings)
+  )
   const chosenSemester = semesters.data?.results.find(
     (row) => String(row.id) === form.batchSemester
   )
@@ -704,7 +695,12 @@ function AllocationEditForm({
       description={`${allocation.subject.code} · ${allocation.batchSemester.batch.program.code} ${allocation.batchSemester.batch.year} · ${semesterLabel(allocation.batchSemester.semester)}`}
       formError={formErrorFrom(state.error)}
       isSubmitting={state.isLoading}
-      canSubmit={Boolean(form.batchSemester && form.subject && form.teacher)}
+      canSubmit={Boolean(
+        form.batchSemester &&
+        form.subject &&
+        form.teacher &&
+        scheduleIsValid(schedule)
+      )}
       submitLabel="Save changes"
       contentClassName="max-h-[90dvh] sm:max-w-2xl"
       onSubmit={async () => {
@@ -715,8 +711,7 @@ function AllocationEditForm({
               batchSemester: Number(form.batchSemester),
               subject: Number(form.subject),
               teacher: Number(form.teacher),
-              startTime: form.startTime || null,
-              endTime: form.endTime || null,
+              meetings: meetingsFrom(schedule),
             },
           }).unwrap()
           notifier.success("Subject allocation updated.")
@@ -789,36 +784,11 @@ function AllocationEditForm({
           </Select>
         </Field>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          label="Start time"
-          htmlFor="edit-allocation-start-time"
-          error={errors.startTime}
-          hint="Optional"
-        >
-          <TimePickerInput
-            id="edit-allocation-start-time"
-            value={form.startTime}
-            max={form.endTime || undefined}
-            onValueChange={(startTime) => setForm({ ...form, startTime })}
-            aria-label="Start time"
-          />
-        </Field>
-        <Field
-          label="End time"
-          htmlFor="edit-allocation-end-time"
-          error={errors.endTime}
-          hint="Optional"
-        >
-          <TimePickerInput
-            id="edit-allocation-end-time"
-            value={form.endTime}
-            min={form.startTime || undefined}
-            onValueChange={(endTime) => setForm({ ...form, endTime })}
-            aria-label="End time"
-          />
-        </Field>
-      </div>
+      <ClassScheduleField
+        value={schedule}
+        onChange={setSchedule}
+        error={errors.meetings}
+      />
     </FormDialog>
   )
 }

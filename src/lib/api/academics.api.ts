@@ -73,6 +73,14 @@ export interface SubjectEnrollment {
   isActive: boolean
 }
 
+export interface ClassMeeting {
+  id?: number
+  /** isoweekday(): Monday is 1, Sunday is 7. */
+  weekday: number
+  startTime: string | null
+  endTime: string | null
+}
+
 export interface Allocation {
   id: number
   uuid: string
@@ -87,6 +95,7 @@ export interface Allocation {
   enrolledCount: number
   startTime: string | null
   endTime: string | null
+  meetings: ClassMeeting[]
   isActive: boolean
 }
 
@@ -362,6 +371,7 @@ export const academicsApi = rootAPI.injectEndpoints({
         teacher: number
         startTime?: string | null
         endTime?: string | null
+        meetings?: ClassMeeting[]
       }
     >({
       query: (data) => ({
@@ -381,6 +391,8 @@ export const academicsApi = rootAPI.injectEndpoints({
           teacher: number
           startTime?: string | null
           endTime?: string | null
+          /** Omit to leave the timetable untouched; send [] to clear it. */
+          meetings?: ClassMeeting[]
           isActive?: boolean
         }
       }

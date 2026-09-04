@@ -34,6 +34,11 @@ export interface ClassSummary {
   batchYear: number
   startTime: string | null
   endTime: string | null
+  meetings: {
+    weekday: number
+    startTime: string | null
+    endTime: string | null
+  }[]
   teacher: UserBrief
   studentCount: number
   classesHeld: number
