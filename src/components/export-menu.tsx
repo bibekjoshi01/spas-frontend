@@ -33,7 +33,7 @@ export function ExportMenu({
           {exporting ? `Preparing ${exporting.toUpperCase()}…` : label}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="z-[120]">
         <DropdownMenuItem onClick={() => onExport("xlsx")}>
           Excel workbook (.xlsx)
         </DropdownMenuItem>

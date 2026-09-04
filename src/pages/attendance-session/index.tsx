@@ -158,6 +158,9 @@ export default function AttendanceSessionPage() {
     )
     return sortStudentsByName(filtered, nameSort)
   }, [nameSort, roster.data, search])
+  const reasonStudent = roster.data?.find(
+    (entry) => entry.enrollment === reasonEnrollment
+  )
 
   const counts = useMemo(() => {
     const tally: Record<AttendanceStatus, number> = {
@@ -480,7 +483,7 @@ export default function AttendanceSessionPage() {
             aria-label="Excuse reason"
           >
             <div className="flex items-start justify-between gap-3 border-b p-4">
-              <div className="space-y-1">
+              <div>
                 <div className="flex items-center gap-2 font-semibold">
                   <MessageSquareText
                     className="size-4 text-sky-600"
@@ -488,10 +491,10 @@ export default function AttendanceSessionPage() {
                   />
                   Excuse reason
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {roster.data?.find(
-                    (entry) => entry.enrollment === reasonEnrollment
-                  )?.fullName ?? "Student"}
+                <p className="mt-3 text-base font-semibold text-foreground">
+                  {reasonStudent
+                    ? `${reasonStudent.fullName} (Roll No. ${reasonStudent.rollNumber})`
+                    : "Student"}
                 </p>
               </div>
               <Button
@@ -505,7 +508,10 @@ export default function AttendanceSessionPage() {
               </Button>
             </div>
             <div className="space-y-2 p-4">
-              <label htmlFor="excuse-reason" className="text-sm font-medium">
+              <label
+                htmlFor="excuse-reason"
+                className="block text-sm font-medium"
+              >
                 Comment or reason{" "}
                 <span className="text-muted-foreground">(optional)</span>
               </label>
