@@ -11,6 +11,7 @@ import {
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { QueryState } from "@/components/query-state"
+import { RowActionsMenu } from "@/components/row-actions-menu"
 import { ListSkeleton } from "@/components/skeletons"
 import { GraduateBatchDialog } from "./graduate-batch-dialog"
 import { Badge } from "@/components/ui/badge"
@@ -275,40 +276,46 @@ function BatchRow({
           </span>
         </button>
         {(canEdit || canDelete) && (
-          <div className="flex shrink-0 items-center gap-1 pr-2">
-            {canEdit && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={`Edit ${batch.program.code} ${batch.year}`}
-                onClick={onEdit}
-              >
-                <Pencil className="size-4" aria-hidden />
-              </Button>
-            )}
-            {canEdit && batch.status !== "GRADUATED" && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={`Graduate ${batch.program.code} ${batch.year}`}
-                onClick={onGraduate}
-              >
-                <GraduationCap className="size-4" aria-hidden />
-              </Button>
-            )}
-            {canDelete && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={`Archive ${batch.program.code} ${batch.year}`}
-                onClick={onArchive}
-              >
-                <Trash2 className="size-4 text-destructive" aria-hidden />
-              </Button>
-            )}
+          <div className="shrink-0 pr-2">
+            <RowActionsMenu
+              triggerLabel={`Actions for ${batch.program.code} ${batch.year}`}
+              title={`${batch.program.code} · Batch ${batch.year}`}
+              description={`${batch.studentCount} students · ${batch.status.toLowerCase()}`}
+              actions={[
+                ...(canEdit
+                  ? [
+                      {
+                        label: "Edit batch",
+                        description: "Update the intake year or program.",
+                        icon: <Pencil className="size-4" aria-hidden />,
+                        onSelect: onEdit,
+                      },
+                    ]
+                  : []),
+                ...(canEdit && batch.status !== "GRADUATED"
+                  ? [
+                      {
+                        label: "Graduate batch",
+                        description:
+                          "Complete its running semester and studies.",
+                        icon: <GraduationCap className="size-4" aria-hidden />,
+                        onSelect: onGraduate,
+                      },
+                    ]
+                  : []),
+                ...(canDelete
+                  ? [
+                      {
+                        label: "Archive batch",
+                        description: "Removes it from active academic setup.",
+                        icon: <Trash2 className="size-4" aria-hidden />,
+                        onSelect: onArchive,
+                        destructive: true,
+                      },
+                    ]
+                  : []),
+              ]}
+            />
           </div>
         )}
       </div>

@@ -352,13 +352,13 @@ export function AllocationsSection() {
           },
           {
             header: "Subject",
-            className: "w-28 font-mono text-xs",
-            cell: (row) => row.subject.code,
-          },
-          {
-            header: "Name",
             cell: (row) => (
-              <span className="font-medium">{row.subject.name}</span>
+              <div>
+                <span className="block font-medium">{row.subject.name}</span>
+                <span className="block font-mono text-xs text-muted-foreground">
+                  {row.subject.code}
+                </span>
+              </div>
             ),
           },
           {
