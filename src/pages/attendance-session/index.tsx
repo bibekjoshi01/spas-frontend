@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react"
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
+import { Link, useParams, useSearchParams } from "react-router-dom"
 import {
   AlertTriangle,
-  CalendarDays,
+  ArrowLeft,
   Check,
   Copy,
   MessageSquareText,
@@ -33,12 +33,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { useHasPermission } from "@/hooks/use-has-permissions"
 import {
   ATTENDANCE_LABELS,
@@ -72,7 +66,6 @@ export default function AttendanceSessionPage() {
     allocationId: string
     date: string
   }>()
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
   const allocation = Number(allocationId)
@@ -126,6 +119,9 @@ export default function AttendanceSessionPage() {
   const [reasonEdits, setReasonEdits] = useState<Record<number, string>>({})
   const [reasonEnrollment, setReasonEnrollment] = useState<number | null>(null)
   const [search, setSearch] = useState("")
+  const [statusFilter, setStatusFilter] = useState<AttendanceStatus | "ALL">(
+    "ALL"
+  )
   const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
   const [currentCell, setCurrentCell] = useState<{
     enrollment: number
@@ -174,13 +170,14 @@ export default function AttendanceSessionPage() {
     const term = search.trim().toLowerCase()
     const filtered = roster.data.filter(
       (entry) =>
-        !term ||
-        entry.fullName.toLowerCase().includes(term) ||
-        entry.rollNumber.toLowerCase().includes(term) ||
-        entry.phoneNo.includes(term)
+        (!term ||
+          entry.fullName.toLowerCase().includes(term) ||
+          entry.rollNumber.toLowerCase().includes(term) ||
+          entry.phoneNo.includes(term)) &&
+        (statusFilter === "ALL" || statuses[entry.enrollment] === statusFilter)
     )
     return sortStudentsByName(filtered, nameSort)
-  }, [nameSort, roster.data, search])
+  }, [nameSort, roster.data, search, statusFilter, statuses])
   const reasonStudent = roster.data?.find(
     (entry) => entry.enrollment === reasonEnrollment
   )
@@ -197,19 +194,6 @@ export default function AttendanceSessionPage() {
       if (status) tally[status] += 1
     })
     return tally
-  }, [roster.data, statuses])
-  const studentsByStatus = useMemo(() => {
-    const groups: Record<AttendanceStatus, string[]> = {
-      PRESENT: [],
-      ABSENT: [],
-      LATE: [],
-      EXCUSED: [],
-    }
-    roster.data?.forEach((entry) => {
-      const status = statuses[entry.enrollment]
-      if (status) groups[status].push(entry.fullName)
-    })
-    return groups
   }, [roster.data, statuses])
   const rosterCount = roster.data?.length ?? 0
 
@@ -347,17 +331,12 @@ export default function AttendanceSessionPage() {
         }
         actions={
           <>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs sm:text-sm"
-              onClick={() =>
-                navigate(`/attendance?class=${allocation}&date=${sessionDate}`)
-              }
-            >
-              <CalendarDays className="size-4" aria-hidden />
-              <span className="hidden sm:inline">View attendance history</span>
-              <span className="sm:hidden">History</span>
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/attendance?class=${allocation}&date=${sessionDate}`}>
+                <ArrowLeft className="size-4" aria-hidden />
+                <span className="hidden sm:inline">Back to attendance</span>
+                <span className="sm:hidden">Back</span>
+              </Link>
             </Button>
             <Button
               size="sm"
@@ -452,83 +431,75 @@ export default function AttendanceSessionPage() {
               </p>
             </div>
           )}
-          <section className="border bg-card" aria-label="Attendance summary">
-            <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
-              <TooltipProvider delayDuration={150}>
-                <div className="grid w-full grid-cols-4 gap-1.5 sm:w-auto">
-                  {ATTENDANCE_STATUSES.map((status) => (
-                    <Tooltip key={status}>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          className="flex h-8 items-center justify-center gap-1.5 border bg-background px-2 text-xs transition-colors hover:border-primary/50 hover:bg-accent focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
-                          aria-label={`${ATTENDANCE_LABELS[status]}: ${counts[status]} students`}
-                        >
-                          <span className="hidden text-muted-foreground md:inline">
-                            {ATTENDANCE_LABELS[status]}
-                          </span>
-                          <strong className="tabular-nums">
-                            {counts[status]}
-                          </strong>
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="bottom"
-                        sideOffset={6}
-                        className="max-h-60 w-60 overflow-y-auto p-2.5"
-                      >
-                        <p className="mb-1.5 font-semibold">
-                          {ATTENDANCE_LABELS[status]} students
-                        </p>
-                        {studentsByStatus[status].length ? (
-                          <ul className="space-y-1">
-                            {studentsByStatus[status].map((name, index) => (
-                              <li key={`${name}-${index}`} className="truncate">
-                                {name}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="opacity-75">No students marked yet.</p>
-                        )}
-                      </TooltipContent>
-                    </Tooltip>
-                  ))}
-                </div>
-              </TooltipProvider>
+          <section
+            className="flex flex-col gap-3 border bg-card p-3 xl:flex-row xl:items-center xl:justify-between"
+            aria-label="Attendance controls"
+          >
+            <div
+              className="grid w-full grid-cols-5 border-b xl:w-auto"
+              role="tablist"
+              aria-label="Filter register by attendance status"
+            >
+              <Button
+                type="button"
+                role="tab"
+                variant="ghost"
+                size="sm"
+                data-active={statusFilter === "ALL"}
+                aria-selected={statusFilter === "ALL"}
+                className="h-auto min-w-0 flex-col gap-0 rounded-none border-b-2 border-transparent px-1 py-1.5 text-[10px] text-muted-foreground shadow-none hover:bg-accent hover:text-foreground data-[active=true]:border-primary data-[active=true]:bg-primary/5 data-[active=true]:text-primary sm:h-9 sm:flex-row sm:gap-1 sm:px-2 sm:text-xs"
+                onClick={() => setStatusFilter("ALL")}
+              >
+                <span>All</span>
+                <strong className="tabular-nums">{rosterCount}</strong>
+              </Button>
+              {ATTENDANCE_STATUSES.map((status) => (
+                <Button
+                  key={status}
+                  type="button"
+                  role="tab"
+                  variant="ghost"
+                  size="sm"
+                  data-active={statusFilter === status}
+                  aria-selected={statusFilter === status}
+                  className="h-auto min-w-0 flex-col gap-0 rounded-none border-b-2 border-transparent px-1 py-1.5 text-[10px] text-muted-foreground shadow-none hover:bg-accent hover:text-foreground data-[active=true]:border-primary data-[active=true]:bg-primary/5 data-[active=true]:text-primary sm:h-9 sm:flex-row sm:gap-1 sm:px-2 sm:text-xs"
+                  onClick={() => setStatusFilter(status)}
+                >
+                  <span>{ATTENDANCE_LABELS[status]}</span>
+                  <strong className="tabular-nums">{counts[status]}</strong>
+                </Button>
+              ))}
+            </div>
 
-              <div className="flex flex-col gap-2 sm:items-end">
-                <div className="grid grid-cols-2 gap-2 sm:flex">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs sm:min-w-28 sm:text-sm"
-                    disabled={!canWrite}
-                    onClick={() => markAll("PRESENT")}
-                  >
-                    All present
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs sm:min-w-28 sm:text-sm"
-                    disabled={!canWrite}
-                    onClick={() => markAll("ABSENT")}
-                  >
-                    All absent
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="col-span-2 w-full text-xs sm:col-span-1 sm:w-auto sm:text-sm"
-                    disabled={!canWrite || !previousDetail.data}
-                    onClick={copyPrevious}
-                  >
-                    <Copy className="size-4" aria-hidden />
-                    Copy previous session
-                  </Button>
-                </div>
-              </div>
+            <div className="grid grid-cols-2 gap-2 border-t pt-3 sm:flex xl:shrink-0 xl:border-t-0 xl:pt-0">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs sm:min-w-28 sm:text-sm"
+                disabled={!canWrite}
+                onClick={() => markAll("PRESENT")}
+              >
+                All present
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs sm:min-w-28 sm:text-sm"
+                disabled={!canWrite}
+                onClick={() => markAll("ABSENT")}
+              >
+                All absent
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="col-span-2 w-full text-xs sm:w-auto sm:text-sm"
+                disabled={!canWrite || !previousDetail.data}
+                onClick={copyPrevious}
+              >
+                <Copy className="size-4" aria-hidden />
+                Copy previous session
+              </Button>
             </div>
           </section>
 
@@ -542,8 +513,8 @@ export default function AttendanceSessionPage() {
                   Student register
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  {search
-                    ? `${visible.length} matching ${visible.length === 1 ? "student" : "students"}`
+                  {search || statusFilter !== "ALL"
+                    ? `${visible.length} of ${rosterCount} students`
                     : `${rosterCount} ${rosterCount === 1 ? "student" : "students"}`}
                 </p>
               </div>
@@ -669,17 +640,28 @@ export default function AttendanceSessionPage() {
                     className="mb-2 size-6 text-muted-foreground"
                     aria-hidden
                   />
-                  <p className="text-sm font-medium">No matching students</p>
+                  <p className="text-sm font-medium">
+                    {search
+                      ? "No matching students"
+                      : statusFilter === "ALL"
+                        ? "No students"
+                        : `No ${ATTENDANCE_LABELS[statusFilter].toLowerCase()} students`}
+                  </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Try a different name, roll number, or phone number.
+                    {search
+                      ? "Try a different name, roll number, or phone number."
+                      : "Choose another attendance status to see students."}
                   </p>
                   <Button
                     variant="link"
                     size="sm"
                     className="mt-1"
-                    onClick={() => setSearch("")}
+                    onClick={() => {
+                      setSearch("")
+                      setStatusFilter("ALL")
+                    }}
                   >
-                    Clear search
+                    {search ? "Clear filters" : "Show all students"}
                   </Button>
                 </li>
               )}
