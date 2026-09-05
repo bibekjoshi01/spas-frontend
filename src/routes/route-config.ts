@@ -20,6 +20,7 @@ const Programs = lazy(() => import("@/pages/academics/programs"))
 const Batches = lazy(() => import("@/pages/academics/batches"))
 const Subjects = lazy(() => import("@/pages/academics/subjects"))
 const Allocations = lazy(() => import("@/pages/academics/allocations"))
+const AcademicCalendar = lazy(() => import("@/pages/academics/calendar"))
 
 const People = lazy(() => import("@/pages/people/students"))
 const Accounts = lazy(() => import("@/pages/people/accounts"))
@@ -201,6 +202,13 @@ export const privateRoutes: AppRoute[] = [
     permission: "view_subject_allocation",
     allowedRoles: ["DEPARTMENT-HEAD", "PROGRAM-COORDINATOR"],
     title: "Subject Allocations",
+    showInSidebar: true,
+  },
+  {
+    path: "/academics/calendar",
+    element: AcademicCalendar,
+    permission: "view_academic_calendar",
+    title: "Academic Calendar",
     showInSidebar: true,
   },
 

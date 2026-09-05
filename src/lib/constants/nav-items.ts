@@ -2,6 +2,7 @@ import {
   BookOpen,
   Boxes,
   Building2,
+  CalendarDays,
   CalendarRange,
   ChartNoAxesColumnIncreasing,
   ClipboardCheck,
@@ -185,6 +186,14 @@ export const NAV_ITEMS: NavItem[] = [
     allowedRoles: ["DEPARTMENT-HEAD", "PROGRAM-COORDINATOR"],
     breadcrumb: "Subject Allocations",
     icon: Boxes,
+    section: "Academics",
+  },
+  {
+    label: "Academic Calendar",
+    href: "/academics/calendar",
+    permission: "view_academic_calendar",
+    breadcrumb: "Academic Calendar",
+    icon: CalendarDays,
     section: "Academics",
   },
 

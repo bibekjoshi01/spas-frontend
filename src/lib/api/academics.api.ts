@@ -528,3 +528,135 @@ export const {
   useEnrolStudentsOnClassMutation,
   useEnrolStudentsInSemesterMutation,
 } = academicsApi
+
+// Academic calendar
+// ------------------------------------------------------------------------------------
+
+export type CalendarSystem = "BS" | "AD"
+export type CalendarEntryKind = "HOLIDAY" | "EVENT"
+
+export interface CalendarEntry {
+  id: number
+  uuid: string
+  /** The Gregorian date, which is what the entry is stored against. */
+  date: string
+  /** The same day read as Bikram Sambat, e.g. `2082-05-20`. */
+  nepaliDate: string
+  kind: CalendarEntryKind
+  title: string
+  note: string
+  isActive: boolean
+}
+
+export interface CalendarDay {
+  date: string
+  day: number
+  /** The day number as the chosen system writes it — `१२` in Nepali. */
+  dayLabel: string
+  /** `date.isoweekday()`: Monday is 1, Sunday is 7. */
+  weekday: number
+  isWeekend: boolean
+  entries: CalendarEntry[]
+}
+
+export interface CalendarMonth {
+  index: number
+  name: string
+  nameNepali: string
+  days: CalendarDay[]
+}
+
+export interface CalendarYear {
+  system: CalendarSystem
+  year: number
+  minYear: number
+  maxYear: number
+  weekendDays: number[]
+  months: CalendarMonth[]
+}
+
+export interface CalendarSettings {
+  weekendDays: number[]
+}
+
+/**
+ * The calendar.
+ *
+ * The grid arrives already laid out. Bikram Sambat is a published table rather
+ * than a formula, and independent copies of it disagree from BS 2084 onward, so
+ * the server holds the only one and says which dates fall where — a holiday can
+ * then never be saved against one day and drawn on another.
+ */
+export const calendarApi = rootAPI.injectEndpoints({
+  endpoints: (build) => ({
+    getCalendarYear: build.query<
+      CalendarYear,
+      { system: CalendarSystem; year?: number }
+    >({
+      query: ({ system, year }) => ({
+        url: `${ACADEMICS}/calendar/year`,
+        params: year ? { system, year } : { system },
+      }),
+      providesTags: ["AcademicCalendar"],
+    }),
+    getCalendarSettings: build.query<CalendarSettings, void>({
+      query: () => ({ url: `${ACADEMICS}/calendar/settings` }),
+      providesTags: ["AcademicCalendar"],
+    }),
+    updateCalendarSettings: build.mutation<CalendarSettings, CalendarSettings>({
+      query: (data) => ({
+        url: `${ACADEMICS}/calendar/settings`,
+        method: "PUT",
+        data,
+      }),
+      invalidatesTags: ["AcademicCalendar"],
+    }),
+    createCalendarEntry: build.mutation<
+      MessageWithIdResponse,
+      { date: string; kind: CalendarEntryKind; title: string; note?: string }
+    >({
+      query: (data) => ({
+        url: `${ACADEMICS}/calendar-entries`,
+        method: "POST",
+        data,
+      }),
+      invalidatesTags: ["AcademicCalendar"],
+    }),
+    updateCalendarEntry: build.mutation<
+      MessageWithIdResponse,
+      {
+        id: number
+        body: Partial<{
+          date: string
+          kind: CalendarEntryKind
+          title: string
+          note: string
+          isActive: boolean
+        }>
+      }
+    >({
+      query: ({ id, body }) => ({
+        url: `${ACADEMICS}/calendar-entries/${id}`,
+        method: "PATCH",
+        data: body,
+      }),
+      invalidatesTags: ["AcademicCalendar"],
+    }),
+    deleteCalendarEntry: build.mutation<MessageResponse, number>({
+      query: (id) => ({
+        url: `${ACADEMICS}/calendar-entries/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["AcademicCalendar"],
+    }),
+  }),
+})
+
+export const {
+  useGetCalendarYearQuery,
+  useGetCalendarSettingsQuery,
+  useUpdateCalendarSettingsMutation,
+  useCreateCalendarEntryMutation,
+  useUpdateCalendarEntryMutation,
+  useDeleteCalendarEntryMutation,
+} = calendarApi
