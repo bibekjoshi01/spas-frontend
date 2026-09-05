@@ -191,7 +191,6 @@ export const NAV_ITEMS: NavItem[] = [
   {
     label: "Academic Calendar",
     href: "/academics/calendar",
-    permission: "view_academic_calendar",
     breadcrumb: "Academic Calendar",
     icon: CalendarDays,
     section: "Academics",

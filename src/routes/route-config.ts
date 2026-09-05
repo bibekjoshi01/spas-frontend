@@ -205,9 +205,11 @@ export const privateRoutes: AppRoute[] = [
     showInSidebar: true,
   },
   {
+    // No permission gate: staff read it with view_academic_calendar and
+    // students through the portal, so the screen is open to everyone signed
+    // in and the API decides what comes back.
     path: "/academics/calendar",
     element: AcademicCalendar,
-    permission: "view_academic_calendar",
     title: "Academic Calendar",
     showInSidebar: true,
   },

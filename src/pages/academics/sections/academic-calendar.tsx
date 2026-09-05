@@ -1,18 +1,27 @@
-import { useMemo, useState } from "react"
-import { ChevronLeft, ChevronRight, Save } from "lucide-react"
+import { useState } from "react"
+import {
+  CalendarSearch,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Save,
+} from "lucide-react"
 
 import { InlineSpinner, QueryState } from "@/components/query-state"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useIsSuperUser } from "@/hooks/use-has-permissions"
+import { useHasRole, useIsSuperUser } from "@/hooks/use-has-permissions"
 import {
   type CalendarDay,
   type CalendarMonth,
-  type CalendarSystem,
+  fieldErrorsFrom,
+  formErrorFrom,
   useGetCalendarSettingsQuery,
   useGetCalendarYearQuery,
+  useGetStudentCalendarYearQuery,
   useUpdateCalendarSettingsMutation,
 } from "@/lib/api"
 import { cn } from "@/lib/utils"
@@ -20,12 +29,14 @@ import { localDateKey } from "@/lib/utils/date"
 import { notifier } from "@/lib/utils/notifier"
 
 import { CalendarDayDialog } from "./calendar-day-dialog"
+import { CalendarDownloadDialog } from "./calendar-download-dialog"
+import { CalendarImportantDates } from "./calendar-important-dates"
 
 /**
  * The week, Sunday first.
  *
  * `weekday` arrives as `date.isoweekday()` — Monday 1 through Sunday 7 — so a
- * cell's column is `weekday % 7`, which lands Sunday at 0 without a lookup.
+ * cell's column is `weekday % 7`, which lands Sunday at 0 with no lookup.
  */
 const WEEKDAYS = [
   { iso: 7, en: "Sun", np: "आइत" },
@@ -37,6 +48,24 @@ const WEEKDAYS = [
   { iso: 6, en: "Sat", np: "शनि" },
 ] as const
 
+const ENGLISH_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+]
+
+/** Week rows in every month card, so all twelve are the same height. */
+const WEEKS = 6
+
 const NEPALI_DIGITS = "०१२३४५६७८९"
 
 /** `2082` -> `२०८२`. The digit map is fixed, unlike the calendar table. */
@@ -46,19 +75,54 @@ function toNepaliDigits(value: number | string): string {
 
 const column = (day: CalendarDay) => day.weekday % 7
 
+/** The day of the Gregorian month, read off the date the entry is stored against. */
+const englishDay = (date: string) => Number(date.slice(8, 10))
+
+/**
+ * "Chaitra (March/April)" — a Bikram Sambat month, and the Gregorian ones it
+ * runs across. A BS month starts partway through an AD month, so naming both
+ * is how a reader locates it.
+ */
+function monthHeading(month: CalendarMonth): string {
+  if (!month.days.length) return month.nameNepali
+  const first = Number(month.days[0].date.slice(5, 7)) - 1
+  const last = Number(month.days[month.days.length - 1].date.slice(5, 7)) - 1
+  const span =
+    first === last
+      ? ENGLISH_MONTHS[first]
+      : `${ENGLISH_MONTHS[first]}/${ENGLISH_MONTHS[last]}`
+  return `${month.name} (${span})`
+}
+
 export function AcademicCalendarSection() {
   const isSuperUser = useIsSuperUser()
-  const [system, setSystem] = useState<CalendarSystem>("BS")
+  const isStudent = useHasRole("STUDENT")
   const [year, setYear] = useState<number | undefined>(undefined)
   const [openDate, setOpenDate] = useState<string | null>(null)
+  const [showImportant, setShowImportant] = useState(false)
+  const [showDownload, setShowDownload] = useState(false)
 
-  const calendar = useGetCalendarYearQuery({ system, year })
-  const data = calendar.data
-  const nepali = system === "BS"
-  const today = useMemo(() => localDateKey(), [])
+  // A student reads the calendar through the portal, which applies its own
+  // conditions; everyone else reads the staff endpoint.
+  const staff = useGetCalendarYearQuery(
+    { system: "BS", year },
+    { skip: isStudent }
+  )
+  const portal = useGetStudentCalendarYearQuery(
+    { system: "BS", year },
+    { skip: !isStudent }
+  )
+  const calendar = isStudent ? portal : staff
+  const data = calendar.currentData
+  const today = localDateKey()
 
-  // Left to the compiler to memoize; hand-rolling it here defeated the rule
-  // that keeps that optimisation available.
+  const markedCount =
+    data?.months.reduce(
+      (total, month) =>
+        total + month.days.reduce((sum, day) => sum + day.entries.length, 0),
+      0
+    ) ?? 0
+
   const openDay =
     (openDate &&
       data?.months
@@ -67,73 +131,78 @@ export function AcademicCalendarSection() {
     null
 
   const step = (delta: number) => {
-    if (!data) return
+    if (!data || calendar.isFetching) return
     const next = data.year + delta
     if (next < data.minYear || next > data.maxYear) return
     setYear(next)
-  }
-
-  const switchSystem = (next: CalendarSystem) => {
-    // The years are not comparable across systems, so changing the calendar
-    // returns to that system's current year rather than carrying a number over.
-    setSystem(next)
-    setYear(undefined)
+    setOpenDate(null)
+    setShowImportant(false)
   }
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm border bg-card p-2">
-        <div
-          className="flex items-center gap-1 rounded-sm border p-0.5"
-          role="group"
-          aria-label="Calendar system"
-        >
-          {(["BS", "AD"] as const).map((option) => (
-            <Button
-              key={option}
-              size="sm"
-              variant={system === option ? "default" : "ghost"}
-              aria-pressed={system === option}
-              onClick={() => switchSystem(option)}
-            >
-              {option === "BS" ? "नेपाली" : "English"}
-            </Button>
-          ))}
-        </div>
-
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="icon"
             aria-label="Previous year"
-            disabled={!data || data.year <= data.minYear}
+            disabled={!data || calendar.isFetching || data.year <= data.minYear}
             onClick={() => step(-1)}
           >
             <ChevronLeft className="size-4" aria-hidden />
           </Button>
-          <span className="min-w-24 text-center text-lg font-bold tabular-nums">
-            {data
-              ? `${nepali ? toNepaliDigits(data.year) : data.year} ${system}`
-              : "—"}
+          <span className="min-w-32 text-center">
+            <span className="block text-lg leading-tight font-bold tabular-nums">
+              {data ? toNepaliDigits(data.year) : "—"}
+            </span>
+            <span className="block text-[11px] text-muted-foreground tabular-nums">
+              {data ? `${data.year} BS` : ""}
+            </span>
           </span>
           <Button
             variant="outline"
             size="icon"
             aria-label="Next year"
-            disabled={!data || data.year >= data.maxYear}
+            disabled={!data || calendar.isFetching || data.year >= data.maxYear}
             onClick={() => step(1)}
           >
             <ChevronRight className="size-4" aria-hidden />
           </Button>
         </div>
 
-        <Legend />
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!data || calendar.isFetching || calendar.isError}
+            onClick={() => setShowDownload(true)}
+          >
+            <Download className="size-4" aria-hidden />
+            Download calendar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!data || calendar.isFetching || calendar.isError}
+            onClick={() => setShowImportant(true)}
+          >
+            <CalendarSearch className="size-4" aria-hidden />
+            Important dates
+            {markedCount > 0 && (
+              <Badge variant="secondary" className="ml-0.5 tabular-nums">
+                {markedCount}
+              </Badge>
+            )}
+          </Button>
+          <Legend />
+        </div>
       </div>
 
-      <WeekendPolicy canManage={isSuperUser} />
+      {isSuperUser && <WeekendPolicy />}
 
       <QueryState
-        isLoading={calendar.isLoading}
+        isLoading={calendar.isLoading || (calendar.isFetching && !data)}
         isFetching={calendar.isFetching && !calendar.isLoading}
         error={calendar.error}
         onRetry={calendar.refetch}
@@ -145,8 +214,9 @@ export function AcademicCalendarSection() {
               <MonthCard
                 key={month.index}
                 month={month}
-                nepali={nepali}
+                year={data.year}
                 today={today}
+                weekendDays={data.weekendDays}
                 onPick={setOpenDate}
               />
             ))}
@@ -154,16 +224,28 @@ export function AcademicCalendarSection() {
         )}
       </QueryState>
 
-      {openDay && (
+      {showDownload && data && (
+        <CalendarDownloadDialog
+          initialYear={data}
+          isStudent={isStudent}
+          onClose={() => setShowDownload(false)}
+        />
+      )}
+
+      {showImportant && data && (
+        <CalendarImportantDates
+          year={data}
+          onClose={() => setShowImportant(false)}
+        />
+      )}
+
+      {openDay && !calendar.isError && (
         <CalendarDayDialog
+          key={openDay.day.date}
           day={openDay.day}
           canManage={isSuperUser}
-          heading={`${nepali ? openDay.month.nameNepali : openDay.month.name} ${openDay.day.dayLabel}`}
-          subheading={
-            nepali
-              ? `${openDay.day.date} · ${openDay.day.entries[0]?.nepaliDate ?? ""}`.trim()
-              : openDay.day.date
-          }
+          heading={`${openDay.month.nameNepali} ${openDay.day.dayLabel}`}
+          subheading={`${monthHeading(openDay.month)} · ${openDay.day.date}`}
           onClose={() => setOpenDate(null)}
         />
       )}
@@ -175,11 +257,11 @@ function Legend() {
   return (
     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
       <span className="flex items-center gap-1.5">
-        <span className="size-3 rounded-sm bg-destructive-soft ring-1 ring-destructive/40" />
+        <span className="size-3 rounded-sm bg-destructive/15 ring-1 ring-destructive/50" />
         Holiday
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="size-3 rounded-sm bg-band-info ring-1 ring-primary/40" />
+        <span className="size-3 rounded-sm bg-info/15 ring-1 ring-info/50" />
         Event
       </span>
       <span className="flex items-center gap-1.5">
@@ -190,7 +272,7 @@ function Legend() {
   )
 }
 
-function WeekendPolicy({ canManage }: { canManage: boolean }) {
+function WeekendPolicy() {
   const settings = useGetCalendarSettingsQuery()
   const [update, state] = useUpdateCalendarSettingsMutation()
   const [draft, setDraft] = useState<number[] | null>(null)
@@ -199,52 +281,58 @@ function WeekendPolicy({ canManage }: { canManage: boolean }) {
   const chosen = draft ?? saved
   const dirty =
     draft !== null && [...draft].sort().join() !== [...saved].sort().join()
-
-  const toggle = (iso: number, checked: boolean) => {
-    const next = checked
-      ? [...chosen, iso]
-      : chosen.filter((day) => day !== iso)
-    setDraft(next)
-  }
+  const validationError =
+    fieldErrorsFrom(state.error).weekendDays ?? formErrorFrom(state.error)
 
   return (
     <section className="border bg-card">
-      <div className="border-b bg-band px-3 py-2.5">
-        <h2 className="font-semibold">Weekend days</h2>
-        <p className="text-xs text-muted-foreground">
-          The days the college does not teach. Every other screen will schedule
-          around them.
+      <div className="border-b bg-band-info px-4 py-3">
+        <h2 className="text-base font-bold text-band-info-foreground">
+          Weekend days
+        </h2>
+        <p className="mt-1 text-sm text-band-info-foreground/70">
+          Choose which weekdays are marked as weekends on the calendar.
         </p>
       </div>
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 p-3">
-        {settings.isLoading
-          ? WEEKDAYS.map((day) => (
-              <Skeleton key={day.iso} className="h-5 w-20" />
-            ))
-          : WEEKDAYS.map((day) => (
-              <Label
-                key={day.iso}
-                className={cn(
-                  "flex items-center gap-2 text-sm font-normal",
-                  canManage ? "cursor-pointer" : "cursor-default"
-                )}
-              >
-                <Checkbox
-                  checked={chosen.includes(day.iso)}
-                  disabled={!canManage || state.isLoading}
-                  onCheckedChange={(checked) =>
-                    toggle(day.iso, checked === true)
-                  }
-                />
-                {day.en}
-              </Label>
-            ))}
+      <QueryState
+        isLoading={settings.isLoading}
+        error={settings.error}
+        onRetry={settings.refetch}
+      >
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 p-3">
+          {settings.isLoading
+            ? WEEKDAYS.map((day) => (
+                <Skeleton key={day.iso} className="h-5 w-20" />
+              ))
+            : WEEKDAYS.map((day) => (
+                <Label
+                  key={day.iso}
+                  className="flex cursor-pointer items-center gap-2 text-sm font-normal"
+                >
+                  <Checkbox
+                    checked={chosen.includes(day.iso)}
+                    disabled={state.isLoading || settings.isFetching}
+                    onCheckedChange={(checked) =>
+                      setDraft(
+                        checked === true
+                          ? [...chosen, day.iso]
+                          : chosen.filter((iso) => iso !== day.iso)
+                      )
+                    }
+                  />
+                  {day.en}
+                </Label>
+              ))}
 
-        {canManage && (
           <Button
             size="sm"
             className="ml-auto"
-            disabled={!dirty || state.isLoading}
+            disabled={
+              !dirty ||
+              state.isLoading ||
+              settings.isFetching ||
+              chosen.length === 7
+            }
             onClick={async () => {
               try {
                 await update({ weekendDays: chosen }).unwrap()
@@ -262,46 +350,74 @@ function WeekendPolicy({ canManage }: { canManage: boolean }) {
             )}
             {dirty ? "Save weekend" : "Saved"}
           </Button>
+        </div>
+        {chosen.length === 7 && (
+          <p role="alert" className="px-3 pb-3 text-sm text-destructive">
+            At least one day must remain a teaching day.
+          </p>
         )}
-      </div>
+        {validationError && (
+          <p role="alert" className="px-3 pb-3 text-sm text-destructive">
+            {validationError}
+          </p>
+        )}
+      </QueryState>
     </section>
   )
 }
 
 function MonthCard({
   month,
-  nepali,
+  year,
   today,
+  weekendDays,
   onPick,
 }: {
   month: CalendarMonth
-  nepali: boolean
+  year: number
   today: string
+  weekendDays: number[]
   onPick: (date: string) => void
 }) {
   const leading = month.days.length ? column(month.days[0]) : 0
-  const span = monthSpan(month)
+  /*
+   * Always six week rows, padded at both ends.
+   *
+   * A full lattice — the grid shows the border colour through a one-pixel gap
+   * — rules every cell on all four sides. Six rows rather than "however many
+   * this month needs" because the cards sit in a stretching grid: a 32-day
+   * month next to a 29-day one would pull the shorter card taller and strand
+   * its bottom rule below a strip of empty card. Every month is 29 to 32 days
+   * starting at most six columns in, so six rows always fit.
+   */
+  const trailing = WEEKS * 7 - leading - month.days.length
 
   return (
-    <section className="border bg-card">
+    <section className="overflow-hidden border bg-card">
       <div className="flex items-baseline justify-between gap-2 border-b bg-band px-3 py-2">
-        <h3 className="font-semibold">
-          {nepali ? month.nameNepali : month.name}
-        </h3>
-        <span className="text-xs text-muted-foreground">{span}</span>
+        <h3 className="font-semibold">{monthHeading(month)}</h3>
+        <span className="shrink-0 text-sm font-semibold">
+          {month.nameNepali} {toNepaliDigits(year)}
+        </span>
       </div>
 
-      <div className="grid grid-cols-7 border-b text-center text-[11px] font-semibold text-muted-foreground">
+      <div className="grid grid-cols-7 gap-px border-b bg-border">
         {WEEKDAYS.map((day) => (
-          <span key={day.iso} className="py-1.5">
-            {nepali ? day.np : day.en}
+          <span
+            key={day.iso}
+            className={cn(
+              "bg-card py-1.5 text-center text-[11px] font-semibold text-muted-foreground",
+              weekendDays.includes(day.iso) && "text-destructive"
+            )}
+          >
+            {day.np}
           </span>
         ))}
       </div>
 
-      <div className="grid grid-cols-7">
+      <div className="grid grid-cols-7 gap-px bg-border">
         {Array.from({ length: leading }).map((_, index) => (
-          <span key={`lead-${index}`} aria-hidden />
+          <span key={`lead-${index}`} className="bg-card" aria-hidden />
         ))}
         {month.days.map((day) => (
           <DayCell
@@ -310,6 +426,9 @@ function MonthCard({
             isToday={day.date === today}
             onPick={onPick}
           />
+        ))}
+        {Array.from({ length: trailing }).map((_, index) => (
+          <span key={`trail-${index}`} className="bg-card" aria-hidden />
         ))}
       </div>
     </section>
@@ -336,36 +455,32 @@ function DayCell({
       type="button"
       title={label}
       aria-label={label}
+      aria-current={isToday ? "date" : undefined}
       onClick={() => onPick(day.date)}
       className={cn(
-        "relative aspect-square border-r border-b p-1 text-sm transition-colors last:border-r-0 hover:bg-accent focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        "relative flex aspect-square flex-col justify-between bg-card px-1.5 py-1 text-left transition-colors hover:bg-accent focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         day.isWeekend && "bg-band",
-        holiday && "bg-destructive-soft font-semibold text-destructive",
-        event && "bg-band-info font-semibold text-band-info-foreground",
+        holiday && "bg-destructive/15 text-destructive",
+        event && "bg-info/15 text-info",
         isToday && "ring-2 ring-primary ring-inset"
       )}
     >
-      <span className="tabular-nums">{day.dayLabel}</span>
+      <span
+        className={cn(
+          "text-sm leading-none font-semibold tabular-nums",
+          (day.isWeekend || holiday) && !event && "text-destructive"
+        )}
+      >
+        {day.dayLabel}
+      </span>
+      <span className="self-end text-[10px] leading-none text-muted-foreground tabular-nums">
+        {englishDay(day.date)}
+      </span>
       {day.entries.length > 1 && (
-        <span className="absolute right-1 bottom-1 text-[9px] tabular-nums opacity-70">
-          {day.entries.length}
-        </span>
+        <span className="absolute top-1 right-1 size-1.5 rounded-full bg-current opacity-70" />
       )}
     </button>
   )
-}
-
-/** "14 Apr – 14 May 2025" — where a Nepali month actually falls. */
-function monthSpan(month: CalendarMonth): string {
-  if (!month.days.length) return ""
-  const format = (value: string) =>
-    new Date(`${value}T00:00:00`).toLocaleDateString(undefined, {
-      day: "numeric",
-      month: "short",
-    })
-  const first = month.days[0].date
-  const last = month.days[month.days.length - 1].date
-  return `${format(first)} – ${format(last)} ${last.slice(0, 4)}`
 }
 
 function YearSkeleton() {
@@ -374,10 +489,10 @@ function YearSkeleton() {
       {Array.from({ length: 6 }).map((_, index) => (
         <div key={index} className="border bg-card">
           <div className="border-b bg-band px-3 py-2">
-            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-40" />
           </div>
-          <div className="grid grid-cols-7 gap-px p-1">
-            {Array.from({ length: 35 }).map((_, cell) => (
+          <div className="grid grid-cols-7 gap-px bg-border">
+            {Array.from({ length: WEEKS * 7 }).map((_, cell) => (
               <Skeleton key={cell} className="aspect-square rounded-none" />
             ))}
           </div>

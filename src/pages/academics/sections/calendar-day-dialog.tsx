@@ -60,7 +60,7 @@ export function CalendarDayDialog({
   return (
     <>
       <Dialog open onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{heading}</DialogTitle>
             <DialogDescription>{subheading}</DialogDescription>
@@ -93,10 +93,12 @@ export function CalendarDayDialog({
                       )}
                       {KIND_LABEL[entry.kind]}
                     </Badge>
-                    <span className="font-medium">{entry.title}</span>
+                    <span className="font-medium break-words">
+                      {entry.title}
+                    </span>
                   </div>
                   {entry.note && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm break-words whitespace-pre-wrap text-muted-foreground">
                       {entry.note}
                     </p>
                   )}
@@ -238,6 +240,7 @@ function EntryForm({
       <Field label="Title" htmlFor="entry-title" error={errors.title}>
         <Input
           id="entry-title"
+          maxLength={150}
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           placeholder="Dashain — Ghatasthapana"

@@ -599,6 +599,17 @@ export const calendarApi = rootAPI.injectEndpoints({
       }),
       providesTags: ["AcademicCalendar"],
     }),
+    /** The same year, for a student, through the portal's own conditions. */
+    getStudentCalendarYear: build.query<
+      CalendarYear,
+      { system: CalendarSystem; year?: number }
+    >({
+      query: ({ system, year }) => ({
+        url: `${ACADEMICS}/student-portal/calendar/year`,
+        params: year ? { system, year } : { system },
+      }),
+      providesTags: ["AcademicCalendar"],
+    }),
     getCalendarSettings: build.query<CalendarSettings, void>({
       query: () => ({ url: `${ACADEMICS}/calendar/settings` }),
       providesTags: ["AcademicCalendar"],
@@ -654,6 +665,7 @@ export const calendarApi = rootAPI.injectEndpoints({
 
 export const {
   useGetCalendarYearQuery,
+  useGetStudentCalendarYearQuery,
   useGetCalendarSettingsQuery,
   useUpdateCalendarSettingsMutation,
   useCreateCalendarEntryMutation,
