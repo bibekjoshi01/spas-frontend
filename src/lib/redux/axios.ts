@@ -1,5 +1,4 @@
 import axios, {
-  type AxiosRequestConfig,
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from "axios"
@@ -50,9 +49,17 @@ const logout = () => {
   window.location.replace("/login")
 }
 
+type SessionRequestConfig = InternalAxiosRequestConfig & {
+  _sessionKey?: string
+  _sessionBound?: boolean
+}
+const currentSessionKey = () => auth.getRefresh() || auth.getAccess()
+const sessionChanged = (config?: SessionRequestConfig) =>
+  config?._sessionBound && config._sessionKey !== currentSessionKey()
+
 // Request Interceptor
 axiosInstance.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  (config: SessionRequestConfig) => {
     if (!navigator.onLine) {
       notifier.error("No internet connection available.")
     }
@@ -65,6 +72,8 @@ axiosInstance.interceptors.request.use(
       config.url?.endsWith(path)
     )
 
+    config._sessionBound = !isExemptRoute
+    config._sessionKey = currentSessionKey()
     if (accessToken && !isExemptRoute) {
       config.headers.Authorization = `Bearer ${accessToken}`
     }
@@ -81,12 +90,19 @@ axiosInstance.interceptors.request.use(
 
 // Response Interceptor
 axiosInstance.interceptors.response.use(
-  (response: AxiosResponse) => response,
+  (response: AxiosResponse) => {
+    if (sessionChanged(response.config))
+      throw new axios.CanceledError("Account changed.")
+    return response
+  },
 
   async (error) => {
-    const errorConfig = error.config as AxiosRequestConfig & {
+    const errorConfig = error.config as SessionRequestConfig & {
       _retry?: boolean
     }
+
+    if (sessionChanged(errorConfig))
+      throw new axios.CanceledError("Account changed.")
 
     // Network Errors
     if (axios.isCancel(error)) {
@@ -105,7 +121,10 @@ axiosInstance.interceptors.response.use(
         errorConfig.url?.endsWith(path)
       )
 
-      if (!isAuthExemptRoute && !errorConfig._retry) {
+      // Invalid login/reset credentials belong on their form, not a global logout.
+      if (isAuthExemptRoute) throw error
+
+      if (!errorConfig._retry) {
         errorConfig._retry = true
 
         const refreshToken = auth.getRefresh()
@@ -125,6 +144,11 @@ axiosInstance.interceptors.response.use(
               { refresh: refreshToken }
             )
 
+            if (auth.getRefresh() !== refreshToken) {
+              throw new axios.CanceledError(
+                "Account changed during session renewal."
+              )
+            }
             const newToken = response.data.access
 
             auth.setAccess(newToken)
@@ -133,20 +157,20 @@ axiosInstance.interceptors.response.use(
 
             isTokenRefreshInProgress = false
 
-            errorConfig.headers = {
-              ...errorConfig.headers,
-              Authorization: `Bearer ${newToken}`,
-            }
+            errorConfig.headers.set("Authorization", `Bearer ${newToken}`)
 
             return axiosInstance(errorConfig)
           } catch (refreshError) {
             isTokenRefreshInProgress = false
             notifyTokenRefreshFailed(refreshError)
 
-            notifier.error("Session expired. Please login again.")
-
-            logout()
-
+            const status = axios.isAxiosError(refreshError)
+              ? refreshError.response?.status
+              : undefined
+            if (status === 400 || status === 401 || status === 403) {
+              notifier.error("Session expired. Please login again.")
+              logout()
+            }
             throw refreshError
           }
         }
@@ -154,10 +178,9 @@ axiosInstance.interceptors.response.use(
         return new Promise<string>((resolve, reject) => {
           subscribeToTokenRefresh(resolve, reject)
         }).then((newToken) => {
-          errorConfig.headers = {
-            ...errorConfig.headers,
-            Authorization: `Bearer ${newToken}`,
-          }
+          if (sessionChanged(errorConfig))
+            throw new axios.CanceledError("Account changed.")
+          errorConfig.headers.set("Authorization", `Bearer ${newToken}`)
 
           return axiosInstance(errorConfig)
         })

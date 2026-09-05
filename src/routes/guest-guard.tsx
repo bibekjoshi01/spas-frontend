@@ -7,9 +7,9 @@ import { landingPathFor } from "./route-config"
 
 export default function GuestGuard() {
   const { isAuthenticated, profile } = useAppSelector((state) => state.auth)
-  const hasAccessToken = Boolean(auth.getAccess())
+  const hasSession = Boolean(auth.getAccess() || auth.getRefresh())
 
-  if (isAuthenticated && hasAccessToken) {
+  if (isAuthenticated && hasSession) {
     return (
       <Navigate
         to={landingPathFor(

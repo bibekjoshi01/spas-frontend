@@ -1,9 +1,7 @@
 import type { CalendarDay, CalendarEntry } from "@/lib/api"
 
 /** A read-only projection. Derived dates are never sent to calendar-entry writes. */
-export function calendarDisplayEntries(
-  day: CalendarDay
-): Array<
+export function calendarDisplayEntries(day: CalendarDay): Array<
   Pick<CalendarEntry, "kind" | "title" | "note" | "isActive"> & {
     id: number | string
   }

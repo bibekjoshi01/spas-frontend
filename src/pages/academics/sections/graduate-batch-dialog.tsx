@@ -55,9 +55,8 @@ export function GraduateBatchDialog({
             Graduate {batch.program.code} {batch.year}?
           </DialogTitle>
           <DialogDescription>
-            The batch stops being offered when creating new work, and its
-            students are marked graduated. Nothing is deleted, and this can be
-            undone.
+            Students still studying are marked graduated. Records remain
+            available, and you can undo this action.
           </DialogDescription>
         </DialogHeader>
 
@@ -80,9 +79,8 @@ export function GraduateBatchDialog({
                   of {facts.studentsTotal}
                 </Row>
                 {facts.studentsAlreadyLeft > 0 && (
-                  <Row label="Left earlier">
-                    {facts.studentsAlreadyLeft} dropped out or transferred —
-                    unaffected
+                  <Row label="Already left or graduated">
+                    {facts.studentsAlreadyLeft} unchanged
                   </Row>
                 )}
               </dl>

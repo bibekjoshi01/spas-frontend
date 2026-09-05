@@ -27,6 +27,7 @@ import {
   loginSuccess,
   logoutSuccess,
   sessionInvalidated,
+  setProfile,
 } from "@/pages/auth/redux/auth.slice"
 
 const persistConfig = {
@@ -39,7 +40,7 @@ const persistedReducer = persistReducer(persistConfig, rootReducer)
 const accountBoundaryListener = createListenerMiddleware()
 
 accountBoundaryListener.startListening({
-  matcher: isAnyOf(loginSuccess, logoutSuccess, sessionInvalidated),
+  matcher: isAnyOf(loginSuccess, logoutSuccess, sessionInvalidated, setProfile),
   effect: (action, api) => {
     // RTK Query cache entries are scoped to the account that fetched them.
     // Keeping them through an account switch can expose stale admin rows to a
@@ -47,6 +48,9 @@ accountBoundaryListener.startListening({
     // access. Reset all server data at every authentication boundary.
     api.dispatch(rootAPI.util.resetApiState())
 
+    // A fresh profile may reflect revoked permissions or an account switched
+    // in another tab. Re-fetch protected data under that current identity.
+    if (setProfile.match(action)) return
     if (sessionInvalidated.match(action)) auth.clear()
 
     // Remembered class IDs and password-reset progress are session-specific.

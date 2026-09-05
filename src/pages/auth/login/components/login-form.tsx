@@ -38,7 +38,6 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginFormValues) {
     try {
-      // Real login against the Express backend (POST /api/v1/auth/login)
       const response = await loginRequest({
         persona: values.persona,
         password: values.password,
