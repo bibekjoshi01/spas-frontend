@@ -103,6 +103,40 @@ export function PanelSkeleton({
   )
 }
 
+/** The class banner and section tabs shared by class-context screens. */
+export function ClassWorkspaceSkeleton({
+  compact = false,
+}: {
+  compact?: boolean
+}) {
+  return (
+    <section className="overflow-hidden border bg-card" aria-hidden="true">
+      <div
+        className={cn(
+          "flex items-center justify-between border-l-sky-500 bg-banner",
+          compact
+            ? "gap-3 border-l-[3px] px-4 py-2.5"
+            : "gap-3 border-l-4 px-4 py-3"
+        )}
+      >
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <Skeleton className="h-4 w-48 max-w-[65%] bg-white/20" />
+          <Skeleton className="h-3 w-64 max-w-[85%] bg-white/15" />
+        </div>
+        <Skeleton className="h-6 w-16 shrink-0 rounded-sm bg-white/20" />
+      </div>
+      <div className="flex gap-1 overflow-hidden border-t bg-band px-1">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Skeleton
+            key={index}
+            className={cn("h-10 shrink-0 bg-muted", compact ? "w-24" : "w-20")}
+          />
+        ))}
+      </div>
+    </section>
+  )
+}
+
 /** A few lines of body text. */
 function LinesSkeleton({ count = 3 }: { count?: number }) {
   return (
@@ -122,11 +156,16 @@ export function ListSkeleton({ rows = 6 }: { rows?: number }) {
   return (
     <ul className="divide-y rounded-md border bg-card">
       {Array.from({ length: rows }).map((_, index) => (
-        <li key={index} className="flex items-center gap-3 px-3 py-2.5">
-          <Skeleton className="size-4 shrink-0" />
-          <Skeleton
-            className={cn("h-3.5", CELL_WIDTHS[index % CELL_WIDTHS.length])}
-          />
+        <li key={index} className="flex items-center justify-between gap-3 p-3">
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <Skeleton className="h-3.5 w-2/5" />
+            <Skeleton className="h-3 w-1/4" />
+          </div>
+          <div className="flex shrink-0 gap-1">
+            <Skeleton className="h-7 w-14" />
+            <Skeleton className="h-7 w-14" />
+            <Skeleton className="h-7 w-14" />
+          </div>
         </li>
       ))}
     </ul>
@@ -149,13 +188,10 @@ export function ToolbarSkeleton() {
 /** The dashboard: four stat tiles over two columns of panels. */
 export function DashboardSkeleton() {
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
-          <div
-            key={index}
-            className="rounded-lg border border-l-4 bg-card px-6 py-4"
-          >
+          <div key={index} className="border bg-card px-4 py-4">
             <div className="flex items-center gap-2">
               <Skeleton className="size-7 rounded-none" />
               <Skeleton className="h-3 w-20" />
@@ -166,7 +202,7 @@ export function DashboardSkeleton() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <PanelSkeleton>
           <div className="space-y-2 p-3">
             {Array.from({ length: 4 }).map((_, index) => (
@@ -220,7 +256,7 @@ export function PageSkeleton({
 }) {
   return (
     <div
-      className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4"
+      className="mx-auto max-w-6xl space-y-3 p-3 md:p-4"
       role="status"
       aria-busy="true"
     >

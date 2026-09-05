@@ -17,6 +17,7 @@ import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
 import { PageHeader } from "@/components/page-header"
 import { InlineSpinner, QueryState } from "@/components/query-state"
+import { ClassWorkspaceSkeleton } from "@/components/skeletons"
 import { StudentNameSortButton } from "@/components/student-name-sort"
 import {
   sortStudentsByName,
@@ -188,8 +189,12 @@ export default function AttendancePage() {
         }
       />
 
-      {chosen && (
-        <ClassWorkspaceNav value={chosen} active="Attendance" compact />
+      {classes.isLoading ? (
+        <ClassWorkspaceSkeleton compact />
+      ) : (
+        chosen && (
+          <ClassWorkspaceNav value={chosen} active="Attendance" compact />
+        )
       )}
 
       <section

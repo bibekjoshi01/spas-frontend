@@ -8,6 +8,7 @@ import { useHasPermission } from "@/hooks/use-has-permissions"
 import { useRememberedClass } from "@/hooks/use-remembered-class"
 import { PageHeader } from "@/components/page-header"
 import { InlineSpinner, QueryState } from "@/components/query-state"
+import { ClassWorkspaceSkeleton } from "@/components/skeletons"
 import { StudentNameSortButton } from "@/components/student-name-sort"
 import {
   sortStudentsByName,
@@ -117,7 +118,11 @@ export default function ExamsPage() {
         }
       />
 
-      {chosen && <ClassWorkspaceNav value={chosen} active="Assessments" />}
+      {classes.isLoading ? (
+        <ClassWorkspaceSkeleton />
+      ) : (
+        chosen && <ClassWorkspaceNav value={chosen} active="Assessments" />
+      )}
 
       <div className="flex flex-col gap-2 border bg-card p-2 lg:flex-row lg:items-center">
         {classes.data && (

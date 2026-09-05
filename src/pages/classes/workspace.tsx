@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
+import { ClassWorkspaceSkeleton } from "@/components/skeletons"
 import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
 import { Badge } from "@/components/ui/badge"
@@ -115,6 +116,8 @@ export default function ClassWorkspacePage() {
           </Button>
         }
       />
+
+      {loading && <ClassWorkspaceSkeleton />}
 
       <QueryState
         isLoading={loading}

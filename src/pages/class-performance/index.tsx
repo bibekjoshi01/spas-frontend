@@ -6,6 +6,7 @@ import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
 import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
+import { ClassWorkspaceSkeleton } from "@/components/skeletons"
 import { StudentNameSortButton } from "@/components/student-name-sort"
 import {
   sortStudentsByName,
@@ -158,7 +159,11 @@ export default function ClassPerformancePage() {
         }
       />
 
-      {chosen && <ClassWorkspaceNav value={chosen} active="Performance" />}
+      {classes.isLoading ? (
+        <ClassWorkspaceSkeleton />
+      ) : (
+        chosen && <ClassWorkspaceNav value={chosen} active="Performance" />
+      )}
 
       <div className="flex flex-col gap-2 rounded-sm border bg-card p-2 lg:flex-row lg:items-center">
         <div className="relative w-full lg:max-w-sm">

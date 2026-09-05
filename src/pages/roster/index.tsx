@@ -12,7 +12,10 @@ import { useRememberedClass } from "@/hooks/use-remembered-class"
 import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
 import { ReportDialogFallback } from "@/components/report-dialog-fallback"
-import { SubjectRecordSkeleton } from "@/components/skeletons"
+import {
+  ClassWorkspaceSkeleton,
+  SubjectRecordSkeleton,
+} from "@/components/skeletons"
 import { StudentNameSortButton } from "@/components/student-name-sort"
 import {
   sortStudentsByName,
@@ -230,7 +233,11 @@ export default function RosterPage() {
         description="Review students, attendance, results, and academic standing."
       />
 
-      {chosen && <ClassWorkspaceNav value={chosen} active="Roster" compact />}
+      {classes.isLoading ? (
+        <ClassWorkspaceSkeleton compact />
+      ) : (
+        chosen && <ClassWorkspaceNav value={chosen} active="Roster" compact />
+      )}
 
       <section
         className="flex flex-col gap-2 border bg-card p-2 lg:flex-row lg:items-center"
