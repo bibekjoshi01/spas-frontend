@@ -186,7 +186,12 @@ export function StudentsSection() {
             filters.batch !== "all" ||
             filters.status !== "all" ||
             filters["batch__program"] !== "all",
-          onClear: () => setFilters({ batch: "all", status: "all" }),
+          onClear: () =>
+            setFilters({
+              batch__program: "all",
+              batch: "all",
+              status: "all",
+            }),
         }}
         action={
           canAdd ? (
@@ -229,12 +234,6 @@ export function StudentsSection() {
         }
         columns={[
           {
-            header: "Roll",
-            className:
-              "hidden w-20 font-mono text-xs tabular-nums sm:table-cell",
-            cell: (row) => row.rollNumber,
-          },
-          {
             header: (
               <StudentNameSortButton
                 direction={nameSort}
@@ -246,7 +245,14 @@ export function StudentsSection() {
                 }}
               />
             ),
-            cell: (row) => <span className="font-medium">{row.fullName}</span>,
+            cell: (row) => (
+              <div>
+                <span className="block font-medium">{row.fullName}</span>
+                <span className="block font-mono text-xs text-muted-foreground tabular-nums">
+                  Roll {row.rollNumber}
+                </span>
+              </div>
+            ),
           },
           {
             header: "Batch",
@@ -254,16 +260,15 @@ export function StudentsSection() {
             cell: (row) => `${row.batch.program.code} ${row.batch.year}`,
           },
           {
-            header: "Registration",
+            header: "Identifiers",
             className:
-              "hidden font-mono text-xs text-muted-foreground lg:table-cell",
-            cell: (row) => row.registrationNumber || "—",
-          },
-          {
-            header: "Login username",
-            className:
-              "hidden font-mono text-xs text-muted-foreground lg:table-cell",
-            cell: (row) => row.username,
+              "hidden min-w-40 font-mono text-xs text-muted-foreground lg:table-cell",
+            cell: (row) => (
+              <div className="space-y-0.5">
+                <div>Reg: {row.registrationNumber || "—"}</div>
+                <div>User: {row.username}</div>
+              </div>
+            ),
           },
           {
             header: "Contact",
