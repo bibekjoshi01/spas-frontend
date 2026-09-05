@@ -72,7 +72,7 @@ export function DepartmentsSection() {
             onValueChange={(value) => setFilters({ is_active: value })}
           >
             <SelectTrigger
-              className="w-32"
+              className="w-full sm:w-32"
               aria-label="Filter by status"
               clearable={filters.is_active !== "all"}
               onClear={() => setFilters({ is_active: "all" })}
@@ -91,7 +91,11 @@ export function DepartmentsSection() {
         }}
         action={
           canAdd ? (
-            <Button size="sm" onClick={() => setIsCreating(true)}>
+            <Button
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={() => setIsCreating(true)}
+            >
               <Plus className="size-4" aria-hidden />
               New department
             </Button>
