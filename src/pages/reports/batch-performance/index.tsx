@@ -181,7 +181,7 @@ export default function BatchPerformanceReportPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
       <PageHeader
         title="Batch performance"
         description="Semester-level attendance and performance for every student in your management scope."
@@ -244,7 +244,7 @@ export default function BatchPerformanceReportPage() {
                 control: (
                   <Select value={program} onValueChange={selectProgram}>
                     <SelectTrigger
-                      className="w-52"
+                      className="w-full sm:w-52"
                       aria-label="Filter by program"
                     >
                       <SelectValue />
@@ -268,7 +268,7 @@ export default function BatchPerformanceReportPage() {
                 pinned: true,
                 control: (
                   <Combobox
-                    className="w-52"
+                    className="w-full sm:w-52"
                     aria-label="Select batch"
                     value={batch}
                     onValueChange={(value) => selectBatch(value || "all")}
@@ -284,7 +284,7 @@ export default function BatchPerformanceReportPage() {
                 pinned: true,
                 control: (
                   <Combobox
-                    className="w-64"
+                    className="w-full sm:w-64"
                     aria-label="Select semester"
                     value={effectiveSemesterId}
                     onValueChange={selectSemester}
@@ -305,7 +305,7 @@ export default function BatchPerformanceReportPage() {
                     onValueChange={(attention) => setFilters({ attention })}
                   >
                     <SelectTrigger
-                      className="w-44"
+                      className="w-full sm:w-44"
                       aria-label="Filter by standing"
                     >
                       <SelectValue />
@@ -340,7 +340,10 @@ export default function BatchPerformanceReportPage() {
                       setFilters({ ordering })
                     }}
                   >
-                    <SelectTrigger className="w-48" aria-label="Sort report">
+                    <SelectTrigger
+                      className="w-full sm:w-48"
+                      aria-label="Sort report"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

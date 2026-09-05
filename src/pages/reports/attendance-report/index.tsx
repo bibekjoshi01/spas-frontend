@@ -132,7 +132,7 @@ export default function AttendanceReportPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
       <PageHeader
         title="Attendance reports"
         description="Daily, weekly, and custom-range attendance across the classes you manage."
@@ -217,14 +217,14 @@ export default function AttendanceReportPage() {
                       </Button>
                     </div>
                     <DatePickerInput
-                      className="w-48"
+                      className="w-full sm:w-48"
                       value={filters.start_date}
                       max={filters.end_date}
                       onValueChange={(start_date) => setFilters({ start_date })}
                       aria-label="Report start date"
                     />
                     <DatePickerInput
-                      className="w-48"
+                      className="w-full sm:w-48"
                       value={filters.end_date}
                       min={filters.start_date}
                       max={today}
@@ -258,7 +258,7 @@ export default function AttendanceReportPage() {
                     }
                   >
                     <SelectTrigger
-                      className="w-52"
+                      className="w-full sm:w-52"
                       aria-label="Filter by program"
                     >
                       <SelectValue />
@@ -296,7 +296,7 @@ export default function AttendanceReportPage() {
                     }
                   >
                     <SelectTrigger
-                      className="w-48"
+                      className="w-full sm:w-48"
                       aria-label="Filter by batch"
                     >
                       <SelectValue />
@@ -326,7 +326,7 @@ export default function AttendanceReportPage() {
                     }
                   >
                     <SelectTrigger
-                      className="w-52"
+                      className="w-full sm:w-52"
                       aria-label="Filter by semester"
                     >
                       <SelectValue />
@@ -355,7 +355,7 @@ export default function AttendanceReportPage() {
                     onValueChange={(allocation) => setFilters({ allocation })}
                   >
                     <SelectTrigger
-                      className="w-64"
+                      className="w-full sm:w-64"
                       aria-label="Filter by class"
                     >
                       <SelectValue />
@@ -384,7 +384,10 @@ export default function AttendanceReportPage() {
                     value={filters.ordering}
                     onValueChange={(ordering) => setFilters({ ordering })}
                   >
-                    <SelectTrigger className="w-44" aria-label="Sort report">
+                    <SelectTrigger
+                      className="w-full sm:w-44"
+                      aria-label="Sort report"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
