@@ -106,15 +106,10 @@ export default function AttendanceSessionPage() {
     { allocation, date: sessionDate },
     { skip: !allocation }
   )
-  const [makeupReason, setMakeupReason] = useState("")
-  const needsReason = !existingId && calendar.currentData?.requiresReason
   const calendarAllowsSave = Boolean(
-    calendar.currentData &&
+    calendar.currentData?.isExpected &&
     !calendar.isError &&
-    !calendar.isFetching &&
-    !calendar.currentData.outsideSemester &&
-    (existingId || !calendar.currentData.isCancelled) &&
-    (!needsReason || makeupReason.trim())
+    !calendar.isFetching
   )
 
   // Only the teacher's edits live in state. What is on the server is derived
@@ -132,6 +127,7 @@ export default function AttendanceSessionPage() {
     existing.isLoading || Boolean(existingId && detail.isLoading)
   const sessionError = existing.error ?? detail.error
   const canWrite =
+    calendarAllowsSave &&
     !semesterReadOnly &&
     !sessionIsLoading &&
     !sessionError &&
@@ -249,7 +245,6 @@ export default function AttendanceSessionPage() {
         allocation,
         date: sessionDate,
         period: requestedPeriod,
-        ...(!existingId && makeupReason ? { makeupReason } : {}),
         entries: roster.data.map((entry) => ({
           enrollment: entry.enrollment,
           status: statuses[entry.enrollment]!,
@@ -331,42 +326,14 @@ export default function AttendanceSessionPage() {
         }
       />
 
-      {calendar.currentData &&
-        calendar.currentData.label !== "Teaching day" && (
-          <div className="space-y-2 border bg-card p-3 text-sm">
-            <p>{calendar.currentData.label}</p>
-            {needsReason && (
-              <div>
-                <label htmlFor="makeup-reason" className="mb-1 block">
-                  Reason for extra class
-                </label>
-                <Input
-                  id="makeup-reason"
-                  maxLength={500}
-                  value={makeupReason}
-                  onChange={(event) => setMakeupReason(event.target.value)}
-                  placeholder="e.g. Catch-up practical"
-                />
-              </div>
-            )}
-            {calendar.currentData.isCancelled && !existingId && (
-              <Link
-                className="underline"
-                to={`/attendance?class=${allocation}&date=${sessionDate}`}
-              >
-                Change schedule
-              </Link>
-            )}
-          </div>
-        )}
-      {detail.data?.makeupReason && (
-        <p className="text-sm text-muted-foreground">
-          Extra class · {detail.data.makeupReason}
+      {calendar.currentData && !calendar.currentData.isExpected && (
+        <p role="status" className="border bg-card p-3 text-sm">
+          {calendar.currentData.label} · Attendance unavailable
         </p>
       )}
-      {fieldErrorsFrom(saveError).makeupReason && (
+      {fieldErrorsFrom(saveError).date && (
         <p role="alert" className="text-sm text-destructive">
-          {fieldErrorsFrom(saveError).makeupReason}
+          {fieldErrorsFrom(saveError).date}
         </p>
       )}
       {calendar.isError && (
@@ -395,13 +362,16 @@ export default function AttendanceSessionPage() {
         }
       >
         <div className="space-y-4">
-          {!canWrite && classInfo && !existing.isLoading && (
-            <div className="border-l-4 border-amber-500 bg-band-warn px-3 py-2 text-sm text-band-warn-foreground">
-              {semesterReadOnly
-                ? `This semester is ${classInfo.semesterStatus.toLowerCase()}. Attendance is available for viewing only.`
-                : "You can view this attendance, but your role does not permit changing it."}
-            </div>
-          )}
+          {!canWrite &&
+            classInfo &&
+            !existing.isLoading &&
+            calendar.currentData?.isExpected && (
+              <div className="border-l-4 border-amber-500 bg-band-warn px-3 py-2 text-sm text-band-warn-foreground">
+                {semesterReadOnly
+                  ? `This semester is ${classInfo.semesterStatus.toLowerCase()}. Attendance is available for viewing only.`
+                  : "You can view this attendance, but your role does not permit changing it."}
+              </div>
+            )}
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/10 p-3 dark:border-primary/30 dark:bg-primary/20">
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <Users className="size-4 text-muted-foreground" aria-hidden />

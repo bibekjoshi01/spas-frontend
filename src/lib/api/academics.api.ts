@@ -551,7 +551,7 @@ export interface CalendarEntry {
 export interface CalendarDay {
   milestones?: Array<{
     key: string
-    kind: "EXAM" | "DEADLINE" | "SEMESTER" | "MAKEUP" | "CANCELLED"
+    kind: "SEMESTER"
     title: string
   }>
   date: string
@@ -625,7 +625,7 @@ export const calendarApi = rootAPI.injectEndpoints({
         method: "PUT",
         data,
       }),
-      invalidatesTags: ["AcademicCalendar"],
+      invalidatesTags: ["AcademicCalendar", "Overview"],
     }),
     createCalendarEntry: build.mutation<
       MessageWithIdResponse,
@@ -636,7 +636,7 @@ export const calendarApi = rootAPI.injectEndpoints({
         method: "POST",
         data,
       }),
-      invalidatesTags: ["AcademicCalendar"],
+      invalidatesTags: ["AcademicCalendar", "Overview"],
     }),
     updateCalendarEntry: build.mutation<
       MessageWithIdResponse,
@@ -656,14 +656,14 @@ export const calendarApi = rootAPI.injectEndpoints({
         method: "PATCH",
         data: body,
       }),
-      invalidatesTags: ["AcademicCalendar"],
+      invalidatesTags: ["AcademicCalendar", "Overview"],
     }),
     deleteCalendarEntry: build.mutation<MessageResponse, number>({
       query: (id) => ({
         url: `${ACADEMICS}/calendar-entries/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["AcademicCalendar"],
+      invalidatesTags: ["AcademicCalendar", "Overview"],
     }),
   }),
 })

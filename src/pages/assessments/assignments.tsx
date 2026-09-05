@@ -2,7 +2,6 @@ import { useMemo, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import { ArrowLeft, ClipboardCheck, Pencil, Plus, Save } from "lucide-react"
 
-import { ClassDateNotice } from "@/components/class-date-notice"
 import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
 import { useHasPermission } from "@/hooks/use-has-permissions"
@@ -361,10 +360,6 @@ function EditAssignmentDialog({
                 onValueChange={(dueDate) => setForm({ ...form, dueDate })}
                 aria-label="Due date"
               />
-              <ClassDateNotice
-                allocation={assignment.allocation}
-                date={form.dueDate}
-              />
             </div>
           </div>
         </div>
@@ -464,7 +459,6 @@ function CreateAssignmentDialog({
                 onValueChange={(dueDate) => setForm({ ...form, dueDate })}
                 aria-label="Due date"
               />
-              <ClassDateNotice allocation={allocation} date={form.dueDate} />
             </div>
           </div>
         </div>

@@ -11,7 +11,7 @@ import {
 } from "lucide-react"
 
 import { ClassPicker } from "@/components/class-picker"
-import { ClassCalendarPanel } from "@/components/class-calendar-panel"
+import { AttendanceCalendar } from "@/components/attendance-calendar"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
 import { PageHeader } from "@/components/page-header"
 import { InlineSpinner, QueryState } from "@/components/query-state"
@@ -22,7 +22,6 @@ import {
 } from "@/lib/utils/student-sort"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import { useHasPermission } from "@/hooks/use-has-permissions"
 import { useRememberedClass } from "@/hooks/use-remembered-class"
 import {
@@ -32,6 +31,7 @@ import {
   useGetAttendanceSessionQuery,
   useGetAttendanceSessionsQuery,
   useGetClassesQuery,
+  useGetClassCalendarDayQuery,
 } from "@/lib/api"
 
 const STATUS_STYLES: Record<AttendanceStatus, string> = {
@@ -91,20 +91,26 @@ export default function AttendancePage() {
     (!semesterEnd || date <= semesterEnd)
   const selectedDateIsInSemester = dateIsInSemester(selectedDate)
   const todayIsInSemester = dateIsInSemester(today)
-  const recordedDates = useMemo(
-    () =>
-      Array.from(
-        new Set(sessions.data?.results.map((session) => session.date) ?? [])
-      ).map(fromDateKey),
-    [sessions.data]
+  const selectedDay = useGetClassCalendarDayQuery(
+    { allocation: allocation ?? 0, date: selectedKey },
+    { skip: !allocation }
   )
-  const selectedSessions = useMemo(
-    () =>
-      sessions.data?.results
-        .filter((session) => session.date === selectedKey)
-        .sort((a, b) => a.period - b.period) ?? [],
-    [selectedKey, sessions.data]
+  const todayDay = useGetClassCalendarDayQuery(
+    { allocation: allocation ?? 0, date: toDateKey(today) },
+    { skip: !allocation }
   )
+  const selectedOpen =
+    selectedDay.currentData?.isExpected &&
+    !selectedDay.isFetching &&
+    !selectedDay.isError
+  const todayOpen =
+    todayDay.currentData?.isExpected &&
+    !todayDay.isFetching &&
+    !todayDay.isError
+  const selectedSessions =
+    sessions.data?.results
+      .filter((session) => session.date === selectedKey)
+      .sort((a, b) => a.period - b.period) ?? []
   const sessionParam = params.get("session")
   const selectedSessionId =
     sessionParam === "none"
@@ -172,13 +178,6 @@ export default function AttendancePage() {
       />
 
       {chosen && <ClassWorkspaceNav value={chosen} active="Attendance" />}
-      {allocation && (
-        <ClassCalendarPanel
-          allocation={allocation}
-          date={selectedKey}
-          writable={isWritable}
-        />
-      )}
 
       <div className="flex flex-col gap-2 border bg-card p-2 sm:flex-row sm:items-center">
         <span className="shrink-0 text-sm font-medium">Select class</span>
@@ -197,7 +196,7 @@ export default function AttendancePage() {
               <Eye className="size-4" aria-hidden />
               View today's attendance
             </Button>
-          ) : canAddAttendance ? (
+          ) : canAddAttendance && todayOpen ? (
             <Button asChild size="sm" className="sm:ml-auto">
               <Link to={todayHref}>
                 <Plus className="size-4" aria-hidden />
@@ -231,23 +230,17 @@ export default function AttendancePage() {
                 absences.
               </p>
             </div>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={chooseDate}
-              disabled={[
-                { after: today },
-                ...(semesterStart ? [{ before: semesterStart }] : []),
-                ...(semesterEnd ? [{ after: semesterEnd }] : []),
-              ]}
-              modifiers={{ recorded: recordedDates }}
-              modifiersClassNames={{
-                recorded:
-                  "rounded-md bg-emerald-100 text-emerald-900 [&_button]:bg-emerald-100 [&_button]:font-semibold [&_button]:text-emerald-900 hover:[&_button]:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-100 dark:[&_button]:bg-emerald-950 dark:[&_button]:text-emerald-100 dark:hover:[&_button]:bg-emerald-900",
-              }}
-              className="w-full"
-              classNames={{ root: "w-full", month: "w-full" }}
-            />
+            {allocation && (
+              <AttendanceCalendar
+                key={`${allocation}:${selectedKey}`}
+                allocation={allocation}
+                selected={selectedKey}
+                onSelect={(value) => chooseDate(fromDateKey(value))}
+                recordedDates={
+                  sessions.data?.results.map((session) => session.date) ?? []
+                }
+              />
+            )}
           </section>
 
           <section className="min-w-0 border bg-card">
@@ -279,6 +272,7 @@ export default function AttendancePage() {
                 isWritable &&
                 todayIsInSemester &&
                 canAddAttendance &&
+                selectedOpen &&
                 !selectedSessions.length && (
                   <Button asChild size="sm">
                     <Link to={`/attendance/${allocation}/${selectedKey}`}>
@@ -288,6 +282,17 @@ export default function AttendancePage() {
                   </Button>
                 )}
             </div>
+
+            {selectedDay.currentData && !selectedDay.currentData.isExpected && (
+              <p className="border-b px-3 py-2 text-sm text-destructive">
+                {selectedDay.currentData.label} · Attendance unavailable
+              </p>
+            )}
+            {selectedDay.isError && (
+              <Button variant="ghost" onClick={() => selectedDay.refetch()}>
+                Retry calendar
+              </Button>
+            )}
 
             {selectedSessions.length ? (
               <ul className="divide-y">
@@ -299,7 +304,8 @@ export default function AttendancePage() {
                     canEdit={Boolean(
                       isWritable &&
                       selectedDateIsInSemester &&
-                      canEditAttendance
+                      canEditAttendance &&
+                      selectedOpen
                     )}
                     onToggle={() => toggleSession(session)}
                   />
@@ -319,6 +325,7 @@ export default function AttendancePage() {
                 {allocation &&
                   isWritable &&
                   canAddAttendance &&
+                  selectedOpen &&
                   selectedKey < todayKey &&
                   selectedDateIsInSemester && (
                     <Button

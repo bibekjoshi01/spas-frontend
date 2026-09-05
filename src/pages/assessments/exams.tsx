@@ -2,7 +2,6 @@ import { useMemo, useState, type KeyboardEvent } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import { ArrowLeft, ClipboardList, Pencil, Plus, Save } from "lucide-react"
 
-import { ClassDateNotice } from "@/components/class-date-notice"
 import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
 import { useHasPermission } from "@/hooks/use-has-permissions"
@@ -393,10 +392,6 @@ function EditExamDialog({
                 onValueChange={(examDate) => setForm({ ...form, examDate })}
                 aria-label="Exam date"
               />
-              <ClassDateNotice
-                allocation={exam.allocation}
-                date={form.examDate}
-              />
             </div>
           </div>
         </div>
@@ -534,7 +529,6 @@ function CreateExamDialog({
                 onValueChange={(examDate) => setForm({ ...form, examDate })}
                 aria-label="Exam date"
               />
-              <ClassDateNotice allocation={allocation} date={form.examDate} />
             </div>
           </div>
         </div>
