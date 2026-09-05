@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import { House, RefreshCw, RotateCcw } from "lucide-react"
 
 import PageImage from "@/components/page-image"
 import { Button } from "@/components/ui/button"
@@ -13,43 +14,41 @@ const ErrorFallback = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
-      <PageImage
-        src={ServerIssueImage}
-        alt="Unexpected error illustration"
-        className="mb-8 max-w-md"
-      />
-
-      <h1 className="text-4xl font-semibold tracking-tight">
-        Something Went Wrong
-      </h1>
-
-      <p className="mt-3 max-w-md text-muted-foreground">
-        We encountered an unexpected error. Please try again later.
-      </p>
-
-      <p className="mt-2 max-w-md text-sm text-muted-foreground">
-        If the problem persists, please contact support.
-      </p>
-
-      <div className="mt-8 flex items-center gap-3">
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={() => window.location.reload()}
-        >
-          Try Again
-        </Button>
-
-        <Button size="lg" onClick={handleReset}>
-          Reset App
+    <main className="grid min-h-screen place-items-center bg-muted/20 p-4 sm:p-6">
+      <div className="flex w-full max-w-3xl flex-col items-center text-center">
+        <PageImage
+          src={ServerIssueImage}
+          alt="Unexpected error illustration"
+          className="mb-5 max-w-xs sm:max-w-sm"
+        />
+        <p className="text-xs font-semibold tracking-wider text-destructive uppercase">
+          Unexpected error
+        </p>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+          Something went wrong
+        </h1>
+        <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+          Reload the page first. If the problem continues, reset the local app
+          data and sign in again.
+        </p>
+        <div className="mt-6 flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row">
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            <RefreshCw className="size-4" aria-hidden />
+            Try again
+          </Button>
+          <Button variant="destructive" onClick={handleReset}>
+            <RotateCcw className="size-4" aria-hidden />
+            Reset and sign out
+          </Button>
+        </div>
+        <Button variant="link" className="mt-2" asChild>
+          <Link to="/">
+            <House className="size-4" aria-hidden />
+            Go to dashboard
+          </Link>
         </Button>
       </div>
-
-      <Button variant="link" className="mt-2" asChild>
-        <Link to="/">Back Home</Link>
-      </Button>
-    </div>
+    </main>
   )
 }
 

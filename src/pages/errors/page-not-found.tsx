@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import { ArrowLeft, House } from "lucide-react"
 
 import PageImage from "@/components/page-image"
 import { Button } from "@/components/ui/button"
@@ -7,26 +8,37 @@ import PageNotFoundImage from "@/assets/images/error/404.svg"
 
 const PageNotFound = () => {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
-      <PageImage
-        src={PageNotFoundImage}
-        alt="404 page not found illustration"
-        className="mb-8 max-w-md"
-      />
-
-      <h1 className="text-4xl font-semibold tracking-tight">
-        404 – Page Not Found
-      </h1>
-
-      <p className="mt-3 max-w-md text-muted-foreground">
-        The page you're looking for may have been moved, deleted, renamed, or
-        may never have existed.
-      </p>
-
-      <Button size="lg" className="mt-8" asChild>
-        <Link to="/">Back Home</Link>
-      </Button>
-    </div>
+    <main className="grid min-h-screen place-items-center bg-muted/20 p-4 sm:p-6">
+      <div className="flex w-full max-w-3xl flex-col items-center text-center">
+        <PageImage
+          src={PageNotFoundImage}
+          alt="Page not found illustration"
+          className="mb-5 max-w-xs sm:max-w-sm"
+        />
+        <p className="text-xs font-semibold tracking-wider text-primary uppercase">
+          Error 404
+        </p>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+          Page not found
+        </h1>
+        <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+          This page may have moved, been removed, or the address may be
+          incorrect.
+        </p>
+        <div className="mt-6 flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row">
+          <Button variant="outline" onClick={() => window.history.back()}>
+            <ArrowLeft className="size-4" aria-hidden />
+            Go back
+          </Button>
+          <Button asChild>
+            <Link to="/">
+              <House className="size-4" aria-hidden />
+              Go to dashboard
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </main>
   )
 }
 
