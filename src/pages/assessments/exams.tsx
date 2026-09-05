@@ -399,12 +399,13 @@ function EditExamDialog({
         <DialogFooter className="flex-row items-center border-t pt-3">
           <Button
             variant="ghost"
-            className="h-9 w-full sm:h-8 sm:w-auto"
+            className="h-9 min-w-0 flex-1 px-2 text-xs sm:h-8 sm:w-auto sm:flex-none sm:px-3 sm:text-sm"
             onClick={onClose}
           >
             Cancel
           </Button>
           <Button
+            className="h-9 min-w-0 flex-1 px-2 text-xs sm:h-8 sm:w-auto sm:flex-none sm:px-3 sm:text-sm"
             onClick={submit}
             disabled={
               !form.title.trim() ||
