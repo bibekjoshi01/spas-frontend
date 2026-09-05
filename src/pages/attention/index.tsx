@@ -239,20 +239,15 @@ export default function AttendanceAttentionPage() {
                   {row.presentCount + row.lateCount} attended of{" "}
                   {row.classesHeld}
                 </div>
+                <div className="text-xs text-muted-foreground">
+                  {row.absentCount} absent · {row.lateCount} late ·{" "}
+                  {row.excusedCount} excused
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Last record: {row.lastAttendanceDate || "—"}
+                </div>
               </div>
             ),
-          },
-          {
-            header: <span className="hidden lg:inline">Status counts</span>,
-            className: "hidden whitespace-nowrap text-xs lg:table-cell",
-            cell: (row) =>
-              `${row.absentCount} absent · ${row.lateCount} late · ${row.excusedCount} excused`,
-          },
-          {
-            header: <span className="hidden lg:inline">Last record</span>,
-            className:
-              "hidden whitespace-nowrap text-sm text-muted-foreground lg:table-cell",
-            cell: (row) => row.lastAttendanceDate || "—",
           },
           {
             header: "",

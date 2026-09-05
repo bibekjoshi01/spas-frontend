@@ -1,8 +1,10 @@
 import { useRef, useState, type ComponentProps } from "react"
 import { CalendarDays, Clock3 } from "lucide-react"
 import { Popover as PopoverPrimitive } from "radix-ui"
+import type { DateRange } from "react-day-picker"
 
 import { Calendar } from "@/components/ui/calendar"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { localDateKey } from "@/lib/utils/date"
@@ -86,6 +88,80 @@ export function DatePickerInput({
   )
 }
 
+export function DateRangePickerInput({
+  startValue,
+  endValue,
+  max,
+  className,
+  onValueChange,
+}: {
+  startValue: string
+  endValue: string
+  max?: string
+  className?: string
+  onValueChange: (range: { start: string; end: string }) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const selectedRange: DateRange = {
+    from: parseLocalDate(startValue) ?? undefined,
+    to: parseLocalDate(endValue) ?? undefined,
+  }
+  const [draft, setDraft] = useState<DateRange>(selectedRange)
+  const maximumDate = max ? parseLocalDate(max) : null
+  const label = formatRangeLabel(selectedRange)
+
+  return (
+    <PopoverPrimitive.Root
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen)
+        if (nextOpen) setDraft(selectedRange)
+      }}
+    >
+      <PopoverPrimitive.Trigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={cn(
+            "w-full justify-start bg-card px-3 font-normal sm:w-64",
+            className
+          )}
+          aria-label={`Date range: ${label}`}
+        >
+          <CalendarDays className="size-4 text-muted-foreground" aria-hidden />
+          <span className="truncate">{label}</span>
+        </Button>
+      </PopoverPrimitive.Trigger>
+      <PopoverPrimitive.Portal>
+        <PopoverPrimitive.Content
+          align="start"
+          sideOffset={6}
+          collisionPadding={12}
+          className="z-[120] max-h-[var(--radix-popover-content-available-height)] max-w-[calc(100vw-1rem)] overflow-auto border bg-white outline-none dark:bg-slate-950"
+        >
+          <Calendar
+            mode="range"
+            numberOfMonths={1}
+            selected={draft}
+            defaultMonth={draft.from}
+            disabled={maximumDate ? [{ after: maximumDate }] : undefined}
+            onSelect={(range) => {
+              if (!range) return
+              setDraft(range)
+              if (!range.from || !range.to) return
+              onValueChange({
+                start: localDateKey(range.from),
+                end: localDateKey(range.to),
+              })
+            }}
+          />
+        </PopoverPrimitive.Content>
+      </PopoverPrimitive.Portal>
+    </PopoverPrimitive.Root>
+  )
+}
+
 export function TimePickerInput({
   value,
   className,
@@ -145,4 +221,17 @@ function clampDate(date: Date, minimum: Date | null, maximum: Date | null) {
   if (minimum && date < minimum) return minimum
   if (maximum && date > maximum) return maximum
   return date
+}
+
+function formatRangeLabel(range: DateRange) {
+  if (!range.from) return "Choose date range"
+  const format = (date: Date) =>
+    date.toLocaleDateString(undefined, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })
+  if (!range.to || range.from.getTime() === range.to.getTime())
+    return format(range.from)
+  return `${format(range.from)} – ${format(range.to)}`
 }

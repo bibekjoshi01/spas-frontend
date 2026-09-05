@@ -85,7 +85,7 @@ export default function OverviewPage() {
       >
         {data && (
           <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 border bg-card lg:grid-cols-4">
               <StatTile
                 icon={<GraduationCap className="size-4" aria-hidden />}
                 label="Classes"
@@ -553,10 +553,8 @@ function StatTile({
   tone?: "default" | "warning"
 }) {
   return (
-    // Card already brings py-6; a stat tile is a label and a number, so it does
-    // not need a second helping of vertical padding stacked on top of that.
-    <Card className="gap-0 py-4">
-      <CardContent className="space-y-0.5">
+    <div className="border-r border-b p-3 lg:border-b-0">
+      <div className="space-y-0.5">
         <div className="flex items-center gap-2 text-muted-foreground">
           <span className="flex size-7 items-center justify-center rounded-sm bg-muted text-muted-foreground">
             {icon}
@@ -575,7 +573,7 @@ function StatTile({
           {value}
         </p>
         {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

@@ -6,9 +6,8 @@ import { PageHeader } from "@/components/page-header"
 import { ExportMenu } from "@/components/export-menu"
 import { ResourceList } from "@/components/resource-list"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { DatePickerInput } from "@/components/ui/date-time-picker"
+import { DateRangePickerInput } from "@/components/ui/date-time-picker"
 import {
   Select,
   SelectContent,
@@ -138,7 +137,7 @@ export default function AttendanceReportPage() {
         description="Daily, weekly, and custom-range attendance across the classes you manage."
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 lg:grid-cols-4">
         <Summary
           label="Classes Held"
           value={data?.summary.sessions}
@@ -216,20 +215,13 @@ export default function AttendanceReportPage() {
                         30 days
                       </Button>
                     </div>
-                    <DatePickerInput
-                      className="w-full sm:w-48"
-                      value={filters.start_date}
-                      max={filters.end_date}
-                      onValueChange={(start_date) => setFilters({ start_date })}
-                      aria-label="Report start date"
-                    />
-                    <DatePickerInput
-                      className="w-full sm:w-48"
-                      value={filters.end_date}
-                      min={filters.start_date}
+                    <DateRangePickerInput
+                      startValue={filters.start_date}
+                      endValue={filters.end_date}
                       max={today}
-                      onValueChange={(end_date) => setFilters({ end_date })}
-                      aria-label="Report end date"
+                      onValueChange={({ start, end }) =>
+                        setFilters({ start_date: start, end_date: end })
+                      }
                     />
                   </>
                 ),
@@ -465,30 +457,22 @@ export default function AttendanceReportPage() {
           },
           { header: "Teacher", cell: (row) => row.teacherName },
           {
-            header: "Marked",
-            className: "text-center tabular-nums",
-            cell: (row) => row.marked,
-          },
-          {
-            header: "Present",
-            className: "text-center tabular-nums",
-            cell: (row) => row.present,
-          },
-          {
-            header: "Absent",
-            className:
-              "text-center font-semibold tabular-nums text-destructive",
-            cell: (row) => row.absent,
-          },
-          {
-            header: "Late",
-            className: "text-center tabular-nums",
-            cell: (row) => row.late,
-          },
-          {
-            header: "Excused",
-            className: "text-center tabular-nums",
-            cell: (row) => row.excused,
+            header: "Breakdown",
+            className: "min-w-44",
+            cell: (row) => (
+              <div className="space-y-0.5 text-xs tabular-nums">
+                <div>
+                  {row.marked} marked · {row.present} present
+                </div>
+                <div>
+                  <span className="font-semibold text-destructive">
+                    {row.absent} absent
+                  </span>
+                  {" · "}
+                  {row.late} late · {row.excused} excused
+                </div>
+              </div>
+            ),
           },
           {
             header: "Attendance",
@@ -515,24 +499,20 @@ function Summary({
   loading?: boolean
 }) {
   return (
-    <Card
-      className={
-        danger ? "border-l-4 border-l-red-500" : "border-l-4 border-l-slate-500"
-      }
+    <div
+      className={`border bg-card p-3 ${danger ? "border-l-4 border-l-red-500" : ""}`}
     >
-      <CardContent className="p-3">
-        <div className="text-xs font-bold text-muted-foreground">{label}</div>
-        {/* A bare dash would read as a real total of nothing, so a figure
+      <div className="text-xs font-bold text-muted-foreground">{label}</div>
+      {/* A bare dash would read as a real total of nothing, so a figure
             still being counted shows as a skeleton instead. */}
-        {loading ? (
-          <Skeleton className="mt-1.5 h-6 w-16" />
-        ) : (
-          <div className="mt-1 text-xl font-bold tabular-nums">
-            {value ?? "—"}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {loading ? (
+        <Skeleton className="mt-1.5 h-6 w-16" />
+      ) : (
+        <div className="mt-1 text-xl font-bold tabular-nums">
+          {value ?? "—"}
+        </div>
+      )}
+    </div>
   )
 }
 

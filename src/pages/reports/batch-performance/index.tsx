@@ -16,7 +16,6 @@ import {
 } from "@/lib/utils/student-sort"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Select,
@@ -187,7 +186,7 @@ export default function BatchPerformanceReportPage() {
         description="Semester-level attendance and performance for every student in your management scope."
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 border bg-card lg:grid-cols-4">
         <Summary
           label="Students"
           value={data?.summary.students}
@@ -446,19 +445,30 @@ export default function BatchPerformanceReportPage() {
               ),
           },
           {
-            header: "Assessment",
-            className: "text-center tabular-nums",
-            cell: (row) => percent(row.assessment.percentage),
-          },
-          {
-            header: "Assignment",
-            className: "text-center tabular-nums",
-            cell: (row) => percent(row.assignment.percentage),
-          },
-          {
-            header: "Class performance",
-            className: "text-center tabular-nums",
-            cell: (row) => percent(row.classPerformancePercentage),
+            header: "Evidence",
+            className: "min-w-40",
+            cell: (row) => (
+              <div className="space-y-0.5 text-xs tabular-nums">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-muted-foreground">Assessment</span>
+                  <span className="font-medium">
+                    {percent(row.assessment.percentage)}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-muted-foreground">Assignment</span>
+                  <span className="font-medium">
+                    {percent(row.assignment.percentage)}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-muted-foreground">Class rating</span>
+                  <span className="font-medium">
+                    {percent(row.classPerformancePercentage)}
+                  </span>
+                </div>
+              </div>
+            ),
           },
           {
             header: "Overall",
@@ -528,26 +538,20 @@ function Summary({
   loading?: boolean
 }) {
   return (
-    <Card
-      className={
-        tone === "danger"
-          ? "border-l-4 border-l-red-500"
-          : "border-l-4 border-l-slate-500"
-      }
+    <div
+      className={`border-r border-b p-3 lg:border-b-0 ${tone === "danger" ? "border-l-4 border-l-red-500" : ""}`}
     >
-      <CardContent className="p-3">
-        <div className="text-xs font-bold text-muted-foreground">{label}</div>
-        {/* A bare dash would read as a real total of nothing, so a figure
+      <div className="text-xs font-bold text-muted-foreground">{label}</div>
+      {/* A bare dash would read as a real total of nothing, so a figure
             still being counted shows as a skeleton instead. */}
-        {loading ? (
-          <Skeleton className="mt-1.5 h-6 w-16" />
-        ) : (
-          <div className="mt-1 text-xl font-bold tabular-nums">
-            {value ?? "—"}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {loading ? (
+        <Skeleton className="mt-1.5 h-6 w-16" />
+      ) : (
+        <div className="mt-1 text-xl font-bold tabular-nums">
+          {value ?? "—"}
+        </div>
+      )}
+    </div>
   )
 }
 
