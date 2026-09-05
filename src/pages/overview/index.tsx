@@ -91,28 +91,24 @@ export default function OverviewPage() {
                 label="Classes"
                 value={data.stats.totalClasses}
                 hint={isTeacher ? "allocated to you" : "in your academic scope"}
-                accent="blue"
               />
               <StatTile
                 icon={<Users className="size-4" aria-hidden />}
                 label="Students"
                 value={data.stats.totalStudents}
                 hint={isTeacher ? "across your classes" : "within your scope"}
-                accent="violet"
               />
               <StatTile
                 icon={<TrendingUp className="size-4" aria-hidden />}
                 label="Average attendance"
                 value={formatPercentage(data.stats.avgAttendancePercentage)}
                 hint={isTeacher ? "your classes held" : "scoped classes held"}
-                accent="emerald"
               />
               <StatTile
                 icon={<AlertTriangle className="size-4" aria-hidden />}
                 label={`Below ${formatPercentage(threshold)}`}
                 value={data.stats.studentsBelowEligibility}
                 hint="need attention"
-                accent="amber"
                 tone={
                   data.stats.studentsBelowEligibility > 0
                     ? "warning"
@@ -124,7 +120,7 @@ export default function OverviewPage() {
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="space-y-4">
                 {isTeacher ? (
-                  <Card className="border-blue-200 dark:border-blue-900">
+                  <Card>
                     <CardHeader className="grid-cols-[minmax(0,1fr)_auto] !grid-rows-1 items-center">
                       <CardTitle className="text-base">
                         {isTeacher
@@ -203,13 +199,7 @@ export default function OverviewPage() {
               </div>
 
               <div className="space-y-4">
-                <Card
-                  className={
-                    isTeacher
-                      ? "border-blue-200 dark:border-blue-900"
-                      : "border-violet-200 dark:border-violet-900"
-                  }
-                >
+                <Card>
                   <CardHeader>
                     <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-base">
@@ -454,13 +444,13 @@ function TeacherWorkQueue({ items }: { items: WorkItem[] }) {
 
   return (
     <section className="border bg-card">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-primary px-3 py-2.5 text-primary-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-band px-3 py-2.5">
         <div>
           <h2 className="flex items-center gap-2 font-semibold">
             <ListChecks className="size-4" aria-hidden />
             Work to complete
           </h2>
-          <p className="text-xs text-primary-foreground/75">
+          <p className="text-xs text-muted-foreground">
             Open records across your active classes that still need attention.
           </p>
         </div>
@@ -468,11 +458,7 @@ function TeacherWorkQueue({ items }: { items: WorkItem[] }) {
           variant="outline"
           // The chip sits on the primary bar, so it takes its colours from that
           // bar rather than from the page behind it.
-          className={
-            items.length
-              ? "border-transparent bg-primary-foreground/15 text-primary-foreground"
-              : "border-primary-foreground/40 text-primary-foreground"
-          }
+          className="bg-card tabular-nums"
         >
           {items.length} open
         </Badge>
@@ -559,47 +545,20 @@ function StatTile({
   value,
   hint,
   tone = "default",
-  accent,
 }: {
   icon: React.ReactNode
   label: string
   value: string | number
   hint?: string
   tone?: "default" | "warning"
-  accent: "blue" | "violet" | "emerald" | "amber"
 }) {
-  const accents = {
-    blue: {
-      card: "border-l-blue-600",
-      icon: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-      value: "text-blue-700 dark:text-blue-300",
-    },
-    violet: {
-      card: "border-l-violet-600",
-      icon: "bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
-      value: "text-violet-700 dark:text-violet-300",
-    },
-    emerald: {
-      card: "border-l-emerald-600",
-      icon: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-      value: "text-emerald-700 dark:text-emerald-300",
-    },
-    amber: {
-      card: "border-l-amber-500",
-      icon: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-      value: "text-amber-700 dark:text-amber-300",
-    },
-  }[accent]
-
   return (
     // Card already brings py-6; a stat tile is a label and a number, so it does
     // not need a second helping of vertical padding stacked on top of that.
-    <Card className={`gap-0 border-l-4 py-4 ${accents.card}`}>
+    <Card className="gap-0 py-4">
       <CardContent className="space-y-0.5">
         <div className="flex items-center gap-2 text-muted-foreground">
-          <span
-            className={`flex size-7 items-center justify-center ${accents.icon}`}
-          >
+          <span className="flex size-7 items-center justify-center rounded-sm bg-muted text-muted-foreground">
             {icon}
           </span>
           <span className="text-xs font-bold tracking-wide uppercase">
@@ -610,7 +569,7 @@ function StatTile({
           className={
             tone === "warning"
               ? "text-xl font-semibold text-amber-700 tabular-nums sm:text-2xl dark:text-amber-300"
-              : `text-xl font-semibold tabular-nums sm:text-2xl ${accents.value}`
+              : "text-xl font-semibold tabular-nums sm:text-2xl"
           }
         >
           {value}
