@@ -4,7 +4,7 @@ import { SubjectsSection } from "../academics/sections/subjects"
 
 export default function Page() {
   return (
-    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
       <PageHeader
         title="Subjects"
         description="The curriculum: what is taught, in which semester of which programme."

@@ -92,7 +92,10 @@ export function SubjectsSection() {
                 value={filters.program}
                 onValueChange={(value) => setFilters({ program: value })}
               >
-                <SelectTrigger className="w-44" aria-label="Filter by program">
+                <SelectTrigger
+                  className="w-full sm:w-44"
+                  aria-label="Filter by program"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -110,7 +113,10 @@ export function SubjectsSection() {
               value={filters.semester}
               onValueChange={(value) => setFilters({ semester: value })}
             >
-              <SelectTrigger className="w-40" aria-label="Filter by semester">
+              <SelectTrigger
+                className="w-full sm:w-40"
+                aria-label="Filter by semester"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -130,7 +136,7 @@ export function SubjectsSection() {
               onValueChange={(value) => setFilters({ is_active: value })}
             >
               <SelectTrigger
-                className="w-32"
+                className="w-full sm:w-32"
                 aria-label="Filter by status"
                 clearable={filters.is_active !== "all"}
                 onClear={() => setFilters({ is_active: "all" })}
@@ -154,18 +160,23 @@ export function SubjectsSection() {
         }}
         action={
           canAdd ? (
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
               {canEdit && (
                 <Button
                   size="sm"
                   variant="outline"
+                  className="min-w-0 flex-1 sm:flex-none"
                   onClick={() => setIsImporting(true)}
                 >
                   <Upload className="size-4" aria-hidden />
                   Import
                 </Button>
               )}
-              <Button size="sm" onClick={() => setIsCreating(true)}>
+              <Button
+                size="sm"
+                className="min-w-0 flex-1 sm:flex-none"
+                onClick={() => setIsCreating(true)}
+              >
                 <Plus className="size-4" aria-hidden />
                 New subject
               </Button>
