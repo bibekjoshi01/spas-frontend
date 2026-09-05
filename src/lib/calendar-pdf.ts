@@ -1,4 +1,5 @@
 import type { CalendarMonth } from "@/lib/api"
+import { calendarDisplayEntries } from "@/lib/utils/calendar"
 import nepaliFontUrl from "@/assets/fonts/NotoSansDevanagari.ttf?url"
 
 export interface CalendarExportMonth {
@@ -179,7 +180,7 @@ export async function downloadCalendarPdf(selected: CalendarExportMonth[]) {
 
   const entries = months.flatMap(({ year, month }) =>
     month.days.flatMap((day) =>
-      day.entries
+      calendarDisplayEntries(day)
         .filter((entry) => entry.isActive)
         .map((entry) => ({
           kind: entry.kind,

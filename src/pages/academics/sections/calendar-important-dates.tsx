@@ -12,12 +12,12 @@ import {
 } from "@/components/ui/dialog"
 import type {
   CalendarDay,
-  CalendarEntry,
   CalendarEntryKind,
   CalendarMonth,
   CalendarYear,
 } from "@/lib/api"
 import { cn } from "@/lib/utils"
+import { calendarDisplayEntries } from "@/lib/utils/calendar"
 
 type Filter = "ALL" | CalendarEntryKind
 
@@ -29,7 +29,7 @@ const FILTERS: { value: Filter; label: string }[] = [
 
 interface DatedEntry {
   day: CalendarDay
-  entry: CalendarEntry
+  entry: ReturnType<typeof calendarDisplayEntries>[number]
 }
 
 interface MonthGroup {
@@ -43,7 +43,7 @@ function group(year: CalendarYear, filter: Filter): MonthGroup[] {
     .map((month) => ({
       month,
       rows: month.days.flatMap((day) =>
-        day.entries
+        calendarDisplayEntries(day)
           .filter((entry) => filter === "ALL" || entry.kind === filter)
           .map((entry) => ({ day, entry }))
       ),
@@ -72,7 +72,7 @@ export function CalendarImportantDates({
   const [filter, setFilter] = useState<Filter>("ALL")
   const groups = group(year, filter)
   const all = year.months.flatMap((month) =>
-    month.days.flatMap((day) => day.entries)
+    month.days.flatMap(calendarDisplayEntries)
   )
   const holidays = all.filter((entry) => entry.kind === "HOLIDAY").length
 

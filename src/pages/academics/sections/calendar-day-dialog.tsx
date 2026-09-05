@@ -67,7 +67,7 @@ export function CalendarDayDialog({
           </DialogHeader>
 
           <div className="space-y-2">
-            {day.entries.length === 0 && (
+            {day.entries.length === 0 && !day.milestones?.length && (
               <p className="border bg-card p-4 text-center text-sm text-muted-foreground">
                 Nothing is marked on this date.
               </p>
@@ -124,6 +124,12 @@ export function CalendarDayDialog({
                     </Button>
                   </div>
                 )}
+              </div>
+            ))}
+
+            {(day.milestones ?? []).map((item) => (
+              <div key={item.key} className="border bg-card p-3 text-sm">
+                {item.title}
               </div>
             ))}
 

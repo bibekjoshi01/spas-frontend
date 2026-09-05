@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 
 import { ClassPicker } from "@/components/class-picker"
+import { ClassCalendarPanel } from "@/components/class-calendar-panel"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
 import { PageHeader } from "@/components/page-header"
 import { InlineSpinner, QueryState } from "@/components/query-state"
@@ -171,6 +172,13 @@ export default function AttendancePage() {
       />
 
       {chosen && <ClassWorkspaceNav value={chosen} active="Attendance" />}
+      {allocation && (
+        <ClassCalendarPanel
+          allocation={allocation}
+          date={selectedKey}
+          writable={isWritable}
+        />
+      )}
 
       <div className="flex flex-col gap-2 border bg-card p-2 sm:flex-row sm:items-center">
         <span className="shrink-0 text-sm font-medium">Select class</span>

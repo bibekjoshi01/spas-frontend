@@ -549,6 +549,11 @@ export interface CalendarEntry {
 }
 
 export interface CalendarDay {
+  milestones?: Array<{
+    key: string
+    kind: "EXAM" | "DEADLINE" | "SEMESTER" | "MAKEUP" | "CANCELLED"
+    title: string
+  }>
   date: string
   day: number
   /** The day number as the chosen system writes it — `१२` in Nepali. */

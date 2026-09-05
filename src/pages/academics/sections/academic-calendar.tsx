@@ -13,6 +13,11 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { useHasRole, useIsSuperUser } from "@/hooks/use-has-permissions"
 import {
   type CalendarDay,
@@ -119,7 +124,12 @@ export function AcademicCalendarSection() {
   const markedCount =
     data?.months.reduce(
       (total, month) =>
-        total + month.days.reduce((sum, day) => sum + day.entries.length, 0),
+        total +
+        month.days.reduce(
+          (sum, day) =>
+            sum + day.entries.length + (day.milestones?.length ?? 0),
+          0
+        ),
       0
     ) ?? 0
 
@@ -445,15 +455,16 @@ function DayCell({
   onPick: (date: string) => void
 }) {
   const holiday = day.entries.some((entry) => entry.kind === "HOLIDAY")
-  const event = !holiday && day.entries.length > 0
-  const label = day.entries.length
-    ? `${day.date}: ${day.entries.map((entry) => entry.title).join(", ")}`
-    : day.date
+  const titles = [
+    ...day.entries.map((entry) => entry.title),
+    ...(day.milestones ?? []).map((item) => item.title),
+  ]
+  const event = !holiday && titles.length > 0
+  const label = titles.length ? `${day.date}: ${titles.join(", ")}` : day.date
 
-  return (
+  const cell = (
     <button
       type="button"
-      title={label}
       aria-label={label}
       aria-current={isToday ? "date" : undefined}
       onClick={() => onPick(day.date)}
@@ -476,10 +487,30 @@ function DayCell({
       <span className="self-end text-[10px] leading-none text-muted-foreground tabular-nums">
         {englishDay(day.date)}
       </span>
-      {day.entries.length > 1 && (
+      {titles.length > 1 && (
         <span className="absolute top-1 right-1 size-1.5 rounded-full bg-current opacity-70" />
       )}
     </button>
+  )
+
+  if (!titles.length) return cell
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{cell}</TooltipTrigger>
+      <TooltipContent sideOffset={6} className="max-w-72 text-left">
+        {day.entries.map((entry) => (
+          <p key={entry.id} className="break-words">
+            {entry.title}
+          </p>
+        ))}
+        {(day.milestones ?? []).map((item) => (
+          <p key={item.key} className="break-words">
+            {item.title}
+          </p>
+        ))}
+      </TooltipContent>
+    </Tooltip>
   )
 }
 

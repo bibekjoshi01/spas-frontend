@@ -34,6 +34,8 @@ import {
   useGetClassesQuery,
   useGetRosterQuery,
   useRecordAttendanceMutation,
+  useGetClassCalendarDayQuery,
+  fieldErrorsFrom,
 } from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
 import { localDateKey } from "@/lib/utils/date"
@@ -98,7 +100,22 @@ export default function AttendanceSessionPage() {
     { skip: !previousSession }
   )
 
-  const [record, { isLoading: isSaving }] = useRecordAttendanceMutation()
+  const [record, { isLoading: isSaving, error: saveError }] =
+    useRecordAttendanceMutation()
+  const calendar = useGetClassCalendarDayQuery(
+    { allocation, date: sessionDate },
+    { skip: !allocation }
+  )
+  const [makeupReason, setMakeupReason] = useState("")
+  const needsReason = !existingId && calendar.currentData?.requiresReason
+  const calendarAllowsSave = Boolean(
+    calendar.currentData &&
+    !calendar.isError &&
+    !calendar.isFetching &&
+    !calendar.currentData.outsideSemester &&
+    (existingId || !calendar.currentData.isCancelled) &&
+    (!needsReason || makeupReason.trim())
+  )
 
   // Only the teacher's edits live in state. What is on the server is derived
   // during render and the edits sit on top, so a refetch never discards
@@ -225,13 +242,14 @@ export default function AttendanceSessionPage() {
   }
 
   const save = async () => {
-    if (!roster.data || !isComplete || !canWrite) return
+    if (!roster.data || !isComplete || !canWrite || !calendarAllowsSave) return
 
     try {
       const result = await record({
         allocation,
         date: sessionDate,
         period: requestedPeriod,
+        ...(!existingId && makeupReason ? { makeupReason } : {}),
         entries: roster.data.map((entry) => ({
           enrollment: entry.enrollment,
           status: statuses[entry.enrollment]!,
@@ -288,7 +306,13 @@ export default function AttendanceSessionPage() {
             <Button
               size="sm"
               onClick={save}
-              disabled={!canWrite || isSaving || !isDirty || !isComplete}
+              disabled={
+                !canWrite ||
+                !calendarAllowsSave ||
+                isSaving ||
+                !isDirty ||
+                !isComplete
+              }
             >
               {isSaving ? (
                 <InlineSpinner />
@@ -306,6 +330,50 @@ export default function AttendanceSessionPage() {
           </>
         }
       />
+
+      {calendar.currentData &&
+        calendar.currentData.label !== "Teaching day" && (
+          <div className="space-y-2 border bg-card p-3 text-sm">
+            <p>{calendar.currentData.label}</p>
+            {needsReason && (
+              <div>
+                <label htmlFor="makeup-reason" className="mb-1 block">
+                  Reason for extra class
+                </label>
+                <Input
+                  id="makeup-reason"
+                  maxLength={500}
+                  value={makeupReason}
+                  onChange={(event) => setMakeupReason(event.target.value)}
+                  placeholder="e.g. Catch-up practical"
+                />
+              </div>
+            )}
+            {calendar.currentData.isCancelled && !existingId && (
+              <Link
+                className="underline"
+                to={`/attendance?class=${allocation}&date=${sessionDate}`}
+              >
+                Change schedule
+              </Link>
+            )}
+          </div>
+        )}
+      {detail.data?.makeupReason && (
+        <p className="text-sm text-muted-foreground">
+          Extra class · {detail.data.makeupReason}
+        </p>
+      )}
+      {fieldErrorsFrom(saveError).makeupReason && (
+        <p role="alert" className="text-sm text-destructive">
+          {fieldErrorsFrom(saveError).makeupReason}
+        </p>
+      )}
+      {calendar.isError && (
+        <Button variant="outline" onClick={() => calendar.refetch()}>
+          Retry calendar
+        </Button>
+      )}
 
       <QueryState
         isLoading={roster.isLoading || classes.isLoading || sessionIsLoading}
