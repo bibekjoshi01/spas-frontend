@@ -30,35 +30,40 @@ export function TableSkeleton({
   className?: string
 }) {
   return (
-    <div
-      className={cn(
-        "overflow-hidden rounded-lg border bg-table-surface",
-        className
-      )}
-    >
-      <div className="flex gap-4 border-b-2 border-table-header-border bg-table-header px-3 py-3">
-        {Array.from({ length: columns }).map((_, column) => (
-          <Skeleton
-            key={column}
-            className="h-3 flex-1 bg-slate-300 dark:bg-slate-700"
-          />
-        ))}
-      </div>
-      <div className="divide-y">
-        {Array.from({ length: rows }).map((_, row) => (
-          <div key={row} className="flex items-center gap-4 px-3 py-3.5">
-            {Array.from({ length: columns }).map((_, column) => (
-              <div key={column} className="flex-1">
+    <div className={cn("overflow-x-auto rounded-lg border", className)}>
+      <div className="min-w-[42rem] bg-table-surface">
+        <div
+          className="grid gap-4 border-b-2 border-table-header-border bg-table-header px-3 py-3"
+          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+        >
+          {Array.from({ length: columns }).map((_, column) => (
+            <Skeleton
+              key={column}
+              className="h-3 w-3/5 bg-slate-300 dark:bg-slate-700"
+            />
+          ))}
+        </div>
+        <div className="divide-y">
+          {Array.from({ length: rows }).map((_, row) => (
+            <div
+              key={row}
+              className="grid items-center gap-4 px-3 py-3.5"
+              style={{
+                gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+              }}
+            >
+              {Array.from({ length: columns }).map((_, column) => (
                 <Skeleton
+                  key={column}
                   className={cn(
                     "h-3.5",
                     CELL_WIDTHS[(row + column) % CELL_WIDTHS.length]
                   )}
                 />
-              </div>
-            ))}
-          </div>
-        ))}
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -80,6 +85,19 @@ export function MetricRowSkeleton({
           <Skeleton className="mt-2 h-6 w-14" />
         </div>
       ))}
+    </div>
+  )
+}
+
+/** The title, description and optional primary action every page starts with. */
+export function PageHeaderSkeleton({ action = true }: { action?: boolean }) {
+  return (
+    <div className="flex min-h-12 items-start justify-between gap-4">
+      <div className="min-w-0 flex-1 space-y-2">
+        <Skeleton className="h-5 w-44 max-w-1/2" />
+        <Skeleton className="h-3.5 w-80 max-w-4/5" />
+      </div>
+      {action && <Skeleton className="h-8 w-28 shrink-0" />}
     </div>
   )
 }
@@ -185,6 +203,33 @@ export function ToolbarSkeleton() {
   )
 }
 
+/** Bordered content cards with the same internal rhythm as class and work cards. */
+export function CardGridSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: count }).map((_, index) => (
+        <div key={index} className="border bg-card p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-4 w-3/5" />
+              <Skeleton className="h-3 w-2/5" />
+            </div>
+            <Skeleton className="h-5 w-16 shrink-0" />
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3 border-y py-3">
+            <Skeleton className="h-3.5 w-3/4" />
+            <Skeleton className="h-3.5 w-2/3" />
+          </div>
+          <div className="mt-3 flex justify-end gap-2">
+            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-8 w-24" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /** The dashboard: four stat tiles over two columns of panels. */
 export function DashboardSkeleton() {
   return (
@@ -252,7 +297,14 @@ export function DashboardSkeleton() {
 export function PageSkeleton({
   variant = "list",
 }: {
-  variant?: "list" | "dashboard"
+  variant?:
+    | "list"
+    | "dashboard"
+    | "cards"
+    | "workspace"
+    | "report"
+    | "settings"
+    | "register"
 }) {
   return (
     <div
@@ -261,9 +313,65 @@ export function PageSkeleton({
       aria-busy="true"
     >
       <span className="sr-only">Loading page…</span>
-      {variant === "dashboard" ? (
-        <DashboardSkeleton />
-      ) : (
+      <PageHeaderSkeleton action={variant !== "dashboard"} />
+      {variant === "dashboard" && <DashboardSkeleton />}
+      {variant === "cards" && (
+        <>
+          <ToolbarSkeleton />
+          <CardGridSkeleton />
+        </>
+      )}
+      {variant === "workspace" && (
+        <>
+          <ClassWorkspaceSkeleton compact />
+          <ToolbarSkeleton />
+          <CardGridSkeleton count={3} />
+        </>
+      )}
+      {variant === "report" && (
+        <>
+          <MetricRowSkeleton count={4} className="grid-cols-2 lg:grid-cols-4" />
+          <ToolbarSkeleton />
+          <TableSkeleton />
+        </>
+      )}
+      {variant === "settings" && (
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <PanelSkeleton key={index}>
+              <div className="space-y-4 p-4">
+                {Array.from({ length: index === 0 ? 4 : 1 }).map((__, row) => (
+                  <div
+                    key={row}
+                    className="grid gap-3 sm:grid-cols-[1fr_9rem] sm:items-center"
+                  >
+                    <div className="space-y-1.5">
+                      <Skeleton className="h-3.5 w-32" />
+                      <Skeleton className="h-3 w-64 max-w-full" />
+                    </div>
+                    <Skeleton className="h-8 w-full" />
+                  </div>
+                ))}
+              </div>
+            </PanelSkeleton>
+          ))}
+        </div>
+      )}
+      {variant === "register" && (
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-3 border bg-card p-2">
+            <div className="flex gap-2 overflow-hidden">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton key={index} className="h-8 w-20 shrink-0" />
+              ))}
+            </div>
+            <Skeleton className="h-8 w-28" />
+          </div>
+          <ToolbarSkeleton />
+          <TableSkeleton rows={8} columns={6} />
+        </>
+      )}
+      {variant === "list" && (
         <>
           <ToolbarSkeleton />
           <TableSkeleton />
@@ -278,11 +386,14 @@ export function ClassReportSkeleton() {
   return (
     <div className="space-y-3">
       <MetricRowSkeleton count={3} />
-      <div className="flex flex-wrap items-center justify-between gap-2 border bg-card p-2">
-        <Skeleton className="h-9 w-full sm:w-80" />
-        <Skeleton className="h-8 w-44" />
+      <div className="flex flex-col gap-2 border bg-card p-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-1">
+          <Skeleton className="h-9 w-16" />
+          <Skeleton className="h-9 w-36" />
+        </div>
+        <Skeleton className="h-8 w-full sm:w-72" />
       </div>
-      <TableSkeleton rows={8} columns={8} />
+      <TableSkeleton rows={8} columns={6} />
     </div>
   )
 }
@@ -350,7 +461,7 @@ export function SubjectRecordSkeleton() {
           ))}
         </div>
       </PanelSkeleton>
-      <MetricRowSkeleton count={4} className="sm:grid-cols-2 lg:grid-cols-4" />
+      <MetricRowSkeleton count={6} className="grid-cols-2 lg:grid-cols-6" />
       <TableSkeleton rows={4} columns={5} />
       <TableSkeleton rows={3} columns={5} />
     </div>
