@@ -134,7 +134,10 @@ export function StudentsSection() {
                 setFilters({ batch__program: value, batch: "all" })
               }
             >
-              <SelectTrigger className="w-52" aria-label="Filter by program">
+              <SelectTrigger
+                className="w-full sm:w-52"
+                aria-label="Filter by program"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -148,7 +151,7 @@ export function StudentsSection() {
             </Select>
 
             <Combobox
-              className="w-52"
+              className="w-full sm:w-52"
               aria-label="Filter by batch"
               value={filters.batch}
               onValueChange={(value) => setFilters({ batch: value || "all" })}
@@ -161,7 +164,10 @@ export function StudentsSection() {
               value={filters.status}
               onValueChange={(value) => setFilters({ status: value })}
             >
-              <SelectTrigger className="w-40" aria-label="Filter by standing">
+              <SelectTrigger
+                className="w-full sm:w-40"
+                aria-label="Filter by standing"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -184,18 +190,23 @@ export function StudentsSection() {
         }}
         action={
           canAdd ? (
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
               {canEdit && (
                 <Button
                   size="sm"
                   variant="outline"
+                  className="min-w-0 flex-1 sm:flex-none"
                   onClick={() => setIsImporting(true)}
                 >
                   <Upload className="size-4" aria-hidden />
                   Import
                 </Button>
               )}
-              <Button size="sm" onClick={() => setIsCreating(true)}>
+              <Button
+                size="sm"
+                className="min-w-0 flex-1 sm:flex-none"
+                onClick={() => setIsCreating(true)}
+              >
                 <Plus className="size-4" aria-hidden />
                 Admit a student
               </Button>
@@ -219,7 +230,8 @@ export function StudentsSection() {
         columns={[
           {
             header: "Roll",
-            className: "w-20 font-mono text-xs tabular-nums",
+            className:
+              "hidden w-20 font-mono text-xs tabular-nums sm:table-cell",
             cell: (row) => row.rollNumber,
           },
           {
@@ -243,17 +255,19 @@ export function StudentsSection() {
           },
           {
             header: "Registration",
-            className: "font-mono text-xs text-muted-foreground",
+            className:
+              "hidden font-mono text-xs text-muted-foreground lg:table-cell",
             cell: (row) => row.registrationNumber || "—",
           },
           {
             header: "Login username",
-            className: "font-mono text-xs text-muted-foreground",
+            className:
+              "hidden font-mono text-xs text-muted-foreground lg:table-cell",
             cell: (row) => row.username,
           },
           {
             header: "Contact",
-            className: "text-muted-foreground",
+            className: "hidden text-muted-foreground md:table-cell",
             cell: (row) => (
               <div className="space-y-0.5">
                 <div>{row.email || "—"}</div>
