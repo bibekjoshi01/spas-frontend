@@ -91,7 +91,7 @@ export default function ClassWorkspacePage() {
   const running = selected?.semesterStatus === "RUNNING"
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
       <PageHeader
         title={
           selected ? `${selected.code} — ${selected.name}` : "Class Workspace"

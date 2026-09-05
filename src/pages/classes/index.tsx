@@ -59,7 +59,7 @@ export default function ClassesPage() {
   ] as const
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
       <PageHeader
         title="My Classes"
         description="Every subject allocated to you this semester."
@@ -124,18 +124,18 @@ export default function ClassesPage() {
                   )}
                 >
                   <div>
-                    <h2 className="text-base font-bold tracking-tight">
+                    <h2 className="text-sm font-bold tracking-tight sm:text-base">
                       {section.title}
                     </h2>
                     <p className="text-xs text-muted-foreground">
                       {section.description}
                     </p>
                   </div>
-                  <span className="border bg-card px-2 py-0.5 text-sm font-semibold tabular-nums">
+                  <span className="min-w-7 border bg-card px-2 py-0.5 text-center text-sm font-semibold tabular-nums">
                     {items.length}
                   </span>
                 </div>
-                <div className="grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {items.map((item) => (
                     <ClassCard
                       key={item.allocation}
