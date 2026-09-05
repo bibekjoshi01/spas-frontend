@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo, useState } from "react"
-import { Search } from "lucide-react"
+import { Search, X } from "lucide-react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { ExportMenu } from "@/components/export-menu"
@@ -134,15 +134,15 @@ export function AllocationReportDialog({
       <Dialog open onOpenChange={(open) => !open && onClose()}>
         <DialogContent
           overlayClassName="z-[80]"
-          className="z-[90] h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto sm:max-w-none"
+          className="z-[90] flex h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-none flex-col gap-0 overflow-hidden p-0 sm:max-w-6xl sm:p-0"
         >
-          <DialogHeader className="pr-10">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <DialogTitle>
+          <DialogHeader className="shrink-0 border-b bg-muted/20 p-4 pr-12 sm:p-5 sm:pr-12">
+            <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <DialogTitle className="truncate text-base sm:text-lg">
                   {allocation.subject.code} — {allocation.subject.name}
                 </DialogTitle>
-                <DialogDescription className="mt-1">
+                <DialogDescription className="mt-1 truncate text-xs sm:text-sm">
                   {allocation.batchSemester.batch.program.code} · Batch{" "}
                   {allocation.batchSemester.batch.year} ·{" "}
                   {semesterLabel(allocation.batchSemester.semester)} ·{" "}
@@ -157,145 +157,164 @@ export function AllocationReportDialog({
             </div>
           </DialogHeader>
 
-          <QueryState
-            isLoading={students.isLoading}
-            isFetching={students.isFetching && !students.isLoading}
-            error={students.error}
-            onRetry={students.refetch}
-            skeleton={<ClassReportSkeleton />}
-          >
-            <div className="space-y-3">
-              <div className="grid gap-3 sm:grid-cols-3">
-                <Metric
-                  label="Enrolled students"
-                  value={students.data?.length ?? 0}
-                />
-                <Metric label="Need attention" value={attentionCount} danger />
-                <Metric
-                  label="Average performance"
-                  value={formatPercentage(average)}
-                />
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-2 border bg-card p-2">
-                <div className="relative w-full sm:w-80">
-                  <Search
-                    className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-                    aria-hidden
+          <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
+            <QueryState
+              isLoading={students.isLoading}
+              isFetching={students.isFetching && !students.isLoading}
+              error={students.error}
+              onRetry={students.refetch}
+              skeleton={<ClassReportSkeleton />}
+            >
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  <Metric
+                    label="Enrolled students"
+                    value={students.data?.length ?? 0}
                   />
-                  <Input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search student, roll or phone"
-                    className="pl-8"
+                  <Metric
+                    label="Need attention"
+                    value={attentionCount}
+                    danger
+                  />
+                  <Metric
+                    label="Average performance"
+                    value={formatPercentage(average)}
                   />
                 </div>
-                <Button
-                  variant={attentionOnly ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setAttentionOnly((value) => !value)}
-                >
-                  {attentionOnly
-                    ? "Showing attention only"
-                    : "Show attention only"}
-                </Button>
-              </div>
 
-              <div className="overflow-x-auto border">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-table-header">
-                      <TableHead>#</TableHead>
-                      <TableHead>
-                        <StudentNameSortButton
-                          direction={nameSort}
-                          onChange={setNameSort}
-                        />
-                      </TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Attendance</TableHead>
-                      <TableHead>Assessment</TableHead>
-                      <TableHead>Assignments</TableHead>
-                      <TableHead>Class performance</TableHead>
-                      <TableHead>Overall</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rows.map((row, index) => (
-                      <TableRow key={row.enrollment}>
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>
-                          <button
-                            className="text-left"
-                            onClick={() => setDetailEnrollment(row.enrollment)}
-                          >
-                            <span className="block font-semibold hover:underline">
-                              {row.fullName}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              Roll {row.rollNumber}
-                            </span>
-                          </button>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {row.phoneNo || "—"}
-                          <br />
-                          {row.email || "—"}
-                        </TableCell>
-                        <TableCell className="min-w-44">
-                          <AttendanceMeter
-                            percentage={row.attendance.percentage}
-                          />
-                        </TableCell>
-                        <TableCell className="text-center tabular-nums">
-                          {row.internalMarks.total
-                            ? `${row.internalMarks.obtained}/${row.internalMarks.total}`
-                            : "—"}
-                        </TableCell>
-                        <TableCell className="text-center tabular-nums">
-                          {row.assignments.total
-                            ? `${row.assignments.done}/${row.assignments.total}`
-                            : "—"}
-                        </TableCell>
-                        <TableCell className="text-center tabular-nums">
-                          {row.classPerformance.score === null
-                            ? "—"
-                            : `${row.classPerformance.score}/10`}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="font-bold tabular-nums">
-                            {row.performancePercentage === null
-                              ? "—"
-                              : formatPercentage(row.performancePercentage)}
-                          </div>
-                          {isAttention(
-                            row.performancePercentage,
-                            row.attendance.percentage,
-                            row.attendance.held,
-                            threshold
-                          ) && (
-                            <Badge variant="destructive" className="mt-1">
-                              Needs attention
-                            </Badge>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {!rows.length && !students.isLoading && (
-                      <TableRow>
-                        <TableCell
-                          colSpan={8}
-                          className="py-8 text-center text-muted-foreground"
-                        >
-                          No students match this view.
-                        </TableCell>
-                      </TableRow>
+                <div className="flex flex-col gap-2 border bg-card p-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="relative w-full sm:w-80">
+                    <Search
+                      className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+                      aria-hidden
+                    />
+                    <Input
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Search student, roll or phone"
+                      className="pr-8 pl-8"
+                    />
+                    {search && (
+                      <button
+                        type="button"
+                        onClick={() => setSearch("")}
+                        className="absolute top-1/2 right-1.5 flex size-6 -translate-y-1/2 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none"
+                        aria-label="Clear report search"
+                      >
+                        <X className="size-3.5" aria-hidden />
+                      </button>
                     )}
-                  </TableBody>
-                </Table>
+                  </div>
+                  <Button
+                    variant={attentionOnly ? "default" : "outline"}
+                    size="sm"
+                    className="w-full text-xs sm:w-auto sm:text-sm"
+                    onClick={() => setAttentionOnly((value) => !value)}
+                  >
+                    {attentionOnly
+                      ? "Showing attention only"
+                      : "Show attention only"}
+                  </Button>
+                </div>
+
+                <div className="overflow-x-auto border">
+                  <Table className="min-w-[56rem]">
+                    <TableHeader>
+                      <TableRow className="bg-table-header">
+                        <TableHead>#</TableHead>
+                        <TableHead>
+                          <StudentNameSortButton
+                            direction={nameSort}
+                            onChange={setNameSort}
+                          />
+                        </TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Attendance</TableHead>
+                        <TableHead>Assessment</TableHead>
+                        <TableHead>Assignments</TableHead>
+                        <TableHead>Class performance</TableHead>
+                        <TableHead>Overall</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rows.map((row, index) => (
+                        <TableRow key={row.enrollment}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>
+                            <button
+                              className="text-left"
+                              onClick={() =>
+                                setDetailEnrollment(row.enrollment)
+                              }
+                            >
+                              <span className="block font-semibold hover:underline">
+                                {row.fullName}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                Roll {row.rollNumber}
+                              </span>
+                            </button>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {row.phoneNo || "—"}
+                            <br />
+                            {row.email || "—"}
+                          </TableCell>
+                          <TableCell className="min-w-44">
+                            <AttendanceMeter
+                              percentage={row.attendance.percentage}
+                            />
+                          </TableCell>
+                          <TableCell className="text-center tabular-nums">
+                            {row.internalMarks.total
+                              ? `${row.internalMarks.obtained}/${row.internalMarks.total}`
+                              : "—"}
+                          </TableCell>
+                          <TableCell className="text-center tabular-nums">
+                            {row.assignments.total
+                              ? `${row.assignments.done}/${row.assignments.total}`
+                              : "—"}
+                          </TableCell>
+                          <TableCell className="text-center tabular-nums">
+                            {row.classPerformance.score === null
+                              ? "—"
+                              : `${row.classPerformance.score}/10`}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="font-bold tabular-nums">
+                              {row.performancePercentage === null
+                                ? "—"
+                                : formatPercentage(row.performancePercentage)}
+                            </div>
+                            {isAttention(
+                              row.performancePercentage,
+                              row.attendance.percentage,
+                              row.attendance.held,
+                              threshold
+                            ) && (
+                              <Badge variant="destructive" className="mt-1">
+                                Needs attention
+                              </Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {!rows.length && !students.isLoading && (
+                        <TableRow>
+                          <TableCell
+                            colSpan={8}
+                            className="py-8 text-center text-muted-foreground"
+                          >
+                            No students match this view.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
-            </div>
-          </QueryState>
+            </QueryState>
+          </div>
         </DialogContent>
       </Dialog>
 

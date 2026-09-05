@@ -173,7 +173,7 @@ export function AllocationsSection() {
                     }
                   >
                     <SelectTrigger
-                      className="w-56"
+                      className="w-full sm:w-56"
                       aria-label="Filter by program"
                     >
                       <SelectValue />
@@ -202,7 +202,7 @@ export function AllocationsSection() {
                     }
                   >
                     <SelectTrigger
-                      className="w-48"
+                      className="w-full sm:w-48"
                       aria-label="Filter by batch"
                     >
                       <SelectValue />
@@ -231,7 +231,7 @@ export function AllocationsSection() {
                     }
                   >
                     <SelectTrigger
-                      className="w-40"
+                      className="w-full sm:w-40"
                       aria-label="Filter by semester"
                     >
                       <SelectValue />
@@ -259,7 +259,7 @@ export function AllocationsSection() {
                     onValueChange={(value) => setFilters({ subject: value })}
                   >
                     <SelectTrigger
-                      className="w-52"
+                      className="w-full sm:w-52"
                       aria-label="Filter by subject"
                     >
                       <SelectValue />
@@ -287,7 +287,7 @@ export function AllocationsSection() {
                     onValueChange={(value) => setFilters({ teacher: value })}
                   >
                     <SelectTrigger
-                      className="w-52"
+                      className="w-full sm:w-52"
                       aria-label="Filter by teacher"
                     >
                       <SelectValue />
@@ -324,7 +324,11 @@ export function AllocationsSection() {
         }}
         action={
           canAdd ? (
-            <Button size="sm" onClick={() => setIsCreating(true)}>
+            <Button
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={() => setIsCreating(true)}
+            >
               <Plus className="size-4" aria-hidden />
               Allocate a subject
             </Button>

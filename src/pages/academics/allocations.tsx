@@ -4,7 +4,7 @@ import { AllocationsSection } from "../academics/sections/allocations"
 
 export default function Page() {
   return (
-    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
       <PageHeader
         title="Subject Allocations"
         description="Who teaches what, to which batch. Creating one makes a class."
