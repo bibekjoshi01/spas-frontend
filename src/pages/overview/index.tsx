@@ -60,7 +60,7 @@ export default function OverviewPage() {
     profile?.firstName || profile?.fullName?.split(" ")[0] || "there"
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
       <PageHeader
         title={`Good to see you, ${firstName}`}
         description={dateLabel}
@@ -84,8 +84,8 @@ export default function OverviewPage() {
         skeleton={<DashboardSkeleton />}
       >
         {data && (
-          <div className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <StatTile
                 icon={<GraduationCap className="size-4" aria-hidden />}
                 label="Classes"
@@ -121,8 +121,8 @@ export default function OverviewPage() {
               />
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div className="space-y-6">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-4">
                 {isTeacher ? (
                   <Card className="border-blue-200 dark:border-blue-900">
                     <CardHeader className="grid-cols-[minmax(0,1fr)_auto] !grid-rows-1 items-center">
@@ -150,7 +150,7 @@ export default function OverviewPage() {
                       {data.todaysClasses.map((item) => (
                         <div
                           key={item.allocation}
-                          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
+                          className="flex flex-wrap items-center justify-between gap-3 rounded-sm border p-3"
                         >
                           <div className="min-w-0">
                             <p className="truncate font-medium">{item.name}</p>
@@ -167,7 +167,11 @@ export default function OverviewPage() {
                                 Recorded
                               </Badge>
                             ) : isTeacher ? (
-                              <Button asChild size="sm">
+                              <Button
+                                asChild
+                                size="sm"
+                                className="w-full sm:w-auto"
+                              >
                                 <Link
                                   to={`/attendance/${item.allocation}/${today}`}
                                 >
@@ -198,7 +202,7 @@ export default function OverviewPage() {
                 {isTeacher && <TeacherWorkQueue items={data.workQueue} />}
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <Card
                   className={
                     isTeacher
@@ -605,8 +609,8 @@ function StatTile({
         <p
           className={
             tone === "warning"
-              ? "text-2xl font-semibold text-amber-700 tabular-nums dark:text-amber-300"
-              : `text-2xl font-semibold tabular-nums ${accents.value}`
+              ? "text-xl font-semibold text-amber-700 tabular-nums sm:text-2xl dark:text-amber-300"
+              : `text-xl font-semibold tabular-nums sm:text-2xl ${accents.value}`
           }
         >
           {value}

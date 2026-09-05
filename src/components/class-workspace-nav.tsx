@@ -73,11 +73,6 @@ export function ClassWorkspaceNav({
         )}
       >
         <div className="min-w-0">
-          {!compact && (
-            <p className="mb-0.5 text-[10px] font-bold tracking-[0.14em] text-sky-300 uppercase">
-              Class workspace
-            </p>
-          )}
           <p className="truncate text-base font-bold tracking-tight">
             {value.code} — {value.name}
           </p>
