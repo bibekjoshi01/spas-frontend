@@ -2,8 +2,8 @@ import { useState } from "react"
 import { LockKeyhole, LogOut } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PasswordInput } from "@/components/ui/password-input"
 import { apiErrorMessage } from "@/lib/api"
 import { useAppDispatch } from "@/lib/redux/hooks"
 import { auth } from "@/lib/redux/auth"
@@ -47,7 +47,7 @@ export default function InitialPasswordChange() {
     <main className="grid min-h-screen place-items-center bg-muted/30 p-4">
       <form
         onSubmit={submit}
-        className="w-full max-w-md space-y-5 rounded-xl border bg-card p-6 shadow-sm"
+        className="w-full max-w-md space-y-5 rounded-sm border bg-card p-5 sm:p-6"
       >
         <div className="space-y-2 text-center">
           <LockKeyhole className="mx-auto size-9 text-primary" aria-hidden />
@@ -61,9 +61,8 @@ export default function InitialPasswordChange() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="initial-current">Current password</Label>
-          <Input
+          <PasswordInput
             id="initial-current"
-            type="password"
             autoComplete="current-password"
             value={currentPassword}
             onChange={(event) => setCurrentPassword(event.target.value)}
@@ -71,9 +70,8 @@ export default function InitialPasswordChange() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="initial-new">New password</Label>
-          <Input
+          <PasswordInput
             id="initial-new"
-            type="password"
             autoComplete="new-password"
             value={newPassword}
             onChange={(event) => setNewPassword(event.target.value)}
@@ -84,9 +82,8 @@ export default function InitialPasswordChange() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="initial-confirm">Confirm new password</Label>
-          <Input
+          <PasswordInput
             id="initial-confirm"
-            type="password"
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
