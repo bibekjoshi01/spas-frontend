@@ -15,7 +15,6 @@ import {
   SubjectRecordSkeleton,
 } from "@/components/skeletons"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -166,7 +165,7 @@ export function AllocationReportDialog({
               skeleton={<ClassReportSkeleton />}
             >
               <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
                   <Metric
                     label="Enrolled students"
                     value={students.data?.length ?? 0}
@@ -182,43 +181,71 @@ export function AllocationReportDialog({
                   />
                 </div>
 
-                <div className="flex flex-col gap-2 border bg-card p-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="relative w-full sm:w-80">
-                    <Search
-                      className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-                      aria-hidden
-                    />
-                    <Input
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Search student, roll or phone"
-                      className="pr-8 pl-8"
-                    />
-                    {search && (
-                      <button
-                        type="button"
-                        onClick={() => setSearch("")}
-                        className="absolute top-1/2 right-1.5 flex size-6 -translate-y-1/2 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none"
-                        aria-label="Clear report search"
-                      >
-                        <X className="size-3.5" aria-hidden />
-                      </button>
-                    )}
-                  </div>
-                  <Button
-                    variant={attentionOnly ? "default" : "outline"}
-                    size="sm"
-                    className="w-full text-xs sm:w-auto sm:text-sm"
-                    onClick={() => setAttentionOnly((value) => !value)}
+                <div className="flex flex-col gap-2 border bg-card p-2 sm:flex-row sm:items-center">
+                  <div
+                    className="order-1 flex min-w-0 gap-1 overflow-x-auto"
+                    aria-label="Filter students by attention status"
                   >
-                    {attentionOnly
-                      ? "Showing attention only"
-                      : "Show attention only"}
-                  </Button>
+                    <button
+                      type="button"
+                      aria-pressed={!attentionOnly}
+                      onClick={() => setAttentionOnly(false)}
+                      className={`flex h-9 shrink-0 items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
+                        !attentionOnly
+                          ? "border-primary text-foreground"
+                          : "border-transparent text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      All
+                      <span className="text-xs tabular-nums">
+                        {students.data?.length ?? 0}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={attentionOnly}
+                      onClick={() => setAttentionOnly(true)}
+                      className={`flex h-9 shrink-0 items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
+                        attentionOnly
+                          ? "border-primary text-foreground"
+                          : "border-transparent text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Needs attention
+                      <span className="text-xs tabular-nums">
+                        {attentionCount}
+                      </span>
+                    </button>
+                  </div>
+                  <div className="order-2 flex justify-end sm:ml-auto">
+                    <div className="relative w-full sm:w-64 lg:w-72">
+                      <Search
+                        className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+                        aria-hidden
+                      />
+                      <Input
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder="Search student, roll or phone"
+                        className="bg-background pr-9 pl-8"
+                        aria-label="Search students"
+                      />
+                      {search && (
+                        <button
+                          type="button"
+                          onClick={() => setSearch("")}
+                          className="absolute top-1/2 right-1 flex size-8 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                          aria-label="Clear report search"
+                        >
+                          <X className="size-4" aria-hidden />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="overflow-x-auto border">
-                  <Table className="min-w-[56rem]">
+                  <Table className="min-w-[48rem]">
                     <TableHeader>
                       <TableRow className="bg-table-header">
                         <TableHead>#</TableHead>
@@ -230,9 +257,7 @@ export function AllocationReportDialog({
                         </TableHead>
                         <TableHead>Contact</TableHead>
                         <TableHead>Attendance</TableHead>
-                        <TableHead>Assessment</TableHead>
-                        <TableHead>Assignments</TableHead>
-                        <TableHead>Class performance</TableHead>
+                        <TableHead>Performance evidence</TableHead>
                         <TableHead>Overall</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -242,7 +267,7 @@ export function AllocationReportDialog({
                           <TableCell>{index + 1}</TableCell>
                           <TableCell>
                             <button
-                              className="text-left"
+                              className="min-h-10 rounded-sm text-left focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none"
                               onClick={() =>
                                 setDetailEnrollment(row.enrollment)
                               }
@@ -265,20 +290,31 @@ export function AllocationReportDialog({
                               percentage={row.attendance.percentage}
                             />
                           </TableCell>
-                          <TableCell className="text-center tabular-nums">
-                            {row.internalMarks.total
-                              ? `${row.internalMarks.obtained}/${row.internalMarks.total}`
-                              : "—"}
-                          </TableCell>
-                          <TableCell className="text-center tabular-nums">
-                            {row.assignments.total
-                              ? `${row.assignments.done}/${row.assignments.total}`
-                              : "—"}
-                          </TableCell>
-                          <TableCell className="text-center tabular-nums">
-                            {row.classPerformance.score === null
-                              ? "—"
-                              : `${row.classPerformance.score}/10`}
+                          <TableCell>
+                            <dl className="grid min-w-44 grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs">
+                              <dt className="text-muted-foreground">
+                                Assessment
+                              </dt>
+                              <dd className="font-medium tabular-nums">
+                                {row.internalMarks.total
+                                  ? `${row.internalMarks.obtained}/${row.internalMarks.total}`
+                                  : "—"}
+                              </dd>
+                              <dt className="text-muted-foreground">
+                                Assignments
+                              </dt>
+                              <dd className="font-medium tabular-nums">
+                                {row.assignments.total
+                                  ? `${row.assignments.done}/${row.assignments.total}`
+                                  : "—"}
+                              </dd>
+                              <dt className="text-muted-foreground">Rating</dt>
+                              <dd className="font-medium tabular-nums">
+                                {row.classPerformance.score === null
+                                  ? "—"
+                                  : `${row.classPerformance.score}/10`}
+                              </dd>
+                            </dl>
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="font-bold tabular-nums">
@@ -302,7 +338,7 @@ export function AllocationReportDialog({
                       {!rows.length && !students.isLoading && (
                         <TableRow>
                           <TableCell
-                            colSpan={8}
+                            colSpan={6}
                             className="py-8 text-center text-muted-foreground"
                           >
                             No students match this view.

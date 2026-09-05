@@ -29,6 +29,7 @@ import { exportStudentDetailPdf } from "@/lib/pdf-reports"
 import { exportSpreadsheet, type ExportFormat } from "@/lib/spreadsheet-export"
 import { classStudentExportTable } from "@/lib/spreadsheet-reports"
 import { formatPercentage } from "@/lib/utils"
+import { formatDisplayDate } from "@/lib/utils/date"
 import { notifier } from "@/lib/utils/notifier"
 
 export function StudentDetailDialog({
@@ -173,7 +174,7 @@ export function StudentDetailDialog({
                       return [
                         row.title,
                         EXAM_TYPE_LABELS[row.examType],
-                        row.examDate ?? "—",
+                        row.examDate ? formatDisplayDate(row.examDate) : "—",
                         marks,
                         passed,
                       ]
@@ -197,8 +198,8 @@ export function StudentDetailDialog({
                     empty="No assignments created for this subject."
                     rows={data.assignments.map((row) => [
                       row.title,
-                      row.assignedDate,
-                      row.dueDate ?? "—",
+                      formatDisplayDate(row.assignedDate),
+                      row.dueDate ? formatDisplayDate(row.dueDate) : "—",
                       row.status ? ASSIGNMENT_LABELS[row.status] : "Not marked",
                       row.remarks || "—",
                     ])}

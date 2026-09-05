@@ -186,7 +186,7 @@ export default function BatchPerformanceReportPage() {
         description="Semester-level attendance and performance for every student in your management scope."
       />
 
-      <div className="grid grid-cols-2 border bg-card lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 lg:grid-cols-4">
         <Summary
           label="Students"
           value={data?.summary.students}
@@ -539,7 +539,7 @@ function Summary({
 }) {
   return (
     <div
-      className={`border-r border-b p-3 lg:border-b-0 ${tone === "danger" ? "border-l-4 border-l-red-500" : ""}`}
+      className={`border bg-card p-3 ${tone === "danger" ? "border-l-4 border-l-red-500" : ""}`}
     >
       <div className="text-xs font-bold text-muted-foreground">{label}</div>
       {/* A bare dash would read as a real total of nothing, so a figure

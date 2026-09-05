@@ -131,7 +131,7 @@ export function Combobox({
           disabled={disabled}
           data-slot="select-trigger"
           className={cn(
-            "flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none",
+            "flex h-8 w-full items-center justify-between gap-2 rounded-sm border border-input bg-card px-2.5 py-1.5 text-sm transition-colors outline-none dark:bg-input/30 dark:hover:bg-input/50",
             "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
             "disabled:cursor-not-allowed disabled:opacity-50",
             clearable && selected && "pr-8"
