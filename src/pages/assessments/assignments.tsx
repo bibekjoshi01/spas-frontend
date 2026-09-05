@@ -1,6 +1,13 @@
 import { useMemo, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
-import { ArrowLeft, ClipboardCheck, Pencil, Plus, Save } from "lucide-react"
+import {
+  ArrowLeft,
+  ClipboardCheck,
+  Pencil,
+  Plus,
+  Save,
+  Search,
+} from "lucide-react"
 
 import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
@@ -28,13 +35,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   ASSIGNMENT_LABELS,
   type Assignment,
@@ -105,6 +105,17 @@ export default function AssignmentsPage() {
       )
     })
   }, [assignments.data, completion, studentCount])
+  const completionCounts = useMemo(() => {
+    const results = assignments.data?.results ?? []
+    const complete = results.filter(
+      (assignment) => assignment.evaluatedCount >= studentCount
+    ).length
+    return {
+      all: results.length,
+      complete,
+      incomplete: results.length - complete,
+    }
+  }, [assignments.data, studentCount])
 
   return (
     <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
@@ -133,45 +144,66 @@ export default function AssignmentsPage() {
       {classes.isLoading ? (
         <ClassWorkspaceSkeleton />
       ) : (
-        chosen && <ClassWorkspaceNav value={chosen} active="Assignments" />
+        chosen && (
+          <ClassWorkspaceNav value={chosen} active="Assignments" compact />
+        )
       )}
 
-      <div className="flex flex-col gap-2 border bg-card p-2 lg:flex-row lg:items-center">
-        {classes.data && (
-          <ClassPicker
-            classes={classChoices}
-            value={allocation}
-            label="My Classes"
-            className="w-full lg:w-[32rem]"
-            onChange={(next) => {
-              setChosenId(next)
-              remember(next)
-              setParams({ class: String(next) })
-            }}
-          />
-        )}
-        <Select value={completion} onValueChange={setCompletion}>
-          <SelectTrigger
-            className="w-full lg:w-52"
-            aria-label="Filter assignment evaluation"
+      <div className="border bg-card">
+        <div className="flex flex-col gap-2 p-2 sm:flex-row sm:items-center">
+          {classes.data && (
+            <ClassPicker
+              classes={classChoices}
+              value={allocation}
+              label="My Classes"
+              className="w-full lg:w-[32rem]"
+              onChange={(next) => {
+                setChosenId(next)
+                remember(next)
+                setParams({ class: String(next) })
+              }}
+            />
+          )}
+          <Button
+            size="sm"
+            className="sm:ml-auto"
+            disabled={!canCreate}
+            onClick={() => setIsCreating(true)}
           >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All assignments</SelectItem>
-            <SelectItem value="incomplete">Evaluation incomplete</SelectItem>
-            <SelectItem value="complete">Evaluation complete</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button
-          size="sm"
-          className="lg:ml-auto"
-          disabled={!canCreate}
-          onClick={() => setIsCreating(true)}
+            <Plus className="size-4" aria-hidden />
+            {isReadOnly ? "Read only" : "Add assignment"}
+          </Button>
+        </div>
+        <div
+          className="flex min-w-0 gap-1 overflow-x-auto border-t px-2"
+          aria-label="Filter assignment evaluation"
         >
-          <Plus className="size-4" aria-hidden />
-          {isReadOnly ? "Read only" : "Add assignment"}
-        </Button>
+          {(
+            [
+              ["all", "All"],
+              ["incomplete", "Needs review"],
+              ["complete", "Complete"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={completion === value}
+              onClick={() => setCompletion(value)}
+              className={cn(
+                "flex h-9 shrink-0 items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                completion === value
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {label}
+              <span className="text-xs tabular-nums">
+                {completionCounts[value]}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <QueryState
@@ -504,6 +536,10 @@ function StatusDialog({
   // Saved statuses are derived; only edits are state.
   const [edits, setEdits] = useState<Record<number, AssignmentStatus>>({})
   const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
+  const [studentSearch, setStudentSearch] = useState("")
+  const [statusFilter, setStatusFilter] = useState<"all" | AssignmentStatus>(
+    "all"
+  )
   const [currentCell, setCurrentCell] = useState<{
     enrollment: number
     status: AssignmentStatus
@@ -525,6 +561,26 @@ function StatusDialog({
   }, [roster.data, existing.data])
 
   const statuses = useMemo(() => ({ ...saved, ...edits }), [saved, edits])
+  const statusCounts = useMemo(() => {
+    const values = sortedRoster.map((student) => statuses[student.enrollment])
+    return {
+      all: values.length,
+      DONE: values.filter((status) => status === "DONE").length,
+      PARTIAL: values.filter((status) => status === "PARTIAL").length,
+      NOT_DONE: values.filter((status) => status === "NOT_DONE").length,
+    }
+  }, [sortedRoster, statuses])
+  const visibleRoster = useMemo(() => {
+    const term = studentSearch.trim().toLowerCase()
+    return sortedRoster.filter(
+      (student) =>
+        (!term ||
+          student.fullName.toLowerCase().includes(term) ||
+          student.rollNumber.toLowerCase().includes(term)) &&
+        (statusFilter === "all" ||
+          statuses[student.enrollment] === statusFilter)
+    )
+  }, [sortedRoster, statuses, statusFilter, studentSearch])
 
   const moveStatusFocus = (
     rowIndex: number,
@@ -539,14 +595,14 @@ function StatusDialog({
       nextStatus = 0
     }
     if (key === "ArrowDown") {
-      nextRow = Math.min(sortedRoster.length - 1, rowIndex + 1)
+      nextRow = Math.min(visibleRoster.length - 1, rowIndex + 1)
       nextStatus = 0
     }
     if (key === "ArrowLeft") nextStatus = Math.max(0, statusIndex - 1)
     if (key === "ArrowRight")
       nextStatus = Math.min(STATUS_ORDER.length - 1, statusIndex + 1)
 
-    const student = sortedRoster[nextRow]
+    const student = visibleRoster[nextRow]
     const status = STATUS_ORDER[nextStatus]
     if (!student || !status) return
 
@@ -588,29 +644,65 @@ function StatusDialog({
           <DialogTitle>{assignment.title}</DialogTitle>
         </DialogHeader>
 
-        {!readOnly && (
-          <div className="flex flex-wrap justify-end gap-2 border-b pb-3">
-            {STATUS_ORDER.map((status) => (
-              <Button
-                key={status}
-                size="sm"
-                variant="outline"
-                className="text-xs"
-                disabled={existing.isLoading || !!existing.error}
-                onClick={() => {
-                  if (!roster.data) return
-                  const next: Record<number, AssignmentStatus> = {}
-                  roster.data.forEach((entry) => {
-                    next[entry.enrollment] = status
-                  })
-                  setEdits(next)
-                }}
-              >
-                All {ASSIGNMENT_LABELS[status].toLowerCase()}
-              </Button>
-            ))}
+        <div className="space-y-2 border-b pb-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div
+              className="flex min-w-0 gap-1 overflow-x-auto"
+              aria-label="Filter students by assignment status"
+            >
+              {(["all", ...STATUS_ORDER] as const).map((status) => (
+                <Button
+                  key={status}
+                  type="button"
+                  size="sm"
+                  variant={statusFilter === status ? "secondary" : "ghost"}
+                  className="h-8 shrink-0 px-2 text-xs"
+                  aria-pressed={statusFilter === status}
+                  onClick={() => setStatusFilter(status)}
+                >
+                  {status === "all" ? "All" : ASSIGNMENT_LABELS[status]}{" "}
+                  <span className="tabular-nums">{statusCounts[status]}</span>
+                </Button>
+              ))}
+            </div>
+            <div className="relative w-full sm:w-52">
+              <Search
+                className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+              <Input
+                value={studentSearch}
+                onChange={(event) => setStudentSearch(event.target.value)}
+                placeholder="Search student"
+                aria-label="Search students"
+                className="h-8 pl-8 text-xs"
+              />
+            </div>
           </div>
-        )}
+          {!readOnly && (
+            <div className="flex flex-wrap justify-end gap-2">
+              {STATUS_ORDER.map((status) => (
+                <Button
+                  key={status}
+                  size="sm"
+                  variant="outline"
+                  className="text-xs"
+                  disabled={existing.isLoading || !!existing.error}
+                  onClick={() => {
+                    if (!roster.data) return
+                    const next: Record<number, AssignmentStatus> = {}
+                    roster.data.forEach((entry) => {
+                      next[entry.enrollment] = status
+                    })
+                    setEdits(next)
+                  }}
+                >
+                  All {ASSIGNMENT_LABELS[status].toLowerCase()}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
 
         <QueryState
           isLoading={roster.isLoading || existing.isLoading}
@@ -632,7 +724,12 @@ function StatusDialog({
                 label="Student"
               />
             </li>
-            {sortedRoster.map((student, rowIndex) => (
+            {visibleRoster.length === 0 && (
+              <li className="p-8 text-center text-muted-foreground">
+                No students match this filter.
+              </li>
+            )}
+            {visibleRoster.map((student, rowIndex) => (
               <li
                 key={student.enrollment}
                 className="flex items-center justify-between gap-2 p-3"

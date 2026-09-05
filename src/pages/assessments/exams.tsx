@@ -1,6 +1,13 @@
 import { useMemo, useState, type KeyboardEvent } from "react"
 import { Link, useSearchParams } from "react-router-dom"
-import { ArrowLeft, ClipboardList, Pencil, Plus, Save } from "lucide-react"
+import {
+  ArrowLeft,
+  ClipboardList,
+  Pencil,
+  Plus,
+  Save,
+  Search,
+} from "lucide-react"
 
 import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
@@ -93,6 +100,17 @@ export default function ExamsPage() {
       )
     })
   }, [chosen?.studentCount, completion, exams.data])
+  const completionCounts = useMemo(() => {
+    const results = exams.data?.results ?? []
+    const complete = results.filter(
+      (exam) => exam.markedCount >= (chosen?.studentCount ?? 0)
+    ).length
+    return {
+      all: results.length,
+      complete,
+      incomplete: results.length - complete,
+    }
+  }, [chosen?.studentCount, exams.data])
 
   return (
     <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
@@ -121,45 +139,65 @@ export default function ExamsPage() {
       {classes.isLoading ? (
         <ClassWorkspaceSkeleton />
       ) : (
-        chosen && <ClassWorkspaceNav value={chosen} active="Assessments" />
+        chosen && (
+          <ClassWorkspaceNav value={chosen} active="Assessments" compact />
+        )
       )}
 
-      <div className="flex flex-col gap-2 border bg-card p-2 lg:flex-row lg:items-center">
-        {classes.data && (
-          <ClassPicker
-            classes={classChoices}
-            value={allocation}
-            label="My Classes"
-            className="w-full lg:w-[32rem]"
-            onChange={(next) => {
-              setChosenId(next)
-              remember(next)
-              setParams({ class: String(next) })
-            }}
-          />
-        )}
-        <Select value={completion} onValueChange={setCompletion}>
-          <SelectTrigger
-            className="w-full lg:w-52"
-            aria-label="Filter assessment completion"
+      <div className="border bg-card">
+        <div className="flex flex-col gap-2 p-2 sm:flex-row sm:items-center">
+          {classes.data && (
+            <ClassPicker
+              classes={classChoices}
+              value={allocation}
+              label="My Classes"
+              className="w-full lg:w-[32rem]"
+              onChange={(next) => {
+                setChosenId(next)
+                remember(next)
+                setParams({ class: String(next) })
+              }}
+            />
+          )}
+          <Button
+            size="sm"
+            className="sm:ml-auto"
+            disabled={!canCreate}
+            onClick={() => setIsCreating(true)}
           >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All assessments</SelectItem>
-            <SelectItem value="incomplete">Marks incomplete</SelectItem>
-            <SelectItem value="complete">Marks complete</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button
-          size="sm"
-          className="lg:ml-auto"
-          disabled={!canCreate}
-          onClick={() => setIsCreating(true)}
+            <Plus className="size-4" aria-hidden />
+            {isReadOnly ? "Read only" : "Add assessment"}
+          </Button>
+        </div>
+        <div
+          className="flex min-w-0 gap-1 overflow-x-auto border-t px-2"
+          aria-label="Filter assessment completion"
         >
-          <Plus className="size-4" aria-hidden />
-          {isReadOnly ? "Read only" : "Add assessment"}
-        </Button>
+          {(
+            [
+              ["all", "All"],
+              ["incomplete", "Needs marks"],
+              ["complete", "Complete"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={completion === value}
+              onClick={() => setCompletion(value)}
+              className={`flex h-9 shrink-0 items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
+                completion === value
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {label}
+              <span className="text-xs tabular-nums">
+                {completionCounts[value]}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <QueryState
@@ -588,6 +626,10 @@ function MarksDialog({
     Record<number, { marks: string; absent: boolean }>
   >({})
   const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
+  const [studentSearch, setStudentSearch] = useState("")
+  const [entryFilter, setEntryFilter] = useState<
+    "all" | "unmarked" | "marked" | "absent"
+  >("all")
   const sortedRoster = useMemo(
     () => sortStudentsByName(roster.data ?? [], nameSort),
     [nameSort, roster.data]
@@ -608,6 +650,33 @@ function MarksDialog({
   }, [roster.data, existing.data])
 
   const entries = useMemo(() => ({ ...saved, ...edits }), [saved, edits])
+  const entryCounts = useMemo(() => {
+    const values = sortedRoster.map((student) => entries[student.enrollment])
+    return {
+      all: values.length,
+      unmarked: values.filter((entry) => !entry?.absent && !entry?.marks)
+        .length,
+      marked: values.filter((entry) => !entry?.absent && Boolean(entry?.marks))
+        .length,
+      absent: values.filter((entry) => entry?.absent).length,
+    }
+  }, [entries, sortedRoster])
+  const visibleRoster = useMemo(() => {
+    const term = studentSearch.trim().toLowerCase()
+    return sortedRoster.filter((student) => {
+      const entry = entries[student.enrollment]
+      const matchesSearch =
+        !term ||
+        student.fullName.toLowerCase().includes(term) ||
+        student.rollNumber.toLowerCase().includes(term)
+      const matchesFilter =
+        entryFilter === "all" ||
+        (entryFilter === "unmarked" && !entry?.absent && !entry?.marks) ||
+        (entryFilter === "marked" && !entry?.absent && Boolean(entry?.marks)) ||
+        (entryFilter === "absent" && entry?.absent)
+      return matchesSearch && matchesFilter
+    })
+  }, [entries, entryFilter, sortedRoster, studentSearch])
 
   const invalid = useMemo(
     () =>
@@ -620,7 +689,11 @@ function MarksDialog({
   )
 
   const focusNextMarksInput = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter" || event.nativeEvent.isComposing) return
+    if (
+      !["Enter", "ArrowDown", "ArrowUp"].includes(event.key) ||
+      event.nativeEvent.isComposing
+    )
+      return
 
     event.preventDefault()
     const inputs = Array.from(
@@ -631,7 +704,8 @@ function MarksDialog({
         ) ?? []
     )
     const currentIndex = inputs.indexOf(event.currentTarget)
-    const nextInput = inputs[currentIndex + 1]
+    const direction = event.key === "ArrowUp" ? -1 : 1
+    const nextInput = inputs[currentIndex + direction]
 
     nextInput?.focus()
     nextInput?.select()
@@ -679,7 +753,48 @@ function MarksDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 overflow-hidden">
+        <div className="flex min-h-0 flex-col gap-2 overflow-hidden">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div
+              className="flex min-w-0 gap-1 overflow-x-auto"
+              aria-label="Filter students by marks status"
+            >
+              {(
+                [
+                  ["all", "All"],
+                  ["unmarked", "Unmarked"],
+                  ["marked", "Marked"],
+                  ["absent", "Absent"],
+                ] as const
+              ).map(([value, label]) => (
+                <Button
+                  key={value}
+                  type="button"
+                  size="sm"
+                  variant={entryFilter === value ? "secondary" : "ghost"}
+                  className="h-8 shrink-0 px-2 text-xs"
+                  aria-pressed={entryFilter === value}
+                  onClick={() => setEntryFilter(value)}
+                >
+                  {label}{" "}
+                  <span className="tabular-nums">{entryCounts[value]}</span>
+                </Button>
+              ))}
+            </div>
+            <div className="relative w-full sm:w-52">
+              <Search
+                className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+              <Input
+                value={studentSearch}
+                onChange={(event) => setStudentSearch(event.target.value)}
+                placeholder="Search student"
+                aria-label="Search students"
+                className="h-8 pl-8 text-xs"
+              />
+            </div>
+          </div>
           <QueryState
             isLoading={roster.isLoading || existing.isLoading}
             error={roster.error ?? existing.error}
@@ -720,7 +835,17 @@ function MarksDialog({
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {sortedRoster.map((student) => {
+                  {visibleRoster.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={3}
+                        className="h-24 px-3 text-center text-muted-foreground"
+                      >
+                        No students match this filter.
+                      </td>
+                    </tr>
+                  )}
+                  {visibleRoster.map((student) => {
                     const entry = entries[student.enrollment] ?? {
                       marks: "",
                       absent: false,

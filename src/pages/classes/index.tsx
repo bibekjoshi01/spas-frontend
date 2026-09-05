@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { Search } from "lucide-react"
+import { Search, X } from "lucide-react"
 
 import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
@@ -19,21 +19,25 @@ import { ClassCard } from "./components/class-card"
 export default function ClassesPage() {
   const { data, isLoading, isFetching, error, refetch } = useGetClassesQuery()
   const [search, setSearch] = useState("")
+  const [status, setStatus] = useState<
+    "ALL" | "RUNNING" | "UPCOMING" | "COMPLETED"
+  >("ALL")
 
   const today = useMemo(() => localDateKey(), [])
 
   const filtered = useMemo(() => {
     if (!data) return []
     const term = search.trim().toLowerCase()
-    if (!term) return data
-
-    return data.filter(
-      (item) =>
+    return data.filter((item) => {
+      const matchesStatus = status === "ALL" || item.semesterStatus === status
+      const matchesSearch =
+        !term ||
         item.name.toLowerCase().includes(term) ||
         item.code.toLowerCase().includes(term) ||
         item.programCode.toLowerCase().includes(term)
-    )
-  }, [data, search])
+      return matchesStatus && matchesSearch
+    })
+  }, [data, search, status])
 
   const totalStudents =
     data?.reduce((sum, item) => sum + item.studentCount, 0) ?? 0
@@ -74,8 +78,11 @@ export default function ClassesPage() {
             </>
           )
         }
-        actions={
-          <div className="relative w-full sm:w-64">
+      />
+
+      <div className="border bg-card">
+        <div className="flex justify-end p-2">
+          <div className="relative w-full lg:w-72">
             <Search
               className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
               aria-hidden
@@ -83,13 +90,59 @@ export default function ClassesPage() {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search classes"
-              className="bg-card pl-8 dark:bg-input/30"
+              placeholder="Search subject or program"
+              className="bg-background pr-9 pl-8"
               aria-label="Search classes"
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute top-1/2 right-1 flex size-8 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
+                aria-label="Clear class search"
+              >
+                <X className="size-4" aria-hidden />
+              </button>
+            )}
           </div>
-        }
-      />
+        </div>
+        <div
+          className="flex min-w-0 gap-1 overflow-x-auto border-t px-2"
+          aria-label="Filter classes by status"
+        >
+          {(
+            [
+              ["ALL", "All"],
+              ["RUNNING", "Current"],
+              ["UPCOMING", "Upcoming"],
+              ["COMPLETED", "Previous"],
+            ] as const
+          ).map(([value, label]) => {
+            const count =
+              value === "ALL"
+                ? (data?.length ?? 0)
+                : (data?.filter((item) => item.semesterStatus === value)
+                    .length ?? 0)
+            return (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={status === value}
+                onClick={() => setStatus(value)}
+                className={cn(
+                  "flex h-9 shrink-0 items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  status === value
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {label}
+                <span className="text-xs tabular-nums">{count}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
       <QueryState
         isLoading={isLoading}
@@ -98,10 +151,12 @@ export default function ClassesPage() {
         onRetry={refetch}
         skeleton="cards"
         emptyTitle={
-          search ? "No classes match that" : "No classes allocated yet"
+          search || status !== "ALL"
+            ? "No classes match that"
+            : "No classes allocated yet"
         }
         emptyMessage={
-          search
+          search || status !== "ALL"
             ? "Try a different subject name or code."
             : "Once a coordinator allocates a subject to you, it will show up here."
         }
