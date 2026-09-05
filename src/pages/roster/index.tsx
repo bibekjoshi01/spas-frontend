@@ -224,67 +224,18 @@ export default function RosterPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
       <PageHeader
-        title="Students"
-        description={
-          chosen
-            ? `${chosen.code} — ${chosen.name} · ${chosen.programCode} ${chosen.batchYear}`
-            : "Choose a class."
-        }
-        meta={
-          students.data && (
-            <>
-              <span>{students.data.length} enrolled</span>
-              {atRisk !== undefined && atRisk > 0 && (
-                <span className="text-rose-600 dark:text-rose-400">
-                  {atRisk} at risk
-                </span>
-              )}
-            </>
-          )
-        }
-        actions={
-          <>
-            {allocation && canViewPerformance && (
-              <Button asChild size="sm">
-                <Link to={`/class-performance?class=${allocation}`}>
-                  <PencilLine className="size-4" aria-hidden />
-                  <span className="hidden sm:inline">
-                    {chosen?.semesterStatus === "RUNNING" && canEditPerformance
-                      ? "Add class performance"
-                      : "View class performance"}
-                  </span>
-                  <span className="sm:hidden">Performance</span>
-                </Link>
-              </Button>
-            )}
-            <ExportMenu
-              exporting={exporting}
-              disabled={!visible.length || !chosen}
-              onExport={(format) => void exportRoster(format)}
-            />
-          </>
-        }
+        title="Roster"
+        description="Review students, attendance, results, and academic standing."
       />
 
-      {chosen && <ClassWorkspaceNav value={chosen} active="Roster" />}
+      {chosen && <ClassWorkspaceNav value={chosen} active="Roster" compact />}
 
-      <div className="flex flex-col gap-2 rounded-sm border bg-card p-2 sm:flex-row sm:items-center">
-        <div className="relative w-full sm:max-w-sm">
-          <Search
-            className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by name, roll or registration number"
-            className="pl-8"
-            aria-label="Search students"
-          />
-        </div>
-
+      <section
+        className="flex flex-col gap-2 border bg-card p-2 lg:flex-row lg:items-center"
+        aria-label="Roster filters"
+      >
         {classes.data && (
           <>
             <Select value={selectedBatch} onValueChange={chooseBatch}>
@@ -308,7 +259,7 @@ export default function RosterPage() {
               value={allocation}
               onChange={choose}
               label="Filter roster by subject"
-              className="sm:w-[28rem]"
+              className="sm:w-80"
               showBatchFilter={false}
             />
             <Select value={standingFilter} onValueChange={setStandingFilter}>
@@ -343,171 +294,225 @@ export default function RosterPage() {
                 Clear filters
               </Button>
             )}
+            {allocation && canViewPerformance && (
+              <Button asChild size="sm" className="w-full lg:ml-auto lg:w-auto">
+                <Link to={`/class-performance?class=${allocation}`}>
+                  <PencilLine className="size-4" aria-hidden />
+                  {chosen?.semesterStatus === "RUNNING" && canEditPerformance
+                    ? "Add performance"
+                    : "View performance"}
+                </Link>
+              </Button>
+            )}
           </>
         )}
-      </div>
+      </section>
 
-      <QueryState
-        isLoading={classes.isLoading || students.isLoading}
-        error={classes.error ?? students.error}
-        isEmpty={visible.length === 0}
-        onRetry={students.refetch}
-        skeleton="table"
-        emptyTitle={
-          search ? "No students match that" : "No students on this class"
-        }
-        emptyMessage={
-          search
-            ? "Try a different name or roll number."
-            : "Register students onto the class to see them here."
-        }
+      <section
+        className="overflow-hidden border bg-card"
+        aria-label="Class roster"
       >
-        <div className="overflow-x-auto rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b-2 border-table-header-border bg-table-header hover:bg-table-header">
-                <TableHead className="w-16">Roll</TableHead>
-                <TableHead>
-                  <StudentNameSortButton
-                    direction={nameSort}
-                    onChange={setNameSort}
-                  />
-                </TableHead>
-                <TableHead className="min-w-52">Contact info</TableHead>
-                <TableHead className="w-56">Attendance</TableHead>
-                <TableHead className="w-32 text-right">Internal</TableHead>
-                <TableHead className="w-32 text-right">Assignments</TableHead>
-                <TableHead className="w-32 text-right">
-                  Class performance
-                </TableHead>
-                <TableHead className="w-40">Standing</TableHead>
-                <TableHead className="w-14 px-1 text-center">
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visible.map((row) => {
-                const standing =
-                  row.performancePercentage === null
-                    ? null
-                    : eligibilityFor(row.performancePercentage, threshold)
-
-                return (
-                  <TableRow key={row.enrollment}>
-                    <TableCell className="font-mono text-xs tabular-nums">
-                      {row.rollNumber}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{row.fullName}</span>
-                        {row.isRetake && (
-                          <Badge variant="outline" className="text-xs">
-                            Retake
-                          </Badge>
-                        )}
-                      </div>
-                      {row.registrationNumber && (
-                        <span className="font-mono text-xs text-muted-foreground">
-                          {row.registrationNumber}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      <div className="space-y-0.5">
-                        <div>{row.email || "No email"}</div>
-                        <div className="tabular-nums">
-                          Primary: {row.phoneNo || "—"}
-                        </div>
-                        <div className="tabular-nums">
-                          Alternate: {row.alternatePhoneNo || "—"}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <AttendanceMeter percentage={row.attendance.percentage} />
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {row.attendance.attended}/{row.attendance.held} classes
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {row.internalMarks.total > 0 ? (
-                        <>
-                          {row.internalMarks.obtained}
-                          <span className="text-muted-foreground">
-                            /{row.internalMarks.total}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {row.assignments.total > 0 ? (
-                        <>
-                          {row.assignments.done}
-                          <span className="text-muted-foreground">
-                            /{row.assignments.total}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {row.classPerformance.score !== null ? (
-                        <span className="font-medium">
-                          {row.classPerformance.score}/10
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">Not rated</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-2">
-                        <Badge
-                          variant={
-                            standing ? ELIGIBILITY_VARIANT[standing] : "outline"
-                          }
-                        >
-                          {standing
-                            ? `${ELIGIBILITY_LABEL[standing]} · ${formatPercentage(row.performancePercentage)}`
-                            : "No data"}
-                        </Badge>
-                        <RecentAttendance records={row.attendance.recent} />
-                        <span className="block text-[11px] text-muted-foreground">
-                          {concernFor(row, threshold)}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="w-14 px-1 text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Actions for ${row.fullName}`}
-                          >
-                            <EllipsisVertical className="size-4" aria-hidden />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="min-w-44">
-                          <DropdownMenuItem
-                            onSelect={() => openDetail(row.enrollment)}
-                          >
-                            <Eye className="size-4" aria-hidden />
-                            View details
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+        <div className="flex flex-col gap-3 border-b px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold">Class roster</h2>
+            <p className="text-xs text-muted-foreground">
+              {visible.length} of {students.data?.length ?? 0} students
+              {atRisk ? ` · ${atRisk} at risk` : ""}
+            </p>
+          </div>
+          <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto">
+            <div className="flex h-8 min-w-0 flex-1 items-center border bg-background px-1.5 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 sm:h-9 sm:w-72 sm:flex-none sm:px-2">
+              <Search
+                className="size-3.5 shrink-0 text-muted-foreground sm:size-4"
+                aria-hidden
+              />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search students"
+                aria-label="Search by name, roll or registration number"
+                className="h-7 min-w-0 border-0 bg-transparent px-1.5 text-xs shadow-none focus-visible:border-0 focus-visible:ring-0 sm:h-8 sm:px-2 sm:text-sm dark:bg-transparent"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="flex size-6 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none sm:size-7"
+                  aria-label="Clear student search"
+                >
+                  <X className="size-3 sm:size-3.5" aria-hidden />
+                </button>
+              )}
+            </div>
+            <ExportMenu
+              exporting={exporting}
+              disabled={!visible.length || !chosen}
+              onExport={(format) => void exportRoster(format)}
+            />
+          </div>
         </div>
-      </QueryState>
+
+        <QueryState
+          isLoading={classes.isLoading || students.isLoading}
+          error={classes.error ?? students.error}
+          isEmpty={visible.length === 0}
+          onRetry={students.refetch}
+          skeleton="table"
+          emptyTitle={
+            search || standingFilter !== "all"
+              ? "No students match these filters"
+              : "No students on this class"
+          }
+          emptyMessage={
+            search || standingFilter !== "all"
+              ? "Try another search or academic standing."
+              : "Register students onto the class to see them here."
+          }
+        >
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b-2 border-table-header-border bg-table-header hover:bg-table-header">
+                  <TableHead>
+                    <StudentNameSortButton
+                      direction={nameSort}
+                      onChange={setNameSort}
+                    />
+                  </TableHead>
+                  <TableHead className="hidden min-w-52 md:table-cell">
+                    Contact info
+                  </TableHead>
+                  <TableHead className="hidden w-44 sm:table-cell">
+                    Attendance
+                  </TableHead>
+                  <TableHead className="hidden w-48 lg:table-cell">
+                    Results
+                  </TableHead>
+                  <TableHead className="w-32 sm:w-40">Standing</TableHead>
+                  <TableHead className="w-14 px-1 text-center">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visible.map((row) => {
+                  const standing =
+                    row.performancePercentage === null
+                      ? null
+                      : eligibilityFor(row.performancePercentage, threshold)
+
+                  return (
+                    <TableRow key={row.enrollment}>
+                      <TableCell className="min-w-0">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="truncate font-medium">
+                            {row.fullName}
+                          </span>
+                          {row.isRetake && (
+                            <Badge variant="outline" className="text-xs">
+                              Retake
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="block truncate font-mono text-[10px] text-muted-foreground sm:text-xs">
+                          Roll {row.rollNumber}
+                          {row.registrationNumber
+                            ? ` · ${row.registrationNumber}`
+                            : ""}
+                        </span>
+                        <span className="mt-1 block text-[10px] text-muted-foreground sm:hidden">
+                          Attendance{" "}
+                          {formatPercentage(row.attendance.percentage)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
+                        <div className="space-y-0.5">
+                          <div className="max-w-56 truncate">
+                            {row.email || "No email"}
+                          </div>
+                          <div className="tabular-nums">
+                            Primary: {row.phoneNo || "—"}
+                          </div>
+                          <div className="tabular-nums">
+                            Alternate: {row.alternatePhoneNo || "—"}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <AttendanceMeter
+                          percentage={row.attendance.percentage}
+                        />
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {row.attendance.attended}/{row.attendance.held}{" "}
+                          classes
+                        </span>
+                      </TableCell>
+                      <TableCell className="hidden text-xs lg:table-cell">
+                        <div className="space-y-1 tabular-nums">
+                          <p>
+                            Internal: {row.internalMarks.obtained}/
+                            {row.internalMarks.total}
+                          </p>
+                          <p>
+                            Assignments: {row.assignments.done}/
+                            {row.assignments.total}
+                          </p>
+                          <p>
+                            Performance: {row.classPerformance.score ?? "—"}/10
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-2">
+                          <Badge
+                            variant={
+                              standing
+                                ? ELIGIBILITY_VARIANT[standing]
+                                : "outline"
+                            }
+                          >
+                            {standing
+                              ? `${ELIGIBILITY_LABEL[standing]} · ${formatPercentage(row.performancePercentage)}`
+                              : "No data"}
+                          </Badge>
+                          <RecentAttendance records={row.attendance.recent} />
+                          <span className="block text-[11px] text-muted-foreground">
+                            {concernFor(row, threshold)}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="w-14 px-1 text-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Actions for ${row.fullName}`}
+                            >
+                              <EllipsisVertical
+                                className="size-4"
+                                aria-hidden
+                              />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="min-w-44">
+                            <DropdownMenuItem
+                              onSelect={() => openDetail(row.enrollment)}
+                            >
+                              <Eye className="size-4" aria-hidden />
+                              View details
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </QueryState>
+      </section>
       {allocation && detailEnrollment && (
         <Suspense
           fallback={
