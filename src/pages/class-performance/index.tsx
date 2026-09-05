@@ -135,7 +135,7 @@ export default function ClassPerformancePage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
       <PageHeader
         title="Class Performance"
         description={
@@ -170,8 +170,18 @@ export default function ClassPerformancePage() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search student or roll number"
-            className="pl-8"
+            className="pr-8 pl-8"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute top-1/2 right-1.5 flex size-6 -translate-y-1/2 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none"
+              aria-label="Clear student search"
+            >
+              <X className="size-3.5" aria-hidden />
+            </button>
+          )}
         </div>
         {classes.data && (
           <ClassPicker
@@ -183,7 +193,7 @@ export default function ClassPerformancePage() {
               setParams({ class: String(next) })
             }}
             label="Select class"
-            className="sm:w-[28rem]"
+            className="sm:w-md"
           />
         )}
         {isReadOnly && chosen && (
@@ -193,7 +203,7 @@ export default function ClassPerformancePage() {
         )}
         <Button
           size="sm"
-          className="lg:ml-auto"
+          className="w-full text-xs sm:w-auto sm:text-sm lg:ml-auto"
           disabled={
             !canChange || !dirty.length || hasInvalidScores || saving.isLoading
           }
@@ -228,19 +238,21 @@ export default function ClassPerformancePage() {
         }
       >
         <div className="overflow-x-auto rounded-lg border">
-          <Table>
+          <Table className="min-w-136">
             <TableHeader>
               <TableRow className="border-b-2 border-table-header-border bg-table-header hover:bg-table-header">
-                <TableHead className="w-14">#</TableHead>
-                <TableHead className="w-28">Roll</TableHead>
+                <TableHead className="hidden w-14 sm:table-cell">#</TableHead>
+                <TableHead className="hidden w-28 sm:table-cell">
+                  Roll
+                </TableHead>
                 <TableHead>
                   <StudentNameSortButton
                     direction={nameSort}
                     onChange={setNameSort}
                   />
                 </TableHead>
-                <TableHead className="w-44">Rating (1–10)</TableHead>
-                <TableHead className="min-w-80">Remarks</TableHead>
+                <TableHead className="w-28 sm:w-44">Rating (1–10)</TableHead>
+                <TableHead className="min-w-48 sm:min-w-80">Remarks</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -260,14 +272,17 @@ export default function ClassPerformancePage() {
                         : undefined
                     }
                   >
-                    <TableCell className="text-muted-foreground tabular-nums">
+                    <TableCell className="hidden text-muted-foreground tabular-nums sm:table-cell">
                       {index + 1}
                     </TableCell>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="hidden font-mono text-xs sm:table-cell">
                       {row.rollNumber}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {row.fullName}
+                      <span className="block">{row.fullName}</span>
+                      <span className="block font-mono text-[10px] text-muted-foreground sm:hidden">
+                        Roll {row.rollNumber}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <div>
@@ -296,7 +311,7 @@ export default function ClassPerformancePage() {
                                 ? `score-error-${row.enrollment}`
                                 : undefined
                             }
-                            className="w-24 tabular-nums"
+                            className="w-16 text-xs tabular-nums sm:w-24 sm:text-sm"
                           />
                           {!isReadOnly && draft.score && (
                             <Button
