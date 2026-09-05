@@ -94,7 +94,7 @@ export default function ExamsPage() {
   }, [chosen?.studentCount, completion, exams.data])
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
       <PageHeader
         title="Assessments"
         description={
@@ -191,8 +191,8 @@ export default function ExamsPage() {
       >
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visibleExams.map((exam) => (
-            <Card key={exam.id}>
-              <CardHeader className="pb-3">
+            <Card key={exam.id} className="h-full border">
+              <CardHeader className="border-b bg-muted/20 pb-3">
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-base">{exam.title}</CardTitle>
                   <Badge variant="secondary">
@@ -205,8 +205,8 @@ export default function ExamsPage() {
                   {exam.examDate && ` · ${exam.examDate}`}
                 </p>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid divide-y border text-center text-xs sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+              <CardContent className="flex flex-1 flex-col space-y-3">
+                <div className="grid grid-cols-3 divide-x border text-center text-xs">
                   <ExamMetric label="Marked" value={exam.markedCount} />
                   <ExamMetric label="Passed" value={exam.passedCount} />
                   <ExamMetric
@@ -218,11 +218,11 @@ export default function ExamsPage() {
                     }
                   />
                 </div>
-                <div className="flex gap-2">
+                <div className="mt-auto flex flex-row gap-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1"
+                    className="min-w-0 flex-1 py-1"
                     onClick={() => setOpenExam(exam)}
                   >
                     <ClipboardList className="size-4" aria-hidden />
@@ -232,6 +232,7 @@ export default function ExamsPage() {
                     <Button
                       size="sm"
                       variant="outline"
+                      className="min-w-0 flex-1"
                       onClick={() => setEditingExam(exam)}
                     >
                       <Pencil className="size-4" aria-hidden />
@@ -324,8 +325,8 @@ function EditExamDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90dvh] sm:max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader className="border-b pr-8 pb-3">
           <DialogTitle>Edit Assessment</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
@@ -395,8 +396,12 @@ function EditExamDialog({
             </div>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>
+        <DialogFooter className="flex-row items-center border-t pt-3">
+          <Button
+            variant="ghost"
+            className="h-9 w-full sm:h-8 sm:w-auto"
+            onClick={onClose}
+          >
             Cancel
           </Button>
           <Button
@@ -456,8 +461,8 @@ function CreateExamDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90dvh] sm:max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader className="border-b pr-8 pb-3">
           <DialogTitle>New Internal Exam</DialogTitle>
         </DialogHeader>
 
@@ -533,7 +538,7 @@ function CreateExamDialog({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-row items-center border-t pt-3">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
@@ -657,10 +662,12 @@ function MarksDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="grid max-h-[94dvh] w-[calc(100vw-1rem)] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-3 sm:w-[calc(100vw-2rem)] sm:max-w-[80rem] sm:p-6">
-        <DialogHeader className="min-w-0 pr-8">
-          <DialogTitle className="leading-snug">{exam.title}</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="grid max-h-[94dvh] w-[calc(100vw-1rem)] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-3 sm:w-[calc(100vw-2rem)] sm:max-w-xl sm:p-6">
+        <DialogHeader className="min-w-0 border-b pr-8 pb-3">
+          <DialogTitle className="text-base leading-snug sm:text-lg">
+            {exam.title}
+          </DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
             {readOnly ? "Viewing" : "Enter"} marks out of {exam.fullMarks} for
             each student. Roll numbers and names remain fully visible.
           </DialogDescription>
@@ -680,18 +687,12 @@ function MarksDialog({
             emptyMessage="Register students onto this class first."
           >
             <div className="h-full max-h-[72dvh] overflow-auto rounded-lg border">
-              <table className="w-full min-w-[46rem] border-collapse bg-table-surface text-sm">
+              <table className="w-full table-fixed border-collapse bg-table-surface text-xs sm:text-sm">
                 <thead className="sticky top-0 z-10 bg-table-header text-table-header-foreground">
                   <tr className="border-b">
                     <th
                       scope="col"
-                      className="min-w-52 px-3 py-2 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
-                    >
-                      Roll number
-                    </th>
-                    <th
-                      scope="col"
-                      className="min-w-64 px-3 py-2 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+                      className="px-2 py-2 text-left text-[10px] font-semibold tracking-wide text-muted-foreground uppercase sm:px-3 sm:text-[11px]"
                     >
                       <StudentNameSortButton
                         direction={nameSort}
@@ -700,13 +701,13 @@ function MarksDialog({
                     </th>
                     <th
                       scope="col"
-                      className="w-32 px-3 py-2 text-right text-[11px] font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase"
+                      className="w-20 px-1 py-2 text-right text-[10px] font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase sm:w-28 sm:px-3 sm:text-[11px]"
                     >
                       Marks / {exam.fullMarks}
                     </th>
                     <th
                       scope="col"
-                      className="w-28 px-3 py-2 text-center text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+                      className="w-20 px-1 py-2 text-center text-[10px] font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase sm:w-24 sm:px-3 sm:text-[11px]"
                     >
                       Status
                     </th>
@@ -726,13 +727,15 @@ function MarksDialog({
                         key={student.enrollment}
                         className="transition-colors hover:bg-muted/40"
                       >
-                        <td className="px-3 py-2.5 font-mono text-xs leading-5 break-all text-muted-foreground tabular-nums">
-                          {student.rollNumber}
+                        <td className="px-2 py-2.5 leading-5 sm:px-3">
+                          <span className="block text-xs font-medium wrap-break-word sm:text-sm">
+                            {student.fullName}
+                          </span>
+                          <span className="block truncate font-mono text-[10px] text-muted-foreground tabular-nums sm:text-xs">
+                            Roll {student.rollNumber}
+                          </span>
                         </td>
-                        <td className="px-3 py-2.5 leading-5 font-medium break-words">
-                          {student.fullName}
-                        </td>
-                        <td className="px-3 py-2.5">
+                        <td className="px-1 py-2.5 sm:px-3">
                           <Input
                             type="number"
                             data-marks-entry="true"
@@ -744,7 +747,7 @@ function MarksDialog({
                             disabled={readOnly || entry.absent}
                             aria-label={`Marks for ${student.fullName}`}
                             aria-invalid={tooHigh}
-                            className={`ml-auto h-8 w-28 text-right tabular-nums ${
+                            className={`ml-auto h-8 w-16 text-right text-xs tabular-nums sm:w-24 sm:text-sm ${
                               tooHigh ? "border-destructive" : ""
                             }`}
                             onChange={(event) =>
@@ -759,12 +762,12 @@ function MarksDialog({
                             onKeyDown={focusNextMarksInput}
                           />
                         </td>
-                        <td className="px-3 py-2.5 text-center">
+                        <td className="px-1 py-2.5 text-center sm:px-3">
                           <Button
                             type="button"
                             size="sm"
                             variant={entry.absent ? "destructive" : "outline"}
-                            className="h-8 min-w-20 px-2 text-xs"
+                            className="h-8 min-w-16 px-1.5 text-[11px] sm:min-w-20 sm:px-2 sm:text-xs"
                             aria-pressed={entry.absent}
                             disabled={readOnly}
                             onClick={() =>
@@ -789,17 +792,22 @@ function MarksDialog({
           </QueryState>
         </div>
 
-        <DialogFooter className="border-t pt-3">
+        <DialogFooter className="flex-row items-center border-t pt-3">
           {invalid && (
-            <p className="mr-auto text-xs text-destructive">
+            <p className="mr-auto text-[11px] text-destructive sm:text-xs">
               Marks must be between 0 and {exam.fullMarks}.
             </p>
           )}
-          <Button variant="ghost" onClick={onClose}>
+          <Button
+            variant="ghost"
+            className="h-9 min-w-0 flex-1 sm:h-8 sm:w-auto sm:flex-none"
+            onClick={onClose}
+          >
             {readOnly ? "Close" : "Cancel"}
           </Button>
           {!readOnly && (
             <Button
+              className="h-9 min-w-0 flex-1 sm:h-8 sm:w-auto sm:flex-none"
               onClick={submit}
               disabled={
                 isSaving || invalid || existing.isLoading || !!existing.error

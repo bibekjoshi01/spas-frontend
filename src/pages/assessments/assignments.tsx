@@ -107,7 +107,7 @@ export default function AssignmentsPage() {
   }, [assignments.data, completion, studentCount])
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
       <PageHeader
         title="Assignments"
         description={
@@ -205,8 +205,8 @@ export default function AssignmentsPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visibleAssignments.map((assignment) => {
             return (
-              <Card key={assignment.id}>
-                <CardHeader className="pb-3">
+              <Card key={assignment.id} className="h-full border">
+                <CardHeader className="border-b bg-muted/20 pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-base">
                       {assignment.title}
@@ -221,7 +221,7 @@ export default function AssignmentsPage() {
                     Given {assignment.assignedDate}
                   </p>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="flex flex-1 flex-col space-y-3">
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>Evaluated · {assignment.doneCount} completed</span>
@@ -238,7 +238,7 @@ export default function AssignmentsPage() {
                     />
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="mt-auto flex flex-col gap-2 pt-1 sm:flex-row">
                     <Button
                       size="sm"
                       variant="outline"
@@ -324,8 +324,8 @@ function EditAssignmentDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="max-h-[90dvh] overflow-y-auto">
+        <DialogHeader className="border-b pr-8 pb-3">
           <DialogTitle>Edit Assignment</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
@@ -363,7 +363,7 @@ function EditAssignmentDialog({
             </div>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="border-t pt-3">
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
@@ -420,8 +420,8 @@ function CreateAssignmentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="max-h-[90dvh] overflow-y-auto">
+        <DialogHeader className="border-b pr-8 pb-3">
           <DialogTitle>New Assignment</DialogTitle>
         </DialogHeader>
 
@@ -463,7 +463,7 @@ function CreateAssignmentDialog({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="border-t pt-3">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
@@ -535,12 +535,12 @@ function StatusDialog({
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[94dvh] w-[calc(100vw-1rem)] max-w-none overflow-hidden p-3 sm:w-[calc(100vw-2rem)] sm:max-w-[72rem] sm:p-6">
-        <DialogHeader>
+        <DialogHeader className="border-b pr-8 pb-3">
           <DialogTitle>{assignment.title}</DialogTitle>
         </DialogHeader>
 
         {!readOnly && (
-          <div className="flex justify-end gap-2 pb-1">
+          <div className="flex flex-wrap justify-end gap-2 border-b pb-3">
             {STATUS_ORDER.map((status) => (
               <Button
                 key={status}
@@ -576,7 +576,7 @@ function StatusDialog({
           emptyMessage="Register students onto this class first."
         >
           <ul className="max-h-[72dvh] divide-y overflow-y-auto rounded-lg border bg-table-surface">
-            <li className="sticky top-0 z-10 flex items-center border-b bg-table-header p-2.5 text-table-header-foreground">
+            <li className="sticky top-0 z-10 flex items-center border-b bg-table-header p-3 text-table-header-foreground">
               <span className="w-40 shrink-0">Roll</span>
               <StudentNameSortButton
                 direction={nameSort}
@@ -586,7 +586,7 @@ function StatusDialog({
             {sortedRoster.map((student) => (
               <li
                 key={student.enrollment}
-                className="flex items-center justify-between gap-3 p-2.5"
+                className="flex items-center justify-between gap-3 p-3"
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="w-40 shrink-0 font-mono text-xs break-all text-muted-foreground tabular-nums">
@@ -632,7 +632,7 @@ function StatusDialog({
           </ul>
         </QueryState>
 
-        <DialogFooter>
+        <DialogFooter className="border-t pt-3">
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
