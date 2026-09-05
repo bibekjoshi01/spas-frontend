@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   ClipboardList,
+  ChevronRight,
   Star,
   Users,
 } from "lucide-react"
@@ -94,12 +95,10 @@ export default function ClassWorkspacePage() {
   return (
     <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
       <PageHeader
-        title={
-          selected ? `${selected.code} — ${selected.name}` : "Class Workspace"
-        }
+        title="Class Overview"
         description={
           selected
-            ? `${selected.programCode} ${selected.batchYear} · Semester ${selected.semester}`
+            ? "See what needs attention and continue your most common class tasks."
             : "Loading class context…"
         }
         actions={
@@ -137,7 +136,7 @@ export default function ClassWorkspacePage() {
       >
         {selected && (
           <div className="space-y-3">
-            <ClassWorkspaceNav value={selected} active="Overview" />
+            <ClassWorkspaceNav value={selected} active="Overview" compact />
 
             <div className="grid grid-cols-2 border bg-card sm:grid-cols-3 lg:grid-cols-5">
               <Metric
@@ -190,14 +189,22 @@ export default function ClassWorkspacePage() {
                         ? "Today’s attendance recorded"
                         : "Open today’s attendance"
                     }
-                    href={`/attendance?class=${allocation}`}
+                    href={
+                      sessions.data?.count
+                        ? `/attendance?class=${allocation}`
+                        : `/attendance/${allocation}/${localDateKey()}`
+                    }
                     done={Boolean(sessions.data?.count)}
                     disabled={!running}
                   />
                   {canViewAssessments && (
                     <ActionRow
                       icon={ClipboardList}
-                      label={`${incompleteExams.length} assessments have incomplete marks`}
+                      label={
+                        incompleteExams.length
+                          ? `${incompleteExams.length} assessments need marks`
+                          : "Assessment marks are complete"
+                      }
                       href={`/assessments?class=${allocation}`}
                       done={!incompleteExams.length}
                       disabled={!running}
@@ -206,7 +213,11 @@ export default function ClassWorkspacePage() {
                   {canViewAssignments && (
                     <ActionRow
                       icon={ClipboardCheck}
-                      label={`${incompleteAssignments.length} assignments have incomplete evaluation`}
+                      label={
+                        incompleteAssignments.length
+                          ? `${incompleteAssignments.length} assignments need review`
+                          : "Assignment reviews are complete"
+                      }
                       href={`/assignments?class=${allocation}`}
                       done={!incompleteAssignments.length}
                       disabled={!running}
@@ -215,7 +226,11 @@ export default function ClassWorkspacePage() {
                   {canViewPerformance && (
                     <ActionRow
                       icon={Star}
-                      label={`${unrated} students are not rated`}
+                      label={
+                        unrated
+                          ? `${unrated} students are not rated`
+                          : "Every student is rated"
+                      }
                       href={`/class-performance?class=${allocation}`}
                       done={!unrated}
                       disabled={!running}
@@ -333,6 +348,9 @@ function ActionRow({
       />
       <span className="flex-1">{label}</span>
       {done && <CheckCircle2 className="size-4 text-emerald-600" aria-hidden />}
+      {!done && (
+        <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+      )}
     </>
   )
   return disabled ? (

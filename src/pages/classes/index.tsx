@@ -80,9 +80,9 @@ export default function ClassesPage() {
         }
       />
 
-      <div className="border bg-card">
-        <div className="flex justify-end p-2">
-          <div className="relative w-full lg:w-72">
+      <div className="flex flex-col gap-2 border bg-card p-2 sm:flex-row sm:items-center">
+        <div className="order-2 flex justify-end sm:ml-auto">
+          <div className="relative w-full sm:w-64 lg:w-72">
             <Search
               className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
               aria-hidden
@@ -107,7 +107,7 @@ export default function ClassesPage() {
           </div>
         </div>
         <div
-          className="flex min-w-0 gap-1 overflow-x-auto border-t px-2"
+          className="order-1 flex min-w-0 gap-1 overflow-x-auto"
           aria-label="Filter classes by status"
         >
           {(

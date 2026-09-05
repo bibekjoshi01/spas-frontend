@@ -201,9 +201,6 @@ export default function AttendancePage() {
         className="flex flex-col gap-2 border bg-card p-2 lg:flex-row lg:items-center"
         aria-label="Attendance class selection"
       >
-        <span className="shrink-0 text-xs font-medium sm:text-sm">
-          Select class
-        </span>
         <ClassPicker
           classes={classes.data ?? []}
           value={allocation}
