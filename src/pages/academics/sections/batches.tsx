@@ -121,7 +121,11 @@ export function BatchesSection() {
         </div>
         {canAdd && (
           <div className="flex w-full items-center justify-end sm:w-auto">
-            <Button size="sm" onClick={() => setIsCreating(true)}>
+            <Button
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={() => setIsCreating(true)}
+            >
               <Plus className="size-4" aria-hidden />
               New batch
             </Button>
@@ -239,24 +243,24 @@ function BatchRow({
 
   return (
     <div className="rounded-lg border bg-card">
-      <div className="flex items-center hover:bg-muted/50">
+      <div className="flex flex-wrap items-center hover:bg-muted/50">
         <button
           type="button"
           onClick={onToggle}
           aria-expanded={isOpen}
           className="flex min-w-0 flex-1 items-center justify-between gap-3 p-3 text-left"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <ChevronRight
               className={`size-4 text-muted-foreground transition-transform ${
                 isOpen ? "rotate-90" : ""
               }`}
               aria-hidden
             />
-            <span className="font-medium">
+            <span className="truncate font-medium">
               {batch.program.code} · {batch.year}
             </span>
-            <span className="text-sm text-muted-foreground">
+            <span className="max-w-24 truncate text-xs text-muted-foreground sm:max-w-none sm:text-sm">
               {batch.program.name}
             </span>
             {batch.status === "GRADUATED" && (
@@ -266,7 +270,7 @@ function BatchRow({
               </Badge>
             )}
           </div>
-          <span className="text-sm text-muted-foreground tabular-nums">
+          <span className="shrink-0 text-xs text-muted-foreground tabular-nums sm:text-sm">
             {batch.studentCount} students
           </span>
         </button>
