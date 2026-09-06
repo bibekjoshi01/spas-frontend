@@ -37,6 +37,7 @@ const CACHE_TAGS = [
   "BatchSemester",
   "Subject",
   "Allocation",
+  "AcademicCalendar",
   // People
   "Student",
   "SemesterEnrollment",

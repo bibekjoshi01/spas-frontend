@@ -44,6 +44,8 @@ import {
   useGetClassesQuery,
   useGetRosterQuery,
   useRecordAttendanceMutation,
+  useGetClassCalendarDayQuery,
+  fieldErrorsFrom,
 } from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
 import { localDateKey } from "@/lib/utils/date"
@@ -110,7 +112,17 @@ export default function AttendanceSessionPage() {
     { skip: !previousSession }
   )
 
-  const [record, { isLoading: isSaving }] = useRecordAttendanceMutation()
+  const [record, { isLoading: isSaving, error: saveError }] =
+    useRecordAttendanceMutation()
+  const calendar = useGetClassCalendarDayQuery(
+    { allocation, date: sessionDate },
+    { skip: !allocation }
+  )
+  const calendarAllowsSave = Boolean(
+    calendar.currentData?.isExpected &&
+    !calendar.isError &&
+    !calendar.isFetching
+  )
 
   // Only the teacher's edits live in state. What is on the server is derived
   // during render and the edits sit on top, so a refetch never discards
@@ -134,6 +146,7 @@ export default function AttendanceSessionPage() {
     existing.isLoading || Boolean(existingId && detail.isLoading)
   const sessionError = existing.error ?? detail.error
   const canWrite =
+    calendarAllowsSave &&
     !semesterReadOnly &&
     !sessionIsLoading &&
     !sessionError &&
@@ -282,7 +295,7 @@ export default function AttendanceSessionPage() {
   }
 
   const save = async () => {
-    if (!roster.data || !isComplete || !canWrite) return
+    if (!roster.data || !isComplete || !canWrite || !calendarAllowsSave) return
 
     try {
       const result = await record({
@@ -342,7 +355,13 @@ export default function AttendanceSessionPage() {
               size="sm"
               className="text-xs sm:text-sm"
               onClick={save}
-              disabled={!canWrite || isSaving || !isDirty || !isComplete}
+              disabled={
+                !canWrite ||
+                !calendarAllowsSave ||
+                isSaving ||
+                !isDirty ||
+                !isComplete
+              }
             >
               {isSaving ? (
                 <InlineSpinner />
@@ -401,6 +420,25 @@ export default function AttendanceSessionPage() {
         </ol>
       </nav>
 
+      {calendar.currentData && !calendar.currentData.isExpected && (
+        <p
+          role="status"
+          className="border border-destructive/25 bg-destructive/5 px-3 py-2.5 text-xs text-destructive sm:text-sm"
+        >
+          {calendar.currentData.label} · Attendance unavailable
+        </p>
+      )}
+      {fieldErrorsFrom(saveError).date && (
+        <p role="alert" className="text-sm text-destructive">
+          {fieldErrorsFrom(saveError).date}
+        </p>
+      )}
+      {calendar.isError && (
+        <Button variant="outline" size="sm" onClick={() => calendar.refetch()}>
+          Retry calendar
+        </Button>
+      )}
+
       <QueryState
         isLoading={roster.isLoading || classes.isLoading || sessionIsLoading}
         error={roster.error ?? classes.error ?? sessionError}
@@ -421,16 +459,19 @@ export default function AttendanceSessionPage() {
         }
       >
         <div className="space-y-3">
-          {!canWrite && classInfo && !existing.isLoading && (
-            <div className="flex items-start gap-2 border border-amber-500/30 bg-band-warn px-3 py-2.5 text-xs text-band-warn-foreground sm:text-sm">
-              <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
-              <p>
-                {semesterReadOnly
-                  ? `This semester is ${classInfo.semesterStatus.toLowerCase()}. Attendance is available for viewing only.`
-                  : "You can view this attendance, but your role does not permit changing it."}
-              </p>
-            </div>
-          )}
+          {!canWrite &&
+            classInfo &&
+            !existing.isLoading &&
+            calendar.currentData?.isExpected && (
+              <div className="flex items-start gap-2 border border-amber-500/30 bg-band-warn px-3 py-2.5 text-xs text-band-warn-foreground sm:text-sm">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+                <p>
+                  {semesterReadOnly
+                    ? `This semester is ${classInfo.semesterStatus.toLowerCase()}. Attendance is available for viewing only.`
+                    : "You can view this attendance, but your role does not permit changing it."}
+                </p>
+              </div>
+            )}
           <section
             className="flex flex-col gap-3 border bg-card p-3 xl:flex-row xl:items-center xl:justify-between"
             aria-label="Attendance controls"

@@ -52,6 +52,21 @@ knows about.
 
 Husky runs typecheck and lint-staged on commit, and a full build on push.
 
+## Calendar PDF downloads
+
+Open **Academic Calendar → Download calendar** and choose the months to include.
+Selections remain selected while moving between BS years. The PDF uses three
+month columns, Nepali month/year headings, and red weekend/holiday dates,
+followed by working-day totals and saved event/holiday tables. It contains no
+letterhead or invented exam schedule. Working days cover the selected months,
+excluding weekends and active holidays; several holidays on one date count as
+one closed day. Long tables continue onto additional pages.
+
+Exports use the authorized staff or student calendar response and perform no
+independent BS conversion. Nepali text uses the bundled SIL Open Font License
+Noto Sans Devanagari font. Pages are rendered at print resolution to preserve
+Nepali text shaping across devices; PDF text is not selectable.
+
 ## Deployment
 
 `yarn build` emits static files to `dist/`. Any static host works, with two

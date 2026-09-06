@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Navigate, Outlet, useLocation } from "react-router-dom"
 
 import { auth } from "@/lib/redux/auth"
@@ -12,7 +12,7 @@ import {
 import InitialPasswordChange from "@/pages/auth/initial-password-change"
 
 let validationRequest: {
-  accessToken: string
+  sessionKey: string
   promise: ReturnType<typeof fetchMe>
 } | null = null
 
@@ -22,45 +22,91 @@ export default function AuthGuard() {
   const { isAuthenticated, sessionStatus, profile } = useAppSelector(
     (state) => state.auth
   )
-  const accessToken = auth.getAccess()
-  const hasAccessToken = Boolean(accessToken)
+  // Refresh tokens identify the session while access tokens rotate/expire.
+  const sessionKey = auth.getRefresh() || auth.getAccess()
+  const [validation, setValidation] = useState<{
+    key: string
+    failed: boolean
+  } | null>(null)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
-    if (!accessToken) return
+    const recheck = () => setAttempt((value) => value + 1)
+    window.addEventListener("focus", recheck)
+    return () => window.removeEventListener("focus", recheck)
+  }, [])
+
+  useEffect(() => {
+    if (!sessionKey) return
 
     let cancelled = false
 
     dispatch(sessionCheckStarted())
-    if (!validationRequest || validationRequest.accessToken !== accessToken) {
+    if (!validationRequest || validationRequest.sessionKey !== sessionKey) {
       const promise = fetchMe().finally(() => {
         if (validationRequest?.promise === promise) validationRequest = null
       })
-      validationRequest = { accessToken, promise }
+      validationRequest = { sessionKey, promise }
     }
 
     const request = validationRequest.promise
     request
       .then((profile) => {
-        if (!cancelled && auth.getAccess() === accessToken) {
+        if (
+          !cancelled &&
+          (auth.getRefresh() || auth.getAccess()) === sessionKey
+        ) {
           dispatch(setProfile(profile))
+          setValidation({ key: sessionKey, failed: false })
         }
       })
-      .catch(() => {
-        if (!cancelled && auth.getAccess() === accessToken) {
-          dispatch(sessionInvalidated())
+      .catch((error) => {
+        if (
+          !cancelled &&
+          (auth.getRefresh() || auth.getAccess()) === sessionKey
+        ) {
+          if (
+            error.response?.status === 401 ||
+            error.response?.status === 403
+          ) {
+            dispatch(sessionInvalidated())
+          } else {
+            setValidation({ key: sessionKey, failed: true })
+          }
         }
       })
 
     return () => {
       cancelled = true
     }
-  }, [accessToken, dispatch])
+  }, [sessionKey, dispatch, attempt])
 
-  if (!hasAccessToken) {
+  if (!sessionKey) {
     return <Navigate to="/login" replace state={{ from: location }} />
   }
 
-  if (sessionStatus !== "ready") {
+  if (validation?.key === sessionKey && validation.failed) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background">
+        <div className="space-y-3 text-center">
+          <p className="text-sm">
+            Could not check your session. Please try again.
+          </p>
+          <button
+            className="rounded border px-4 py-2 text-sm"
+            onClick={() => {
+              setValidation(null)
+              setAttempt((value) => value + 1)
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (sessionStatus !== "ready" || validation?.key !== sessionKey) {
     return (
       <div className="grid min-h-screen place-items-center bg-background">
         <div className="text-center">

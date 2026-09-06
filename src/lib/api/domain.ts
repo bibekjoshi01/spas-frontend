@@ -306,6 +306,7 @@ export interface AttendanceRecord {
 }
 
 export interface AttendanceSessionSummary {
+  makeupReason: string
   id: number
   uuid: string
   allocation: number
@@ -318,6 +319,7 @@ export interface AttendanceSessionSummary {
 }
 
 export interface AttendanceSessionDetail {
+  makeupReason: string
   id: number
   uuid: string
   allocation: number

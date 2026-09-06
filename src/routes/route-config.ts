@@ -20,6 +20,7 @@ const Programs = lazy(() => import("@/pages/academics/programs"))
 const Batches = lazy(() => import("@/pages/academics/batches"))
 const Subjects = lazy(() => import("@/pages/academics/subjects"))
 const Allocations = lazy(() => import("@/pages/academics/allocations"))
+const AcademicCalendar = lazy(() => import("@/pages/academics/calendar"))
 
 const People = lazy(() => import("@/pages/people/students"))
 const Accounts = lazy(() => import("@/pages/people/accounts"))
@@ -214,6 +215,15 @@ export const privateRoutes: AppRoute[] = [
     permission: "view_subject_allocation",
     allowedRoles: ["DEPARTMENT-HEAD", "PROGRAM-COORDINATOR"],
     title: "Subject Allocations",
+    showInSidebar: true,
+  },
+  {
+    // No permission gate: staff read it with view_academic_calendar and
+    // students through the portal, so the screen is open to everyone signed
+    // in and the API decides what comes back.
+    path: "/academics/calendar",
+    element: AcademicCalendar,
+    title: "Academic Calendar",
     showInSidebar: true,
   },
 

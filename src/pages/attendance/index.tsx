@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 
 import { ClassPicker } from "@/components/class-picker"
+import { AttendanceCalendar } from "@/components/attendance-calendar"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
 import { PageHeader } from "@/components/page-header"
 import { InlineSpinner, QueryState } from "@/components/query-state"
@@ -25,7 +26,6 @@ import {
 } from "@/lib/utils/student-sort"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
 import {
   Sheet,
@@ -53,6 +53,7 @@ import {
   useGetAttendanceSessionQuery,
   useGetAttendanceSessionsQuery,
   useGetClassesQuery,
+  useGetClassCalendarDayQuery,
 } from "@/lib/api"
 
 const STATUS_STYLES: Record<AttendanceStatus, string> = {
@@ -120,14 +121,26 @@ export default function AttendancePage() {
       ).sort(),
     [sessions.data]
   )
-  const recordedDates = useMemo(
-    () => recordedDateKeys.map(fromDateKey),
-    [recordedDateKeys]
-  )
   const previousRecordedDate = [...recordedDateKeys]
     .reverse()
     .find((key) => key < selectedKey)
   const nextRecordedDate = recordedDateKeys.find((key) => key > selectedKey)
+  const selectedDay = useGetClassCalendarDayQuery(
+    { allocation: allocation ?? 0, date: selectedKey },
+    { skip: !allocation }
+  )
+  const todayDay = useGetClassCalendarDayQuery(
+    { allocation: allocation ?? 0, date: toDateKey(today) },
+    { skip: !allocation }
+  )
+  const selectedOpen =
+    selectedDay.currentData?.isExpected &&
+    !selectedDay.isFetching &&
+    !selectedDay.isError
+  const todayOpen =
+    todayDay.currentData?.isExpected &&
+    !todayDay.isFetching &&
+    !todayDay.isError
   const selectedSessions =
     sessions.data?.results
       .filter((session) => session.date === selectedKey)
@@ -211,7 +224,8 @@ export default function AttendancePage() {
         {selectedSession &&
           isWritable &&
           selectedDateIsInSemester &&
-          canEditAttendance && (
+          canEditAttendance &&
+          selectedOpen && (
             <Button asChild size="sm" className="w-full lg:ml-auto lg:w-auto">
               <Link
                 to={`/attendance/${selectedSession.allocation}/${selectedSession.date}?period=${selectedSession.period}`}
@@ -225,7 +239,8 @@ export default function AttendancePage() {
           isWritable &&
           todayIsInSemester &&
           !todaySessions.length &&
-          canAddAttendance && (
+          canAddAttendance &&
+          todayOpen && (
             <Button asChild size="sm" className="w-full lg:ml-auto lg:w-auto">
               <Link to={todayHref}>
                 <Plus className="size-4" aria-hidden />
@@ -316,31 +331,24 @@ export default function AttendancePage() {
                       Choose date
                     </Button>
                   </SheetTrigger>
-                  <SheetContent className="w-full gap-0 sm:max-w-sm">
+                  <SheetContent className="w-full gap-0 sm:max-w-md">
                     <SheetHeader className="border-b pr-12">
                       <SheetTitle>Choose attendance date</SheetTitle>
                       <SheetDescription>
-                        Recorded dates are highlighted in green.
+                        Choose a Nepali calendar date. Recorded dates have a
+                        green marker.
                       </SheetDescription>
                     </SheetHeader>
-                    <div className="overflow-y-auto p-2 sm:p-3">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={chooseDate}
-                        disabled={[
-                          { after: today },
-                          ...(semesterStart ? [{ before: semesterStart }] : []),
-                          ...(semesterEnd ? [{ after: semesterEnd }] : []),
-                        ]}
-                        modifiers={{ recorded: recordedDates }}
-                        modifiersClassNames={{
-                          recorded:
-                            "rounded-md bg-emerald-100 text-emerald-900 [&_button]:bg-emerald-100 [&_button]:font-semibold [&_button]:text-emerald-900 hover:[&_button]:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-100 dark:[&_button]:bg-emerald-950 dark:[&_button]:text-emerald-100 dark:hover:[&_button]:bg-emerald-900",
-                        }}
-                        className="w-full"
-                        classNames={{ root: "w-full", month: "w-full" }}
-                      />
+                    <div className="min-w-0 overflow-y-auto p-2 sm:p-3">
+                      {allocation && (
+                        <AttendanceCalendar
+                          key={`${allocation}:${selectedKey}`}
+                          allocation={allocation}
+                          selected={selectedKey}
+                          onSelect={(value) => chooseDate(fromDateKey(value))}
+                          recordedDates={recordedDateKeys}
+                        />
+                      )}
                     </div>
                   </SheetContent>
                 </Sheet>
@@ -357,6 +365,7 @@ export default function AttendancePage() {
                 isWritable &&
                 todayIsInSemester &&
                 canAddAttendance &&
+                selectedOpen &&
                 !selectedSessions.length && (
                   <Button asChild size="sm">
                     <Link to={`/attendance/${allocation}/${selectedKey}`}>
@@ -366,6 +375,17 @@ export default function AttendancePage() {
                   </Button>
                 )}
             </div>
+
+            {selectedDay.currentData && !selectedDay.currentData.isExpected && (
+              <p className="border-b px-3 py-2 text-sm text-destructive">
+                {selectedDay.currentData.label} · Attendance unavailable
+              </p>
+            )}
+            {selectedDay.isError && (
+              <Button variant="ghost" onClick={() => selectedDay.refetch()}>
+                Retry calendar
+              </Button>
+            )}
 
             {selectedSessions.length ? (
               <ul className="divide-y">
@@ -392,6 +412,7 @@ export default function AttendancePage() {
                 {allocation &&
                   isWritable &&
                   canAddAttendance &&
+                  selectedOpen &&
                   selectedKey < todayKey &&
                   selectedDateIsInSemester && (
                     <Button
