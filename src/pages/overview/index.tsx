@@ -141,9 +141,9 @@ export default function OverviewPage() {
                     <CardContent className="space-y-2">
                       {data.todaysClasses.length === 0 && (
                         <p className="py-6 text-center text-sm text-muted-foreground">
-                          {isTeacher
-                            ? "No running classes are allocated to you."
-                            : "No running classes are available in your academic scope."}
+                          {!data.todayAttendance.isTeachingDay
+                            ? `${data.todayAttendance.dayLabel} · No attendance expected`
+                            : "No classes scheduled today."}
                         </p>
                       )}
 
@@ -330,7 +330,9 @@ function ManagementTodayPanel({
           <div>
             <h2 className="font-semibold">Today’s attendance</h2>
             <p className="text-xs text-band-accent-foreground/70">
-              {levelLabel}-scoped records entered today.
+              {data.isTeachingDay
+                ? `${levelLabel} · ${data.expectedClasses} classes expected today`
+                : `${data.dayLabel} · No attendance expected`}
             </p>
           </div>
           <Badge variant="outline">{data.sessionsRecorded} sessions</Badge>
@@ -340,7 +342,9 @@ function ManagementTodayPanel({
           <DailyMetric
             icon={Activity}
             label="Attendance rate"
-            value={formatPercentage(data.attendancePercentage)}
+            value={
+              data.marked ? formatPercentage(data.attendancePercentage) : "—"
+            }
           />
           <DailyMetric
             icon={Users}
@@ -350,7 +354,7 @@ function ManagementTodayPanel({
           <DailyMetric
             icon={CalendarCheck}
             label="Classes recorded"
-            value={`${data.classesRecorded}/${data.activeClasses}`}
+            value={data.classesRecorded}
           />
           <DailyMetric icon={UserCheck} label="Present" value={data.present} />
           <DailyMetric
@@ -372,12 +376,11 @@ function ManagementTodayPanel({
           <div>
             <h3 className="text-sm font-semibold">Classes to review</h3>
             <p className="text-xs text-band-warn-foreground/70">
-              Active classes without a record today; this does not necessarily
-              mean a class was scheduled.
+              Expected classes without a record. These are not student absences.
             </p>
           </div>
           <Badge variant="outline" className="shrink-0 bg-card tabular-nums">
-            {data.classesToReview.length}
+            {data.pendingClasses}
           </Badge>
         </div>
         <div className="bg-card p-3">
@@ -406,7 +409,11 @@ function ManagementTodayPanel({
           ) : (
             <p className="flex items-center gap-2 py-3 text-sm text-muted-foreground">
               <CheckCircle2 className="size-4 text-emerald-600" aria-hidden />
-              Every active class has at least one attendance record today.
+              {!data.isTeachingDay
+                ? "No attendance expected today."
+                : data.expectedClasses === 0
+                  ? "No classes scheduled today."
+                  : "All expected classes have attendance recorded."}
             </p>
           )}
         </div>
