@@ -16,7 +16,7 @@ export function PageHeader({ actions }: PageHeaderProps) {
   if (!actions || !actionsSlot) return null
 
   return createPortal(
-    <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap">
+    <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
       {actions}
     </div>,
     actionsSlot

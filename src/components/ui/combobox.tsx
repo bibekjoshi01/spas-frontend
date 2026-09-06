@@ -122,12 +122,12 @@ export function Combobox({
 
   return (
     <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
-      <div className={cn("relative", className)}>
+      <div className={cn("relative max-w-full min-w-0", className)}>
         <PopoverPrimitive.Trigger
           type="button"
           role="combobox"
           aria-expanded={open}
-          aria-label={ariaLabel}
+          aria-label={ariaLabel ?? placeholder}
           disabled={disabled}
           data-slot="select-trigger"
           className={cn(
@@ -161,7 +161,8 @@ export function Combobox({
         <PopoverPrimitive.Content
           align="start"
           sideOffset={4}
-          className="z-[120] max-h-72 w-[var(--radix-popover-trigger-width)] min-w-56 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md outline-none"
+          collisionPadding={12}
+          className="z-[120] flex max-h-[min(18rem,var(--radix-popover-content-available-height))] w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md outline-none"
           // Typing belongs in the search box, so focus goes there on open.
           onOpenAutoFocus={(event) => {
             event.preventDefault()
@@ -170,7 +171,7 @@ export function Combobox({
               ?.focus()
           }}
         >
-          <div className="flex items-center gap-2 border-b px-3">
+          <div className="flex shrink-0 items-center gap-2 border-b px-3">
             <SearchIcon
               className="size-4 shrink-0 text-muted-foreground"
               aria-hidden
@@ -181,14 +182,14 @@ export function Combobox({
               onKeyDown={onKeyDown}
               placeholder={searchPlaceholder}
               aria-label={searchPlaceholder}
-              className="h-9 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              className="h-9 w-full min-w-0 bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
             />
           </div>
 
           <div
             ref={listRef}
             role="listbox"
-            className="max-h-60 overflow-y-auto p-1"
+            className="min-h-0 overflow-y-auto overscroll-contain p-1"
           >
             {matches.length === 0 && (
               <p className="px-2 py-6 text-center text-sm text-muted-foreground">
@@ -228,9 +229,11 @@ export function Combobox({
                         aria-hidden
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate">{option.label}</span>
+                        <span className="block break-words whitespace-normal">
+                          {option.label}
+                        </span>
                         {option.hint && (
-                          <span className="block truncate text-xs text-muted-foreground">
+                          <span className="block text-xs break-words whitespace-normal text-muted-foreground">
                             {option.hint}
                           </span>
                         )}

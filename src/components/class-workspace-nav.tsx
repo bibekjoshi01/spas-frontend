@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react"
 import { NavLink } from "react-router-dom"
 import {
   BarChart3,
@@ -54,6 +55,18 @@ export function ClassWorkspaceNav({
   value: ClassSummary
   active: (typeof ITEMS)[number][0]
 }) {
+  const navRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const nav = navRef.current
+    const link = nav?.querySelector<HTMLElement>('[data-active="true"]')
+    if (!nav || !link) return
+    const bounds = nav.getBoundingClientRect()
+    const selected = link.getBoundingClientRect()
+    if (selected.left < bounds.left)
+      nav.scrollLeft += selected.left - bounds.left
+    else if (selected.right > bounds.right)
+      nav.scrollLeft += selected.right - bounds.right
+  }, [active, value.allocation])
   const permissions = usePermissions()
   const isSuperUser = useIsSuperUser()
   const visibleItems = ITEMS.filter(
@@ -67,7 +80,7 @@ export function ClassWorkspaceNav({
           <p className="mb-0.5 text-[10px] font-bold tracking-[0.14em] text-sky-300 uppercase">
             Class workspace
           </p>
-          <p className="truncate text-base font-bold tracking-tight">
+          <p className="text-base font-bold tracking-tight break-words">
             {value.code} — {value.name}
           </p>
           <p className="mt-0.5 text-xs text-banner-muted-foreground">
@@ -91,6 +104,7 @@ export function ClassWorkspaceNav({
         </Badge>
       </div>
       <nav
+        ref={navRef}
         className="flex overflow-x-auto border-t border-border bg-band"
         aria-label="Class sections"
       >
@@ -98,6 +112,8 @@ export function ClassWorkspaceNav({
           <NavLink
             key={label}
             to={href(value.allocation)}
+            data-active={active === label}
+            aria-current={active === label ? "page" : undefined}
             className={cn(
               "flex h-10 shrink-0 items-center gap-1.5 border-r px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-card hover:text-foreground",
               active === label &&

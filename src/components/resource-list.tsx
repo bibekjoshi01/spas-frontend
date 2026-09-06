@@ -137,7 +137,7 @@ export function ResourceList<T>({
       >
         <div
           className={cn(
-            "overflow-x-auto rounded-lg border bg-table-surface transition-opacity",
+            "min-w-0 rounded-lg border bg-table-surface transition-opacity",
             isFetching && !isLoading && "opacity-60"
           )}
         >

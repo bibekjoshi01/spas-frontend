@@ -66,7 +66,7 @@ export function ClassPicker({
   }
 
   return (
-    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+    <div className="flex w-full max-w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
       {showBatchFilter && (
         <Select value={batch} onValueChange={chooseBatch}>
           <SelectTrigger

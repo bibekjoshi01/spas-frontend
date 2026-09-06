@@ -32,7 +32,7 @@ export default function MainLayout() {
           <AppHeader onActionsSlotChange={handleActionsSlotChange} />
 
           <main
-            className="flex-1 pb-16 md:pb-0"
+            className="min-w-0 flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0"
             onClick={() => {
               if (sidebarOpen) dispatch(setSidebar(false))
             }}

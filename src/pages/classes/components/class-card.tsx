@@ -38,7 +38,7 @@ export function ClassCard({ item, today }: ClassCardProps) {
               {item.code}
             </p>
             <h3
-              className="truncate text-lg leading-tight font-semibold"
+              className="text-lg leading-tight font-semibold break-words"
               title={item.name}
             >
               {item.name}
@@ -90,7 +90,7 @@ export function ClassCard({ item, today }: ClassCardProps) {
           <AttendanceMeter percentage={item.attendancePercentage} />
         </div>
 
-        <div className="flex gap-2 pt-1">
+        <div className="flex flex-wrap gap-2 pt-1">
           {isRunning ? (
             <Button asChild size="sm" className="flex-1">
               <Link to={`/attendance/${item.allocation}/${today}`}>

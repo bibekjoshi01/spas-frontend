@@ -32,7 +32,7 @@ export function AppFooter() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 px-2 py-1.5 backdrop-blur md:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 px-2 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
       <nav aria-label="Primary mobile navigation">
         <div className="flex w-full items-center justify-around">
           {items.map((item) => {
@@ -47,6 +47,8 @@ export function AppFooter() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleClick(item.href)}
+                aria-current={isActive ? "page" : undefined}
+                aria-label={item.label}
                 className={cn(
                   "h-11 min-w-12 flex-col gap-0.5 rounded-md px-2 text-[10px] transition-colors",
                   isActive
@@ -55,7 +57,13 @@ export function AppFooter() {
                 )}
               >
                 <Icon className="size-4" />
-                <span className="max-w-16 truncate">{item.label}</span>
+                <span className="max-w-16 truncate">
+                  {item.href === "/attention"
+                    ? "Attention"
+                    : item.href === "/student"
+                      ? "My progress"
+                      : item.label}
+                </span>
               </Button>
             )
           })}

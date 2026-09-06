@@ -46,7 +46,7 @@ export function FormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={cn("max-h-[85vh] overflow-y-auto", contentClassName)}
+        className={cn("max-h-[85dvh] overflow-y-auto", contentClassName)}
       >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
