@@ -412,6 +412,10 @@ export interface DashboardOverview {
     sessionsRecorded: number
     classesRecorded: number
     activeClasses: number
+    expectedClasses: number
+    pendingClasses: number
+    isTeachingDay: boolean
+    dayLabel: string
     marked: number
     present: number
     absent: number

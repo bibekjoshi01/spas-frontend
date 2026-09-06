@@ -145,20 +145,9 @@ export function AttendanceCalendar({
           Today
         </Button>
       </div>
-      <div className="grid grid-cols-7 gap-0.5 text-center sm:gap-1">
-        {[
-          "आइत / Sun",
-          "सोम / Mon",
-          "मंगल / Tue",
-          "बुध / Wed",
-          "बिही / Thu",
-          "शुक्र / Fri",
-          "शनि / Sat",
-        ].map((label) => (
-          <span
-            key={label}
-            className="truncate py-1 text-[9px] text-muted-foreground sm:text-[10px]"
-          >
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((label) => (
+          <span key={label} className="py-1 text-[10px] text-muted-foreground">
             {label}
           </span>
         ))}
