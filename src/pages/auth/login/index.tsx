@@ -7,13 +7,16 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-background px-5 py-8 sm:px-8">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
-        <div className="bg-card px-6 py-8 sm:px-9 sm:py-10">
+        <div className="rounded-sm border bg-card px-6 py-8 sm:px-9 sm:py-10">
           <BrandLogo className="mb-9" />
 
           <div>
             <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">
               Sign In To SPAS
             </h1>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Use your college account to continue.
+            </p>
           </div>
 
           <div className="mt-7">

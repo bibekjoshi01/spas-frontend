@@ -29,6 +29,7 @@ import { exportStudentDetailPdf } from "@/lib/pdf-reports"
 import { exportSpreadsheet, type ExportFormat } from "@/lib/spreadsheet-export"
 import { classStudentExportTable } from "@/lib/spreadsheet-reports"
 import { formatPercentage } from "@/lib/utils"
+import { formatDisplayDate } from "@/lib/utils/date"
 import { notifier } from "@/lib/utils/notifier"
 
 export function StudentDetailDialog({
@@ -63,15 +64,15 @@ export function StudentDetailDialog({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         overlayClassName="z-[90]"
-        className="z-[100] h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto sm:max-w-none"
+        className="z-[100] flex h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-none flex-col gap-0 overflow-hidden p-0 sm:max-w-none sm:p-0"
       >
-        <DialogHeader className="pr-10">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <DialogTitle>
+        <DialogHeader className="shrink-0 border-b bg-muted/20 p-4 pr-12 sm:p-5 sm:pr-12">
+          <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <DialogTitle className="truncate">
                 {data?.student.fullName ?? "Student details"}
               </DialogTitle>
-              <DialogDescription className="mt-1">
+              <DialogDescription className="mt-1 truncate">
                 {data
                   ? `${data.class.code} — ${data.class.name} · Roll ${data.student.rollNumber}`
                   : "Loading this student's subject record…"}
@@ -85,141 +86,148 @@ export function StudentDetailDialog({
           </div>
         </DialogHeader>
 
-        <QueryState
-          isLoading={detail.isLoading}
-          isFetching={detail.isFetching && !detail.isLoading}
-          error={detail.error}
-          isEmpty={!data}
-          onRetry={detail.refetch}
-          skeleton={<SubjectRecordSkeleton />}
-          emptyTitle="Student record unavailable"
-          emptyMessage="This student may no longer be enrolled in the selected class."
-        >
-          {data && (
-            <div className="space-y-5">
-              <section className="border bg-card p-3">
-                <h3 className="mb-2 font-semibold">Student and contact</h3>
-                <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                  <Detail
-                    label="Registration"
-                    value={data.student.registrationNumber}
-                  />
-                  <Detail label="Email" value={data.student.email} />
-                  <Detail label="Primary phone" value={data.student.phoneNo} />
-                  <Detail
-                    label="Alternate phone"
-                    value={data.student.alternatePhoneNo}
-                  />
-                </dl>
-              </section>
-
-              <section>
-                <SectionTitle
-                  title="Attendance"
-                  count={data.attendance?.held ?? 0}
-                />
-                {data.attendance ? (
-                  <div className="grid border bg-card sm:grid-cols-3 lg:grid-cols-6">
-                    <Metric label="Present" value={data.attendance.present} />
-                    <Metric label="Absent" value={data.attendance.absent} />
-                    <Metric label="Excused" value={data.attendance.excused} />
-                    <Metric label="Late" value={data.attendance.late} />
-                    <Metric label="Sessions" value={data.attendance.held} />
-                    <Metric
-                      label="Attendance"
-                      value={formatPercentage(data.attendance.percentage)}
+        <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
+          <QueryState
+            isLoading={detail.isLoading}
+            isFetching={detail.isFetching && !detail.isLoading}
+            error={detail.error}
+            isEmpty={!data}
+            onRetry={detail.refetch}
+            skeleton={<SubjectRecordSkeleton />}
+            emptyTitle="Student record unavailable"
+            emptyMessage="This student may no longer be enrolled in the selected class."
+          >
+            {data && (
+              <div className="space-y-5">
+                <section className="rounded-sm border bg-card p-3 sm:p-4">
+                  <h3 className="mb-3 text-sm font-semibold">
+                    Student and contact
+                  </h3>
+                  <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                    <Detail
+                      label="Registration"
+                      value={data.student.registrationNumber}
                     />
-                  </div>
-                ) : (
-                  <p className="border bg-card p-3 text-sm text-muted-foreground">
-                    Attendance summary is unavailable.
-                  </p>
-                )}
+                    <Detail label="Email" value={data.student.email} />
+                    <Detail
+                      label="Primary phone"
+                      value={data.student.phoneNo}
+                    />
+                    <Detail
+                      label="Alternate phone"
+                      value={data.student.alternatePhoneNo}
+                    />
+                  </dl>
+                </section>
 
-                {data.attendance?.trend && (
-                  <AttendanceTrendSummary
-                    trend={data.attendance.trend}
-                    className="border border-t-0 bg-card p-3"
+                <section>
+                  <SectionTitle
+                    title="Attendance"
+                    count={data.attendance?.held ?? 0}
                   />
-                )}
-              </section>
-
-              <section>
-                <SectionTitle
-                  title="Assessments"
-                  count={data.assessments.length}
-                />
-                <DetailTable
-                  headers={["Assessment", "Type", "Date", "Marks", "Result"]}
-                  empty="No assessments created for this subject."
-                  rows={data.assessments.map((row) => {
-                    const marks = row.isAbsent
-                      ? "Absent"
-                      : row.marksObtained === null
-                        ? "Not marked"
-                        : `${row.marksObtained}/${row.fullMarks}`
-                    const passed =
-                      row.passMarks !== null && row.marksObtained !== null
-                        ? Number(row.marksObtained) >= row.passMarks
-                          ? "Passed"
-                          : "Failed"
-                        : "—"
-                    return [
-                      row.title,
-                      EXAM_TYPE_LABELS[row.examType],
-                      row.examDate ?? "—",
-                      marks,
-                      passed,
-                    ]
-                  })}
-                />
-              </section>
-
-              <section>
-                <SectionTitle
-                  title="Assignments"
-                  count={data.assignments.length}
-                />
-                <DetailTable
-                  headers={[
-                    "Assignment",
-                    "Assigned",
-                    "Due",
-                    "Status",
-                    "Remarks",
-                  ]}
-                  empty="No assignments created for this subject."
-                  rows={data.assignments.map((row) => [
-                    row.title,
-                    row.assignedDate,
-                    row.dueDate ?? "—",
-                    row.status ? ASSIGNMENT_LABELS[row.status] : "Not marked",
-                    row.remarks || "—",
-                  ])}
-                />
-              </section>
-
-              <section>
-                <SectionTitle
-                  title="Class performance"
-                  count={data.classPerformance ? 1 : 0}
-                />
-                <div className="border bg-card p-3 text-sm">
-                  {data.classPerformance ? (
-                    <div className="flex flex-wrap items-start gap-3">
-                      <Badge className="text-sm">
-                        {data.classPerformance.score}/10
-                      </Badge>
-                      <p>{data.classPerformance.remarks || "No remarks."}</p>
+                  {data.attendance ? (
+                    <div className="grid overflow-hidden rounded-sm border bg-card sm:grid-cols-3 lg:grid-cols-6">
+                      <Metric label="Present" value={data.attendance.present} />
+                      <Metric label="Absent" value={data.attendance.absent} />
+                      <Metric label="Excused" value={data.attendance.excused} />
+                      <Metric label="Late" value={data.attendance.late} />
+                      <Metric label="Sessions" value={data.attendance.held} />
+                      <Metric
+                        label="Attendance"
+                        value={formatPercentage(data.attendance.percentage)}
+                      />
                     </div>
                   ) : (
-                    <p className="text-muted-foreground">Not rated yet.</p>
+                    <p className="border bg-card p-3 text-sm text-muted-foreground">
+                      Attendance summary is unavailable.
+                    </p>
                   )}
-                </div>
-              </section>
-            </div>
-          )}
-        </QueryState>
+
+                  {data.attendance?.trend && (
+                    <AttendanceTrendSummary
+                      trend={data.attendance.trend}
+                      className="rounded-b-sm border border-t-0 bg-card p-3"
+                    />
+                  )}
+                </section>
+
+                <section>
+                  <SectionTitle
+                    title="Assessments"
+                    count={data.assessments.length}
+                  />
+                  <DetailTable
+                    headers={["Assessment", "Type", "Date", "Marks", "Result"]}
+                    empty="No assessments created for this subject."
+                    rows={data.assessments.map((row) => {
+                      const marks = row.isAbsent
+                        ? "Absent"
+                        : row.marksObtained === null
+                          ? "Not marked"
+                          : `${row.marksObtained}/${row.fullMarks}`
+                      const passed =
+                        row.passMarks !== null && row.marksObtained !== null
+                          ? Number(row.marksObtained) >= row.passMarks
+                            ? "Passed"
+                            : "Failed"
+                          : "—"
+                      return [
+                        row.title,
+                        EXAM_TYPE_LABELS[row.examType],
+                        row.examDate ? formatDisplayDate(row.examDate) : "—",
+                        marks,
+                        passed,
+                      ]
+                    })}
+                  />
+                </section>
+
+                <section>
+                  <SectionTitle
+                    title="Assignments"
+                    count={data.assignments.length}
+                  />
+                  <DetailTable
+                    headers={[
+                      "Assignment",
+                      "Assigned",
+                      "Due",
+                      "Status",
+                      "Remarks",
+                    ]}
+                    empty="No assignments created for this subject."
+                    rows={data.assignments.map((row) => [
+                      row.title,
+                      formatDisplayDate(row.assignedDate),
+                      row.dueDate ? formatDisplayDate(row.dueDate) : "—",
+                      row.status ? ASSIGNMENT_LABELS[row.status] : "Not marked",
+                      row.remarks || "—",
+                    ])}
+                  />
+                </section>
+
+                <section>
+                  <SectionTitle
+                    title="Class performance"
+                    count={data.classPerformance ? 1 : 0}
+                  />
+                  <div className="rounded-sm border bg-card p-3 text-sm">
+                    {data.classPerformance ? (
+                      <div className="flex flex-wrap items-start gap-3">
+                        <Badge className="text-sm">
+                          {data.classPerformance.score}/10
+                        </Badge>
+                        <p>{data.classPerformance.remarks || "No remarks."}</p>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">Not rated yet.</p>
+                    )}
+                  </div>
+                </section>
+              </div>
+            )}
+          </QueryState>
+        </div>
       </DialogContent>
     </Dialog>
   )
@@ -236,9 +244,11 @@ function Detail({ label, value }: { label: string; value: string }) {
 
 function SectionTitle({ title, count }: { title: string; count: number }) {
   return (
-    <div className="mb-2 flex items-center gap-2">
-      <h3 className="font-semibold">{title}</h3>
-      <Badge variant="outline">{count}</Badge>
+    <div className="mb-3 flex items-center gap-2 border-b pb-2">
+      <h3 className="text-sm font-semibold">{title}</h3>
+      <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+        {count}
+      </Badge>
     </div>
   )
 }
@@ -262,10 +272,10 @@ function DetailTable({
   empty: string
 }) {
   return (
-    <div className="overflow-x-auto border">
-      <Table>
+    <div className="overflow-x-auto rounded-sm border bg-card">
+      <Table className="min-w-[640px]">
         <TableHeader>
-          <TableRow className="bg-table-header hover:bg-table-header">
+          <TableRow className="border-b-2 border-table-header-border bg-table-header hover:bg-table-header">
             {headers.map((header) => (
               <TableHead key={header}>{header}</TableHead>
             ))}
@@ -276,7 +286,9 @@ function DetailTable({
             rows.map((row, index) => (
               <TableRow key={index}>
                 {row.map((cell, cellIndex) => (
-                  <TableCell key={cellIndex}>{cell}</TableCell>
+                  <TableCell key={cellIndex} className="align-top">
+                    {cell}
+                  </TableCell>
                 ))}
               </TableRow>
             ))

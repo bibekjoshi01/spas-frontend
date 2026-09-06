@@ -50,7 +50,14 @@ export interface AppRoute {
    * It should match the skeleton the screen itself shows while its data loads,
    * so a cold navigation reads as one wait rather than two.
    */
-  skeleton?: "list" | "dashboard"
+  skeleton?:
+    | "list"
+    | "dashboard"
+    | "cards"
+    | "workspace"
+    | "report"
+    | "settings"
+    | "register"
   title: string
   showInSidebar: boolean
 }
@@ -87,6 +94,7 @@ export const privateRoutes: AppRoute[] = [
     permission: "view_student",
     allowedRoles: ["DEPARTMENT-HEAD", "PROGRAM-COORDINATOR"],
     title: "Batch Performance",
+    skeleton: "report",
     showInSidebar: true,
   },
   {
@@ -95,6 +103,7 @@ export const privateRoutes: AppRoute[] = [
     permission: "view_attendance",
     allowedRoles: ["DEPARTMENT-HEAD", "PROGRAM-COORDINATOR"],
     title: "Attendance Reports",
+    skeleton: "report",
     showInSidebar: true,
   },
   {
@@ -102,7 +111,7 @@ export const privateRoutes: AppRoute[] = [
     element: Classes,
     permission: "view_attendance",
     role: "TEACHER",
-    skeleton: "dashboard",
+    skeleton: "cards",
     title: "My Classes",
     showInSidebar: true,
   },
@@ -111,7 +120,7 @@ export const privateRoutes: AppRoute[] = [
     element: ClassWorkspace,
     permission: "view_attendance",
     role: "TEACHER",
-    skeleton: "dashboard",
+    skeleton: "workspace",
     title: "Class Workspace",
     showInSidebar: false,
   },
@@ -129,6 +138,7 @@ export const privateRoutes: AppRoute[] = [
     permission: "view_attendance",
     role: "TEACHER",
     title: "Take Attendance",
+    skeleton: "register",
     showInSidebar: false,
   },
   {
@@ -145,6 +155,7 @@ export const privateRoutes: AppRoute[] = [
     permission: "view_internal_exam",
     role: "TEACHER",
     title: "Assessments",
+    skeleton: "workspace",
     showInSidebar: true,
   },
   {
@@ -153,6 +164,7 @@ export const privateRoutes: AppRoute[] = [
     permission: "view_assignment",
     role: "TEACHER",
     title: "Assignments",
+    skeleton: "workspace",
     showInSidebar: true,
   },
   {
@@ -161,6 +173,7 @@ export const privateRoutes: AppRoute[] = [
     permission: "view_class_performance",
     role: "TEACHER",
     title: "Class Performance",
+    skeleton: "workspace",
     showInSidebar: true,
   },
   // Academics.
@@ -244,6 +257,7 @@ export const privateRoutes: AppRoute[] = [
     element: PerformanceSettings,
     superuserOnly: true,
     title: "Performance Settings",
+    skeleton: "settings",
     showInSidebar: true,
   },
 ]

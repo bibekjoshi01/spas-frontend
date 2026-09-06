@@ -16,7 +16,6 @@ import {
 } from "@/lib/utils/student-sort"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Select,
@@ -181,13 +180,13 @@ export default function BatchPerformanceReportPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
       <PageHeader
         title="Batch performance"
         description="Semester-level attendance and performance for every student in your management scope."
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 lg:grid-cols-4">
         <Summary
           label="Students"
           value={data?.summary.students}
@@ -244,7 +243,7 @@ export default function BatchPerformanceReportPage() {
                 control: (
                   <Select value={program} onValueChange={selectProgram}>
                     <SelectTrigger
-                      className="w-52"
+                      className="w-full sm:w-52"
                       aria-label="Filter by program"
                     >
                       <SelectValue />
@@ -268,7 +267,7 @@ export default function BatchPerformanceReportPage() {
                 pinned: true,
                 control: (
                   <Combobox
-                    className="w-52"
+                    className="w-full sm:w-52"
                     aria-label="Select batch"
                     value={batch}
                     onValueChange={(value) => selectBatch(value || "all")}
@@ -284,7 +283,7 @@ export default function BatchPerformanceReportPage() {
                 pinned: true,
                 control: (
                   <Combobox
-                    className="w-64"
+                    className="w-full sm:w-64"
                     aria-label="Select semester"
                     value={effectiveSemesterId}
                     onValueChange={selectSemester}
@@ -305,7 +304,7 @@ export default function BatchPerformanceReportPage() {
                     onValueChange={(attention) => setFilters({ attention })}
                   >
                     <SelectTrigger
-                      className="w-44"
+                      className="w-full sm:w-44"
                       aria-label="Filter by standing"
                     >
                       <SelectValue />
@@ -340,7 +339,10 @@ export default function BatchPerformanceReportPage() {
                       setFilters({ ordering })
                     }}
                   >
-                    <SelectTrigger className="w-48" aria-label="Sort report">
+                    <SelectTrigger
+                      className="w-full sm:w-48"
+                      aria-label="Sort report"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -443,19 +445,30 @@ export default function BatchPerformanceReportPage() {
               ),
           },
           {
-            header: "Assessment",
-            className: "text-center tabular-nums",
-            cell: (row) => percent(row.assessment.percentage),
-          },
-          {
-            header: "Assignment",
-            className: "text-center tabular-nums",
-            cell: (row) => percent(row.assignment.percentage),
-          },
-          {
-            header: "Class performance",
-            className: "text-center tabular-nums",
-            cell: (row) => percent(row.classPerformancePercentage),
+            header: "Evidence",
+            className: "min-w-40",
+            cell: (row) => (
+              <div className="space-y-0.5 text-xs tabular-nums">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-muted-foreground">Assessment</span>
+                  <span className="font-medium">
+                    {percent(row.assessment.percentage)}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-muted-foreground">Assignment</span>
+                  <span className="font-medium">
+                    {percent(row.assignment.percentage)}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-muted-foreground">Class rating</span>
+                  <span className="font-medium">
+                    {percent(row.classPerformancePercentage)}
+                  </span>
+                </div>
+              </div>
+            ),
           },
           {
             header: "Overall",
@@ -525,26 +538,20 @@ function Summary({
   loading?: boolean
 }) {
   return (
-    <Card
-      className={
-        tone === "danger"
-          ? "border-l-4 border-l-red-500"
-          : "border-l-4 border-l-slate-500"
-      }
+    <div
+      className={`border bg-card p-3 ${tone === "danger" ? "border-l-4 border-l-red-500" : ""}`}
     >
-      <CardContent className="p-3">
-        <div className="text-xs font-bold text-muted-foreground">{label}</div>
-        {/* A bare dash would read as a real total of nothing, so a figure
+      <div className="text-xs font-bold text-muted-foreground">{label}</div>
+      {/* A bare dash would read as a real total of nothing, so a figure
             still being counted shows as a skeleton instead. */}
-        {loading ? (
-          <Skeleton className="mt-1.5 h-6 w-16" />
-        ) : (
-          <div className="mt-1 text-xl font-bold tabular-nums">
-            {value ?? "—"}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {loading ? (
+        <Skeleton className="mt-1.5 h-6 w-16" />
+      ) : (
+        <div className="mt-1 text-xl font-bold tabular-nums">
+          {value ?? "—"}
+        </div>
+      )}
+    </div>
   )
 }
 

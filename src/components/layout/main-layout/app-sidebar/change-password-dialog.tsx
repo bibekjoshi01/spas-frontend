@@ -9,8 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PasswordInput } from "@/components/ui/password-input"
 import { apiErrorMessage } from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
 import { auth } from "@/lib/redux/auth"
@@ -27,18 +27,20 @@ export function ChangePasswordDialog({
 }: ChangePasswordDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-md">
+        <DialogHeader className="border-b bg-muted/20 p-5 pr-12">
           <DialogTitle>Change Password</DialogTitle>
           <DialogDescription>
             Confirm your current password, then choose a strong new password.
           </DialogDescription>
         </DialogHeader>
-        <ChangePasswordForm
-          key={open ? "open" : "closed"}
-          onCancel={() => onOpenChange(false)}
-          onDone={() => onOpenChange(false)}
-        />
+        <div className="p-5">
+          <ChangePasswordForm
+            key={open ? "open" : "closed"}
+            onCancel={() => onOpenChange(false)}
+            onDone={() => onOpenChange(false)}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   )
@@ -86,9 +88,8 @@ function ChangePasswordForm({
       <div className="space-y-4">
         <div className="space-y-[5px]">
           <Label htmlFor="current-password">Current password</Label>
-          <Input
+          <PasswordInput
             id="current-password"
-            type="password"
             autoComplete="current-password"
             value={currentPassword}
             onChange={(event) => setCurrentPassword(event.target.value)}
@@ -96,9 +97,8 @@ function ChangePasswordForm({
         </div>
         <div className="space-y-[5px]">
           <Label htmlFor="new-password">New password</Label>
-          <Input
+          <PasswordInput
             id="new-password"
-            type="password"
             autoComplete="new-password"
             value={newPassword}
             onChange={(event) => setNewPassword(event.target.value)}
@@ -111,9 +111,8 @@ function ChangePasswordForm({
         </div>
         <div className="space-y-[5px]">
           <Label htmlFor="confirm-new-password">Confirm new password</Label>
-          <Input
+          <PasswordInput
             id="confirm-new-password"
-            type="password"
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
@@ -129,7 +128,7 @@ function ChangePasswordForm({
           </p>
         )}
       </div>
-      <DialogFooter>
+      <DialogFooter className="mt-5 border-t pt-4">
         <Button variant="outline" onClick={onCancel} disabled={isSaving}>
           Cancel
         </Button>

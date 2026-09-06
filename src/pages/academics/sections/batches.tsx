@@ -11,6 +11,7 @@ import {
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { QueryState } from "@/components/query-state"
+import { RowActionsMenu } from "@/components/row-actions-menu"
 import { ListSkeleton } from "@/components/skeletons"
 import { GraduateBatchDialog } from "./graduate-batch-dialog"
 import { Badge } from "@/components/ui/badge"
@@ -121,7 +122,11 @@ export function BatchesSection() {
         </div>
         {canAdd && (
           <div className="flex w-full items-center justify-end sm:w-auto">
-            <Button size="sm" onClick={() => setIsCreating(true)}>
+            <Button
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={() => setIsCreating(true)}
+            >
               <Plus className="size-4" aria-hidden />
               New batch
             </Button>
@@ -239,24 +244,24 @@ function BatchRow({
 
   return (
     <div className="rounded-lg border bg-card">
-      <div className="flex items-center hover:bg-muted/50">
+      <div className="flex flex-wrap items-center hover:bg-muted/50">
         <button
           type="button"
           onClick={onToggle}
           aria-expanded={isOpen}
           className="flex min-w-0 flex-1 items-center justify-between gap-3 p-3 text-left"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <ChevronRight
               className={`size-4 text-muted-foreground transition-transform ${
                 isOpen ? "rotate-90" : ""
               }`}
               aria-hidden
             />
-            <span className="font-medium">
+            <span className="truncate font-medium">
               {batch.program.code} · {batch.year}
             </span>
-            <span className="text-sm text-muted-foreground">
+            <span className="max-w-24 truncate text-xs text-muted-foreground sm:max-w-none sm:text-sm">
               {batch.program.name}
             </span>
             {batch.status === "GRADUATED" && (
@@ -266,45 +271,51 @@ function BatchRow({
               </Badge>
             )}
           </div>
-          <span className="text-sm text-muted-foreground tabular-nums">
+          <span className="shrink-0 text-xs text-muted-foreground tabular-nums sm:text-sm">
             {batch.studentCount} students
           </span>
         </button>
         {(canEdit || canDelete) && (
-          <div className="flex shrink-0 items-center gap-1 pr-2">
-            {canEdit && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={`Edit ${batch.program.code} ${batch.year}`}
-                onClick={onEdit}
-              >
-                <Pencil className="size-4" aria-hidden />
-              </Button>
-            )}
-            {canEdit && batch.status !== "GRADUATED" && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={`Graduate ${batch.program.code} ${batch.year}`}
-                onClick={onGraduate}
-              >
-                <GraduationCap className="size-4" aria-hidden />
-              </Button>
-            )}
-            {canDelete && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={`Archive ${batch.program.code} ${batch.year}`}
-                onClick={onArchive}
-              >
-                <Trash2 className="size-4 text-destructive" aria-hidden />
-              </Button>
-            )}
+          <div className="shrink-0 pr-2">
+            <RowActionsMenu
+              triggerLabel={`Actions for ${batch.program.code} ${batch.year}`}
+              title={`${batch.program.code} · Batch ${batch.year}`}
+              description={`${batch.studentCount} students · ${batch.status.toLowerCase()}`}
+              actions={[
+                ...(canEdit
+                  ? [
+                      {
+                        label: "Edit batch",
+                        description: "Update the intake year or program.",
+                        icon: <Pencil className="size-4" aria-hidden />,
+                        onSelect: onEdit,
+                      },
+                    ]
+                  : []),
+                ...(canEdit && batch.status !== "GRADUATED"
+                  ? [
+                      {
+                        label: "Graduate batch",
+                        description:
+                          "Complete its running semester and studies.",
+                        icon: <GraduationCap className="size-4" aria-hidden />,
+                        onSelect: onGraduate,
+                      },
+                    ]
+                  : []),
+                ...(canDelete
+                  ? [
+                      {
+                        label: "Archive batch",
+                        description: "Removes it from active academic setup.",
+                        icon: <Trash2 className="size-4" aria-hidden />,
+                        onSelect: onArchive,
+                        destructive: true,
+                      },
+                    ]
+                  : []),
+              ]}
+            />
           </div>
         )}
       </div>
