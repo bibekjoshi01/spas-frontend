@@ -6,7 +6,6 @@ import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
 import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
-import { ClassWorkspaceSkeleton } from "@/components/skeletons"
 import { StudentNameSortButton } from "@/components/student-name-sort"
 import {
   sortStudentsByName,
@@ -31,7 +30,6 @@ import {
   useSaveClassPerformanceMutation,
 } from "@/lib/api"
 import { notifier } from "@/lib/utils/notifier"
-import { cn } from "@/lib/utils"
 
 type Draft = { score: string; remarks: string }
 
@@ -50,9 +48,6 @@ export default function ClassPerformancePage() {
     Number(params.get("class")) || null
   )
   const [search, setSearch] = useState("")
-  const [ratingFilter, setRatingFilter] = useState<"all" | "unrated" | "rated">(
-    "all"
-  )
   const [drafts, setDrafts] = useState<Record<number, Draft>>({})
   const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
   const allocation = chosenId ?? initial
@@ -68,31 +63,15 @@ export default function ClassPerformancePage() {
   const visible = useMemo(() => {
     const term = search.trim().toLowerCase()
     return sortStudentsByName(
-      (ratings.data ?? []).filter((row) => {
-        const score = drafts[row.enrollment]?.score ?? row.score
-        const matchesSearch =
+      (ratings.data ?? []).filter(
+        (row) =>
           !term ||
           row.fullName.toLowerCase().includes(term) ||
           row.rollNumber.toLowerCase().includes(term)
-        const matchesRating =
-          ratingFilter === "all" ||
-          (ratingFilter === "unrated"
-            ? score === "" || score === null
-            : score !== "" && score !== null)
-        return matchesSearch && matchesRating
-      }),
+      ),
       nameSort
     )
-  }, [drafts, nameSort, ratingFilter, ratings.data, search])
-
-  const ratingCounts = useMemo(() => {
-    const rows = ratings.data ?? []
-    const rated = rows.filter((row) => {
-      const score = drafts[row.enrollment]?.score ?? row.score
-      return score !== "" && score !== null
-    }).length
-    return { all: rows.length, rated, unrated: rows.length - rated }
-  }, [drafts, ratings.data])
+  }, [nameSort, ratings.data, search])
 
   const dirty = (ratings.data ?? []).filter((row) => {
     const draft = drafts[row.enrollment]
@@ -140,11 +119,7 @@ export default function ClassPerformancePage() {
   }
 
   const focusNextScoreInput = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (
-      !["Enter", "ArrowDown", "ArrowUp"].includes(event.key) ||
-      event.nativeEvent.isComposing
-    )
-      return
+    if (event.key !== "Enter" || event.nativeEvent.isComposing) return
 
     event.preventDefault()
     const inputs = Array.from(
@@ -154,14 +129,13 @@ export default function ClassPerformancePage() {
           'input[data-performance-entry="true"]:not(:disabled)'
         ) ?? []
     )
-    const direction = event.key === "ArrowUp" ? -1 : 1
-    const nextInput = inputs[inputs.indexOf(event.currentTarget) + direction]
+    const nextInput = inputs[inputs.indexOf(event.currentTarget) + 1]
     nextInput?.focus()
     nextInput?.select()
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
       <PageHeader
         title="Class Performance"
         description={
@@ -184,15 +158,21 @@ export default function ClassPerformancePage() {
         }
       />
 
-      {classes.isLoading ? (
-        <ClassWorkspaceSkeleton />
-      ) : (
-        chosen && (
-          <ClassWorkspaceNav value={chosen} active="Performance" compact />
-        )
-      )}
+      {chosen && <ClassWorkspaceNav value={chosen} active="Performance" />}
 
       <div className="flex flex-col gap-2 rounded-sm border bg-card p-2 lg:flex-row lg:items-center">
+        <div className="relative w-full lg:max-w-sm">
+          <Search
+            className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search student or roll number"
+            className="pl-8"
+          />
+        </div>
         {classes.data && (
           <ClassPicker
             classes={classes.data}
@@ -203,7 +183,7 @@ export default function ClassPerformancePage() {
               setParams({ class: String(next) })
             }}
             label="Select class"
-            className="sm:w-md"
+            className="sm:w-[28rem]"
           />
         )}
         {isReadOnly && chosen && (
@@ -213,7 +193,7 @@ export default function ClassPerformancePage() {
         )}
         <Button
           size="sm"
-          className="w-full text-xs sm:w-auto sm:text-sm lg:ml-auto"
+          className="lg:ml-auto"
           disabled={
             !canChange || !dirty.length || hasInvalidScores || saving.isLoading
           }
@@ -228,61 +208,6 @@ export default function ClassPerformancePage() {
         </Button>
       </div>
 
-      <div className="flex flex-col gap-2 border bg-card p-2 sm:flex-row sm:items-center sm:justify-between">
-        <div
-          className="flex min-w-0 gap-1 overflow-x-auto"
-          aria-label="Filter students by rating status"
-        >
-          {(
-            [
-              ["all", "All"],
-              ["unrated", "Not rated"],
-              ["rated", "Rated"],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={ratingFilter === value}
-              onClick={() => setRatingFilter(value)}
-              className={cn(
-                "flex h-9 shrink-0 items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                ratingFilter === value
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {label}
-              <span className="text-xs tabular-nums">
-                {ratingCounts[value]}
-              </span>
-            </button>
-          ))}
-        </div>
-        <div className="relative w-full sm:w-72">
-          <Search
-            className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search student or roll number"
-            className="pr-8 pl-8"
-          />
-          {search && (
-            <button
-              type="button"
-              onClick={() => setSearch("")}
-              className="absolute top-1/2 right-1.5 flex size-6 -translate-y-1/2 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none"
-              aria-label="Clear student search"
-            >
-              <X className="size-3.5" aria-hidden />
-            </button>
-          )}
-        </div>
-      </div>
-
       <QueryState
         isLoading={classes.isLoading || ratings.isLoading}
         isFetching={
@@ -294,32 +219,28 @@ export default function ClassPerformancePage() {
         onRetry={ratings.refetch}
         skeleton="table"
         emptyTitle={
-          search || ratingFilter !== "all"
-            ? "No students match that"
-            : "No students on this class"
+          search ? "No students match that" : "No students on this class"
         }
         emptyMessage={
-          search || ratingFilter !== "all"
+          search
             ? "Try another name or roll number."
             : "Enroll students before rating class performance."
         }
       >
         <div className="overflow-x-auto rounded-lg border">
-          <Table className="min-w-136">
+          <Table>
             <TableHeader>
               <TableRow className="border-b-2 border-table-header-border bg-table-header hover:bg-table-header">
-                <TableHead className="hidden w-14 sm:table-cell">#</TableHead>
-                <TableHead className="hidden w-28 sm:table-cell">
-                  Roll
-                </TableHead>
+                <TableHead className="w-14">#</TableHead>
+                <TableHead className="w-28">Roll</TableHead>
                 <TableHead>
                   <StudentNameSortButton
                     direction={nameSort}
                     onChange={setNameSort}
                   />
                 </TableHead>
-                <TableHead className="w-28 sm:w-44">Rating (1–10)</TableHead>
-                <TableHead className="min-w-48 sm:min-w-80">Remarks</TableHead>
+                <TableHead className="w-44">Rating (1–10)</TableHead>
+                <TableHead className="min-w-80">Remarks</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -333,24 +254,20 @@ export default function ClassPerformancePage() {
                 return (
                   <TableRow
                     key={row.enrollment}
-                    className={cn(
-                      row.enrollment === focusEnrollment &&
-                        "bg-band-warn hover:bg-band-warn",
-                      drafts[row.enrollment] &&
-                        "shadow-[inset_3px_0_0_0_var(--primary)]"
-                    )}
+                    className={
+                      row.enrollment === focusEnrollment
+                        ? "bg-band-warn hover:bg-band-warn"
+                        : undefined
+                    }
                   >
-                    <TableCell className="hidden text-muted-foreground tabular-nums sm:table-cell">
+                    <TableCell className="text-muted-foreground tabular-nums">
                       {index + 1}
                     </TableCell>
-                    <TableCell className="hidden font-mono text-xs sm:table-cell">
+                    <TableCell className="font-mono text-xs">
                       {row.rollNumber}
                     </TableCell>
                     <TableCell className="font-medium">
-                      <span className="block">{row.fullName}</span>
-                      <span className="block font-mono text-[10px] text-muted-foreground sm:hidden">
-                        Roll {row.rollNumber}
-                      </span>
+                      {row.fullName}
                     </TableCell>
                     <TableCell>
                       <div>
@@ -379,7 +296,7 @@ export default function ClassPerformancePage() {
                                 ? `score-error-${row.enrollment}`
                                 : undefined
                             }
-                            className="w-16 text-xs tabular-nums sm:w-24 sm:text-sm"
+                            className="w-24 tabular-nums"
                           />
                           {!isReadOnly && draft.score && (
                             <Button

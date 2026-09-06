@@ -1,13 +1,6 @@
 import { useMemo, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
-import {
-  ArrowLeft,
-  ClipboardCheck,
-  Pencil,
-  Plus,
-  Save,
-  Search,
-} from "lucide-react"
+import { ArrowLeft, ClipboardCheck, Pencil, Plus, Save } from "lucide-react"
 
 import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
@@ -15,7 +8,7 @@ import { useHasPermission } from "@/hooks/use-has-permissions"
 import { useRememberedClass } from "@/hooks/use-remembered-class"
 import { PageHeader } from "@/components/page-header"
 import { InlineSpinner, QueryState } from "@/components/query-state"
-import { ClassWorkspaceSkeleton, ListSkeleton } from "@/components/skeletons"
+import { ListSkeleton } from "@/components/skeletons"
 import { StudentNameSortButton } from "@/components/student-name-sort"
 import {
   sortStudentsByName,
@@ -35,6 +28,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   ASSIGNMENT_LABELS,
   type Assignment,
@@ -105,20 +105,9 @@ export default function AssignmentsPage() {
       )
     })
   }, [assignments.data, completion, studentCount])
-  const completionCounts = useMemo(() => {
-    const results = assignments.data?.results ?? []
-    const complete = results.filter(
-      (assignment) => assignment.evaluatedCount >= studentCount
-    ).length
-    return {
-      all: results.length,
-      complete,
-      incomplete: results.length - complete,
-    }
-  }, [assignments.data, studentCount])
 
   return (
-    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
       <PageHeader
         title="Assignments"
         description={
@@ -141,69 +130,44 @@ export default function AssignmentsPage() {
         }
       />
 
-      {classes.isLoading ? (
-        <ClassWorkspaceSkeleton />
-      ) : (
-        chosen && (
-          <ClassWorkspaceNav value={chosen} active="Assignments" compact />
-        )
-      )}
+      {chosen && <ClassWorkspaceNav value={chosen} active="Assignments" />}
 
-      <div className="border bg-card">
-        <div className="flex flex-col gap-2 p-2 sm:flex-row sm:items-center">
-          {classes.data && (
-            <ClassPicker
-              classes={classChoices}
-              value={allocation}
-              label="My Classes"
-              className="w-full lg:w-[32rem]"
-              onChange={(next) => {
-                setChosenId(next)
-                remember(next)
-                setParams({ class: String(next) })
-              }}
-            />
-          )}
-          <Button
-            size="sm"
-            className="sm:ml-auto"
-            disabled={!canCreate}
-            onClick={() => setIsCreating(true)}
+      <div className="flex flex-col gap-2 border bg-card p-2 lg:flex-row lg:items-center">
+        {classes.data && (
+          <ClassPicker
+            classes={classChoices}
+            value={allocation}
+            label="My Classes"
+            className="w-full lg:w-[32rem]"
+            onChange={(next) => {
+              setChosenId(next)
+              remember(next)
+              setParams({ class: String(next) })
+            }}
+          />
+        )}
+        <Select value={completion} onValueChange={setCompletion}>
+          <SelectTrigger
+            className="w-full lg:w-52"
+            aria-label="Filter assignment evaluation"
           >
-            <Plus className="size-4" aria-hidden />
-            {isReadOnly ? "Read only" : "Add assignment"}
-          </Button>
-        </div>
-        <div
-          className="flex min-w-0 gap-1 overflow-x-auto border-t px-2"
-          aria-label="Filter assignment evaluation"
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All assignments</SelectItem>
+            <SelectItem value="incomplete">Evaluation incomplete</SelectItem>
+            <SelectItem value="complete">Evaluation complete</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          size="sm"
+          className="lg:ml-auto"
+          disabled={!canCreate}
+          onClick={() => setIsCreating(true)}
         >
-          {(
-            [
-              ["all", "All"],
-              ["incomplete", "Needs review"],
-              ["complete", "Complete"],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={completion === value}
-              onClick={() => setCompletion(value)}
-              className={cn(
-                "flex h-9 shrink-0 items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                completion === value
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {label}
-              <span className="text-xs tabular-nums">
-                {completionCounts[value]}
-              </span>
-            </button>
-          ))}
-        </div>
+          <Plus className="size-4" aria-hidden />
+          {isReadOnly ? "Read only" : "Add assignment"}
+        </Button>
       </div>
 
       <QueryState
@@ -241,8 +205,8 @@ export default function AssignmentsPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visibleAssignments.map((assignment) => {
             return (
-              <Card key={assignment.id} className="h-full border">
-                <CardHeader className="border-b bg-muted/20 pb-3">
+              <Card key={assignment.id}>
+                <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-base">
                       {assignment.title}
@@ -257,7 +221,7 @@ export default function AssignmentsPage() {
                     Given {assignment.assignedDate}
                   </p>
                 </CardHeader>
-                <CardContent className="flex flex-1 flex-col space-y-3">
+                <CardContent className="space-y-3">
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>Evaluated · {assignment.doneCount} completed</span>
@@ -274,7 +238,7 @@ export default function AssignmentsPage() {
                     />
                   </div>
 
-                  <div className="mt-auto flex flex-row gap-2 pt-1">
+                  <div className="flex gap-2">
                     <Button
                       size="sm"
                       variant="outline"
@@ -288,7 +252,6 @@ export default function AssignmentsPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="min-w-0 flex-1"
                         onClick={() => setEditing(assignment)}
                       >
                         <Pencil className="size-4" aria-hidden /> Edit
@@ -361,8 +324,8 @@ function EditAssignmentDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto">
-        <DialogHeader className="border-b pr-8 pb-3">
+      <DialogContent>
+        <DialogHeader>
           <DialogTitle>Edit Assignment</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
@@ -400,16 +363,11 @@ function EditAssignmentDialog({
             </div>
           </div>
         </div>
-        <DialogFooter className="flex-row items-center border-t pt-3">
-          <Button
-            variant="ghost"
-            className="h-9 min-w-0 flex-1 px-2 text-xs sm:h-8 sm:w-auto sm:flex-none sm:px-3 sm:text-sm"
-            onClick={onClose}
-          >
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
           <Button
-            className="h-9 min-w-0 flex-1 px-2 text-xs sm:h-8 sm:w-auto sm:flex-none sm:px-3 sm:text-sm"
             onClick={submit}
             disabled={
               !form.title.trim() ||
@@ -462,8 +420,8 @@ function CreateAssignmentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto">
-        <DialogHeader className="border-b pr-8 pb-3">
+      <DialogContent>
+        <DialogHeader>
           <DialogTitle>New Assignment</DialogTitle>
         </DialogHeader>
 
@@ -505,7 +463,7 @@ function CreateAssignmentDialog({
           </div>
         </div>
 
-        <DialogFooter className="border-t pt-3">
+        <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
@@ -536,14 +494,6 @@ function StatusDialog({
   // Saved statuses are derived; only edits are state.
   const [edits, setEdits] = useState<Record<number, AssignmentStatus>>({})
   const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
-  const [studentSearch, setStudentSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<"all" | AssignmentStatus>(
-    "all"
-  )
-  const [currentCell, setCurrentCell] = useState<{
-    enrollment: number
-    status: AssignmentStatus
-  } | null>(null)
   const sortedRoster = useMemo(
     () => sortStudentsByName(roster.data ?? [], nameSort),
     [nameSort, roster.data]
@@ -561,61 +511,6 @@ function StatusDialog({
   }, [roster.data, existing.data])
 
   const statuses = useMemo(() => ({ ...saved, ...edits }), [saved, edits])
-  const statusCounts = useMemo(() => {
-    const values = sortedRoster.map((student) => statuses[student.enrollment])
-    return {
-      all: values.length,
-      DONE: values.filter((status) => status === "DONE").length,
-      PARTIAL: values.filter((status) => status === "PARTIAL").length,
-      NOT_DONE: values.filter((status) => status === "NOT_DONE").length,
-    }
-  }, [sortedRoster, statuses])
-  const visibleRoster = useMemo(() => {
-    const term = studentSearch.trim().toLowerCase()
-    return sortedRoster.filter(
-      (student) =>
-        (!term ||
-          student.fullName.toLowerCase().includes(term) ||
-          student.rollNumber.toLowerCase().includes(term)) &&
-        (statusFilter === "all" ||
-          statuses[student.enrollment] === statusFilter)
-    )
-  }, [sortedRoster, statuses, statusFilter, studentSearch])
-
-  const moveStatusFocus = (
-    rowIndex: number,
-    statusIndex: number,
-    key: string
-  ) => {
-    let nextRow = rowIndex
-    let nextStatus = statusIndex
-
-    if (key === "ArrowUp") {
-      nextRow = Math.max(0, rowIndex - 1)
-      nextStatus = 0
-    }
-    if (key === "ArrowDown") {
-      nextRow = Math.min(visibleRoster.length - 1, rowIndex + 1)
-      nextStatus = 0
-    }
-    if (key === "ArrowLeft") nextStatus = Math.max(0, statusIndex - 1)
-    if (key === "ArrowRight")
-      nextStatus = Math.min(STATUS_ORDER.length - 1, statusIndex + 1)
-
-    const student = visibleRoster[nextRow]
-    const status = STATUS_ORDER[nextStatus]
-    if (!student || !status) return
-
-    setCurrentCell({ enrollment: student.enrollment, status })
-    if (statuses[student.enrollment] !== status) {
-      setEdits((current) => ({ ...current, [student.enrollment]: status }))
-    }
-    document
-      .getElementById(
-        `assignment-${student.enrollment}-${status.toLowerCase()}`
-      )
-      ?.focus()
-  }
 
   const submit = async () => {
     if (!roster.data) return
@@ -639,70 +534,34 @@ function StatusDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[94dvh] w-[calc(100vw-1rem)] max-w-none overflow-hidden p-3 sm:w-[calc(100vw-2rem)] sm:max-w-3xl sm:p-6">
-        <DialogHeader className="border-b pr-8 pb-3">
+      <DialogContent className="max-h-[94dvh] w-[calc(100vw-1rem)] max-w-none overflow-hidden p-3 sm:w-[calc(100vw-2rem)] sm:max-w-[72rem] sm:p-6">
+        <DialogHeader>
           <DialogTitle>{assignment.title}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-2 border-b pb-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div
-              className="flex min-w-0 gap-1 overflow-x-auto"
-              aria-label="Filter students by assignment status"
-            >
-              {(["all", ...STATUS_ORDER] as const).map((status) => (
-                <Button
-                  key={status}
-                  type="button"
-                  size="sm"
-                  variant={statusFilter === status ? "secondary" : "ghost"}
-                  className="h-8 shrink-0 px-2 text-xs"
-                  aria-pressed={statusFilter === status}
-                  onClick={() => setStatusFilter(status)}
-                >
-                  {status === "all" ? "All" : ASSIGNMENT_LABELS[status]}{" "}
-                  <span className="tabular-nums">{statusCounts[status]}</span>
-                </Button>
-              ))}
-            </div>
-            <div className="relative w-full sm:w-52">
-              <Search
-                className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
-              <Input
-                value={studentSearch}
-                onChange={(event) => setStudentSearch(event.target.value)}
-                placeholder="Search student"
-                aria-label="Search students"
-                className="h-8 pl-8 text-xs"
-              />
-            </div>
+        {!readOnly && (
+          <div className="flex justify-end gap-2 pb-1">
+            {STATUS_ORDER.map((status) => (
+              <Button
+                key={status}
+                size="sm"
+                variant="outline"
+                className="text-xs"
+                disabled={existing.isLoading || !!existing.error}
+                onClick={() => {
+                  if (!roster.data) return
+                  const next: Record<number, AssignmentStatus> = {}
+                  roster.data.forEach((entry) => {
+                    next[entry.enrollment] = status
+                  })
+                  setEdits(next)
+                }}
+              >
+                All {ASSIGNMENT_LABELS[status].toLowerCase()}
+              </Button>
+            ))}
           </div>
-          {!readOnly && (
-            <div className="flex flex-wrap justify-end gap-2">
-              {STATUS_ORDER.map((status) => (
-                <Button
-                  key={status}
-                  size="sm"
-                  variant="outline"
-                  className="text-xs"
-                  disabled={existing.isLoading || !!existing.error}
-                  onClick={() => {
-                    if (!roster.data) return
-                    const next: Record<number, AssignmentStatus> = {}
-                    roster.data.forEach((entry) => {
-                      next[entry.enrollment] = status
-                    })
-                    setEdits(next)
-                  }}
-                >
-                  All {ASSIGNMENT_LABELS[status].toLowerCase()}
-                </Button>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
 
         <QueryState
           isLoading={roster.isLoading || existing.isLoading}
@@ -716,31 +575,24 @@ function StatusDialog({
           emptyTitle="No students registered"
           emptyMessage="Register students onto this class first."
         >
-          <ul className="max-h-[72dvh] divide-y overflow-y-auto rounded-lg border bg-table-surface text-xs sm:text-sm">
-            <li className="sticky top-0 z-10 flex items-center border-b bg-table-header p-3 text-table-header-foreground">
+          <ul className="max-h-[72dvh] divide-y overflow-y-auto rounded-lg border bg-table-surface">
+            <li className="sticky top-0 z-10 flex items-center border-b bg-table-header p-2.5 text-table-header-foreground">
+              <span className="w-40 shrink-0">Roll</span>
               <StudentNameSortButton
                 direction={nameSort}
                 onChange={setNameSort}
-                label="Student"
               />
             </li>
-            {visibleRoster.length === 0 && (
-              <li className="p-8 text-center text-muted-foreground">
-                No students match this filter.
-              </li>
-            )}
-            {visibleRoster.map((student, rowIndex) => (
+            {sortedRoster.map((student) => (
               <li
                 key={student.enrollment}
-                className="flex items-center justify-between gap-2 p-3"
+                className="flex items-center justify-between gap-3 p-2.5"
               >
-                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="truncate font-medium">
-                    {student.fullName}
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="w-40 shrink-0 font-mono text-xs break-all text-muted-foreground tabular-nums">
+                    {student.rollNumber}
                   </span>
-                  <span className="truncate font-mono text-[10px] text-muted-foreground tabular-nums sm:text-xs">
-                    Roll {student.rollNumber}
-                  </span>
+                  <span className="truncate text-sm">{student.fullName}</span>
                 </div>
 
                 <div
@@ -748,45 +600,21 @@ function StatusDialog({
                   role="group"
                   aria-label={`Status for ${student.fullName}`}
                 >
-                  {STATUS_ORDER.map((status, statusIndex) => {
+                  {STATUS_ORDER.map((status) => {
                     const active = statuses[student.enrollment] === status
-                    const isCurrent =
-                      currentCell?.enrollment === student.enrollment &&
-                      currentCell.status === status
                     return (
                       <Button
                         key={status}
-                        id={`assignment-${student.enrollment}-${status.toLowerCase()}`}
                         type="button"
                         size="sm"
                         variant={active ? "default" : "outline"}
                         data-active={active}
-                        data-current={isCurrent}
                         aria-pressed={active}
                         disabled={readOnly}
                         className={cn(
-                          "h-7 px-1.5 text-[10px] data-[current=true]:ring-2 data-[current=true]:ring-primary data-[current=true]:ring-offset-1 data-[current=true]:ring-offset-background sm:h-8 sm:px-2.5 sm:text-xs",
+                          "h-8 px-2.5 text-xs",
                           STATUS_STYLES[status]
                         )}
-                        onFocus={() =>
-                          setCurrentCell({
-                            enrollment: student.enrollment,
-                            status,
-                          })
-                        }
-                        onKeyDown={(event) => {
-                          if (
-                            ![
-                              "ArrowUp",
-                              "ArrowDown",
-                              "ArrowLeft",
-                              "ArrowRight",
-                            ].includes(event.key)
-                          )
-                            return
-                          event.preventDefault()
-                          moveStatusFocus(rowIndex, statusIndex, event.key)
-                        }}
                         onClick={() =>
                           setEdits({
                             ...edits,
@@ -804,17 +632,12 @@ function StatusDialog({
           </ul>
         </QueryState>
 
-        <DialogFooter className="flex-row items-center border-t pt-3">
-          <Button
-            variant="ghost"
-            className="min-w-0 flex-1 sm:w-auto sm:flex-none"
-            onClick={onClose}
-          >
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
           {!readOnly && (
             <Button
-              className="min-w-0 flex-1 sm:w-auto sm:flex-none"
               onClick={submit}
               disabled={isSaving || existing.isLoading || !!existing.error}
             >

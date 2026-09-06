@@ -1,12 +1,10 @@
 import { useEffect, useMemo } from "react"
-import { X } from "lucide-react"
 
 import { AuditTrail } from "@/components/audit-trail"
 import { FilterBar } from "@/components/filter-bar"
 import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
-import { Button } from "@/components/ui/button"
-import { DateRangePickerInput } from "@/components/ui/date-time-picker"
+import { DatePickerInput } from "@/components/ui/date-time-picker"
 import {
   Select,
   SelectContent,
@@ -64,10 +62,6 @@ export default function AuditPage() {
   )
   const data = trail.data
   const chosen = options.find((row) => row.slug === filters.resource)
-  const hasActiveFilters =
-    filters.actor !== "all" ||
-    filters.action !== "all" ||
-    Boolean(filters.from || filters.to)
 
   return (
     <div className="mx-auto max-w-[1100px] space-y-3 p-3 md:p-4">
@@ -187,37 +181,27 @@ export default function AuditPage() {
                     isActive: Boolean(filters.from || filters.to),
                     onReset: () => setFilters({ from: "", to: "" }),
                     control: (
-                      <DateRangePickerInput
-                        startValue={filters.from}
-                        endValue={filters.to}
-                        max={localDateKey()}
-                        onValueChange={({ start, end }) =>
-                          setFilters({ from: start, to: end })
-                        }
-                      />
+                      <>
+                        <DatePickerInput
+                          className="w-44"
+                          value={filters.from}
+                          max={filters.to || localDateKey()}
+                          onValueChange={(from) => setFilters({ from })}
+                          aria-label="Changes from"
+                        />
+                        <DatePickerInput
+                          className="w-44"
+                          value={filters.to}
+                          min={filters.from || undefined}
+                          max={localDateKey()}
+                          onValueChange={(to) => setFilters({ to })}
+                          aria-label="Changes up to"
+                        />
+                      </>
                     ),
                   },
                 ]}
               />
-              {hasActiveFilters && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground"
-                  onClick={() =>
-                    setFilters({
-                      actor: "all",
-                      action: "all",
-                      from: "",
-                      to: "",
-                    })
-                  }
-                >
-                  <X className="size-4" aria-hidden />
-                  Clear filters
-                </Button>
-              )}
             </div>
           </div>
 

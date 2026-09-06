@@ -10,7 +10,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.98 0 0);
+  --background: oklch(0.968 0.003 255);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -34,14 +34,14 @@
    * something needing attention. The tints are what tells one panel from the
    * next, so they stay distinct from the surface in both themes.
    */
-  --band: var(--muted);
-  --band-foreground: var(--muted-foreground);
+  --band: oklch(0.968 0.007 248);
+  --band-foreground: oklch(0.21 0.04 266);
   --band-info: oklch(0.97 0.014 255);
   --band-info-foreground: oklch(0.282 0.091 268);
-  --band-accent: var(--accent);
-  --band-accent-foreground: var(--accent-foreground);
-  --band-warn: var(--warning-soft);
-  --band-warn-foreground: var(--warning-foreground);
+  --band-accent: oklch(0.969 0.016 294);
+  --band-accent-foreground: oklch(0.283 0.141 291);
+  --band-warn: oklch(0.987 0.022 95);
+  --band-warn-foreground: oklch(0.414 0.112 46);
 
   /*
    * The workspace banner: a deliberately dark, saturated header that names the
@@ -49,8 +49,8 @@
    * the light theme, so it needs its own pair rather than a band — and in the
    * dark theme it has to rise above the page rather than sink below it.
    */
-  --banner: var(--primary);
-  --banner-foreground: var(--primary-foreground);
+  --banner: oklch(0.28 0.055 258);
+  --banner-foreground: oklch(0.98 0.01 258);
   --banner-muted-foreground: oklch(0.8 0.03 258);
 
   /*
@@ -60,10 +60,10 @@
    * header carry a slate cast, so a grid of rows stays legible as a grid
    * instead of dissolving into the neutral surfaces around it.
    */
-  --table-surface: var(--card);
-  --table-header: var(--secondary);
-  --table-header-foreground: var(--secondary-foreground);
-  --table-header-border: var(--border);
+  --table-surface: oklch(1 0 0);
+  --table-header: oklch(0.929 0.013 256);
+  --table-header-foreground: oklch(0.35 0.02 266);
+  --table-header-border: oklch(0.869 0.02 253);
 
   /* Status Colors */
   --success: oklch(0.627 0.175 149.2);
@@ -97,7 +97,7 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.35rem;
+  --radius: 0.125rem;
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.546 0.245 262.881);
@@ -109,76 +109,98 @@
 }
 
 .dark {
-  /* Neutral surfaces keep the existing navy primary as the brand accent. */
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  /*
+   * The dark theme is built as a lightness ladder on one hue.
+   *
+   * Contrast ratios say almost nothing about two dark surfaces — the constant
+   * in the WCAG formula swamps them, so a pair that is plainly different
+   * scores 1.05 either way. What separates them for a reader is perceptual
+   * lightness, so each level here steps by at least 0.05 in OKLCH L, and
+   * surfaces sharing a level (a panel and a table) are told apart by hue
+   * instead. Ratios are still what governs text, and every pair below clears
+   * AA on the surface it sits on.
+   *
+   * Everything carries a trace of the brand's navy rather than being a pure
+   * grey: neutral greys at these lightnesses read as dead, and a common hue
+   * makes the whole theme look deliberate.
+   */
+  --background: oklch(0.175 0.012 265);
+  --foreground: oklch(0.97 0.005 265);
+  --card: oklch(0.245 0.014 265);
+  --card-foreground: oklch(0.97 0.005 265);
+  --popover: oklch(0.305 0.016 265);
+  --popover-foreground: oklch(0.97 0.005 265);
   --primary: oklch(0.56 0.185 265);
   --primary-foreground: oklch(0.985 0.01 265);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.315 0.018 265);
+  --secondary-foreground: oklch(0.97 0.005 265);
+  --muted: oklch(0.315 0.018 265);
+  --muted-foreground: oklch(0.76 0.022 265);
+  --accent: oklch(0.315 0.018 265);
+  --accent-foreground: oklch(0.97 0.005 265);
 
-  /* Project-specific bands inherit the neutral surface hierarchy. */
-  --band: var(--muted);
-  --band-foreground: var(--muted-foreground);
-  --band-info: var(--secondary);
-  --band-info-foreground: var(--secondary-foreground);
-  --band-accent: var(--accent);
-  --band-accent-foreground: var(--accent-foreground);
-  --band-warn: var(--warning-soft);
-  --band-warn-foreground: oklch(0.92 0.06 82);
+  /*
+   * Bands sit a step above the card. They carry more chroma than they would
+   * in light, because a tint that reads clearly on white disappears on a dark
+   * surface; each is at least 0.05 apart from the others in OKLab.
+   */
+  --band: oklch(0.315 0.018 265);
+  --band-foreground: oklch(0.96 0.01 265);
+  --band-info: oklch(0.325 0.085 250);
+  --band-info-foreground: oklch(0.905 0.065 250);
+  --band-accent: oklch(0.315 0.105 300);
+  --band-accent-foreground: oklch(0.905 0.07 300);
+  --band-warn: oklch(0.345 0.08 75);
+  --band-warn-foreground: oklch(0.915 0.075 85);
 
-  --banner: var(--primary);
-  --banner-foreground: var(--primary-foreground);
+  --banner: oklch(0.3 0.105 258);
+  --banner-foreground: oklch(0.98 0.01 258);
   --banner-muted-foreground: oklch(0.8 0.03 258);
 
-  /* Tables use the same neutral surfaces as other content. */
-  --table-surface: var(--card);
-  --table-header: var(--secondary);
-  --table-header-foreground: var(--secondary-foreground);
-  --table-header-border: var(--border);
+  /* The table keeps its own navy material, lifted clear of the page ground. */
+  --table-surface: oklch(0.235 0.045 258);
+  --table-header: oklch(0.355 0.055 255);
+  --table-header-foreground: oklch(0.965 0.018 255);
+  --table-header-border: oklch(0.46 0.06 255);
 
   /* Status Colors */
-  --success: oklch(0.71 0.17 149.2);
+  --success: oklch(0.76 0.15 150);
   --success-foreground: oklch(0.12 0 0);
-  --success-soft: oklch(0.26 0.055 149.2);
+  --success-soft: oklch(0.32 0.07 150);
 
-  --warning: oklch(0.82 0.15 74.3);
+  --warning: oklch(0.84 0.14 80);
   --warning-foreground: oklch(0.15 0 0);
-  --warning-soft: oklch(0.28 0.045 82);
+  --warning-soft: oklch(0.375 0.078 80);
 
   --info: oklch(0.75 0.14 250);
   --info-foreground: oklch(0.15 0 0);
   --info-soft: oklch(0.33 0.075 250);
 
-  --destructive: oklch(0.7 0.19 27.3);
+  --destructive: oklch(0.715 0.18 25);
   --destructive-foreground: oklch(0.12 0 0);
-  --destructive-soft: oklch(0.27 0.055 25);
+  --destructive-soft: oklch(0.31 0.085 25);
 
-  /* Inputs remain slightly stronger than general dividers in dark mode. */
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  /*
+   * Solid lines, not a wash of white at 10%. Borders carry most of the work of
+   * separating rows and cells in a dense table, and an alpha border over a
+   * near-black surface barely registers.
+   */
+  --border: oklch(0.41 0.02 265);
+  --input: oklch(0.44 0.022 265);
+  --ring: oklch(0.56 0.04 265);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar: oklch(0.215 0.014 265);
+  --sidebar-foreground: oklch(0.97 0.005 265);
   --sidebar-primary: oklch(0.623 0.214 259.815);
   --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-accent: oklch(0.315 0.018 265);
+  --sidebar-accent-foreground: oklch(0.97 0.005 265);
+  --sidebar-border: oklch(0.41 0.02 265);
+  --sidebar-ring: oklch(0.56 0.04 265);
 }
 
 @theme inline {

@@ -4,7 +4,6 @@ import { ChevronDown, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { ResourceList, RowActions } from "@/components/resource-list"
-import { RowActionsMenu } from "@/components/row-actions-menu"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -92,11 +91,7 @@ export function AccountsSection() {
         }}
         action={
           canAdd ? (
-            <Button
-              size="sm"
-              className="w-full sm:w-auto"
-              onClick={() => setIsCreating(true)}
-            >
+            <Button size="sm" onClick={() => setIsCreating(true)}>
               <Plus className="size-4" aria-hidden />
               New account
             </Button>
@@ -111,30 +106,34 @@ export function AccountsSection() {
             cell: (_row, rowIndex) => offset + rowIndex + 1,
           },
           {
-            header: "Account",
+            header: "Name",
             cell: (row) => (
-              <div>
-                <div className="font-medium">
-                  {row.fullName || "—"}
-                  {row.isSuperuser && (
-                    <Badge className="ml-2 gap-1 text-xs">
-                      <ShieldCheck className="size-3" aria-hidden />
-                      Admin
-                    </Badge>
-                  )}
-                </div>
-                <div className="font-mono text-xs text-muted-foreground">
-                  {row.username}
-                </div>
-              </div>
+              <span className="font-medium">
+                {row.fullName || "—"}
+                {row.isSuperuser && (
+                  <Badge className="ml-2 gap-1 text-xs">
+                    <ShieldCheck className="size-3" aria-hidden />
+                    Admin
+                  </Badge>
+                )}
+              </span>
             ),
           },
           {
-            header: "Contact",
-            className: "min-w-48 text-muted-foreground",
+            header: "Username",
+            className: "font-mono text-xs text-muted-foreground",
+            cell: (row) => row.username,
+          },
+          {
+            header: "Email",
+            className: "text-muted-foreground",
+            cell: (row) => row.email,
+          },
+          {
+            header: "Phone",
+            className: "whitespace-nowrap text-muted-foreground tabular-nums",
             cell: (row) => (
               <div className="space-y-0.5">
-                <div>{row.email}</div>
                 <div>{row.phoneNo || "—"}</div>
                 {row.alternatePhoneNo && (
                   <div className="text-xs">Alt: {row.alternatePhoneNo}</div>
@@ -169,62 +168,60 @@ export function AccountsSection() {
               ),
           },
           {
-            header: "Access",
-            className: "min-w-40 whitespace-nowrap",
+            header: "Status",
+            className: "whitespace-nowrap",
             cell: (row) => (
-              <div className="space-y-1">
-                <Badge variant={row.isActive ? "secondary" : "destructive"}>
-                  {row.isActive ? "Active" : "Inactive"}
-                </Badge>
-                <div className="text-xs text-muted-foreground tabular-nums">
-                  {row.lastLogin
-                    ? `Last login ${formatDisplayDateTime(row.lastLogin)}`
-                    : "Never signed in"}
-                </div>
-              </div>
+              <Badge variant={row.isActive ? "secondary" : "destructive"}>
+                {row.isActive ? "Active" : "Inactive"}
+              </Badge>
             ),
+          },
+          {
+            header: "Last login",
+            className: "min-w-40 whitespace-nowrap",
+            cell: (row) =>
+              row.lastLogin ? (
+                <div>
+                  <div className="text-sm tabular-nums">
+                    {formatDisplayDateTime(row.lastLogin)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Details locked
+                  </div>
+                </div>
+              ) : (
+                <Badge variant="outline">Never signed in</Badge>
+              ),
           },
           {
             header: "",
             className: "w-20 text-right",
             cell: (row) => (
               <RowActions>
-                {(canEdit || canDelete) &&
+                {canEdit && !row.isSuperuser && row.id !== currentAccountId && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Edit ${row.username}`}
+                    title={
+                      row.lastLogin ? "Manage account access" : "Edit account"
+                    }
+                    onClick={() => setEditing(row)}
+                  >
+                    <Pencil className="size-4" aria-hidden />
+                  </Button>
+                )}
+                {canDelete &&
                   !row.isSuperuser &&
                   row.id !== currentAccountId && (
-                    <RowActionsMenu
-                      triggerLabel={`Actions for ${row.username}`}
-                      title={row.fullName || row.username}
-                      description={`${row.username} · ${row.isActive ? "Active" : "Inactive"}`}
-                      actions={[
-                        ...(canEdit
-                          ? [
-                              {
-                                label: row.lastLogin
-                                  ? "Manage access"
-                                  : "Edit account",
-                                description: row.lastLogin
-                                  ? "Activate or deactivate this account."
-                                  : "Correct identity, roles, and access.",
-                                icon: <Pencil className="size-4" aria-hidden />,
-                                onSelect: () => setEditing(row),
-                              },
-                            ]
-                          : []),
-                        ...(canDelete
-                          ? [
-                              {
-                                label: "Archive account",
-                                description:
-                                  "Blocks sign-in while preserving existing records.",
-                                icon: <Trash2 className="size-4" aria-hidden />,
-                                onSelect: () => setArchiving(row),
-                                destructive: true,
-                              },
-                            ]
-                          : []),
-                      ]}
-                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Archive ${row.username}`}
+                      onClick={() => setArchiving(row)}
+                    >
+                      <Trash2 className="size-4 text-destructive" aria-hidden />
+                    </Button>
                   )}
               </RowActions>
             ),

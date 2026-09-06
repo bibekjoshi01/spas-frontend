@@ -60,7 +60,7 @@ export default function OverviewPage() {
     profile?.firstName || profile?.fullName?.split(" ")[0] || "there"
 
   return (
-    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
       <PageHeader
         title={`Good to see you, ${firstName}`}
         description={dateLabel}
@@ -84,31 +84,35 @@ export default function OverviewPage() {
         skeleton={<DashboardSkeleton />}
       >
         {data && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 border bg-card lg:grid-cols-4">
+          <div className="space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatTile
                 icon={<GraduationCap className="size-4" aria-hidden />}
                 label="Classes"
                 value={data.stats.totalClasses}
                 hint={isTeacher ? "allocated to you" : "in your academic scope"}
+                accent="blue"
               />
               <StatTile
                 icon={<Users className="size-4" aria-hidden />}
                 label="Students"
                 value={data.stats.totalStudents}
                 hint={isTeacher ? "across your classes" : "within your scope"}
+                accent="violet"
               />
               <StatTile
                 icon={<TrendingUp className="size-4" aria-hidden />}
                 label="Average attendance"
                 value={formatPercentage(data.stats.avgAttendancePercentage)}
                 hint={isTeacher ? "your classes held" : "scoped classes held"}
+                accent="emerald"
               />
               <StatTile
                 icon={<AlertTriangle className="size-4" aria-hidden />}
                 label={`Below ${formatPercentage(threshold)}`}
                 value={data.stats.studentsBelowEligibility}
                 hint="need attention"
+                accent="amber"
                 tone={
                   data.stats.studentsBelowEligibility > 0
                     ? "warning"
@@ -117,10 +121,10 @@ export default function OverviewPage() {
               />
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="space-y-4">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="space-y-6">
                 {isTeacher ? (
-                  <Card>
+                  <Card className="border-blue-200 dark:border-blue-900">
                     <CardHeader className="grid-cols-[minmax(0,1fr)_auto] !grid-rows-1 items-center">
                       <CardTitle className="text-base">
                         {isTeacher
@@ -146,7 +150,7 @@ export default function OverviewPage() {
                       {data.todaysClasses.map((item) => (
                         <div
                           key={item.allocation}
-                          className="flex flex-wrap items-center justify-between gap-3 rounded-sm border p-3"
+                          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
                         >
                           <div className="min-w-0">
                             <p className="truncate font-medium">{item.name}</p>
@@ -163,11 +167,7 @@ export default function OverviewPage() {
                                 Recorded
                               </Badge>
                             ) : isTeacher ? (
-                              <Button
-                                asChild
-                                size="sm"
-                                className="w-full sm:w-auto"
-                              >
+                              <Button asChild size="sm">
                                 <Link
                                   to={`/attendance/${item.allocation}/${today}`}
                                 >
@@ -198,8 +198,14 @@ export default function OverviewPage() {
                 {isTeacher && <TeacherWorkQueue items={data.workQueue} />}
               </div>
 
-              <div className="space-y-4">
-                <Card>
+              <div className="space-y-6">
+                <Card
+                  className={
+                    isTeacher
+                      ? "border-blue-200 dark:border-blue-900"
+                      : "border-violet-200 dark:border-violet-900"
+                  }
+                >
                   <CardHeader>
                     <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-base">
@@ -451,13 +457,13 @@ function TeacherWorkQueue({ items }: { items: WorkItem[] }) {
 
   return (
     <section className="border bg-card">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-band px-3 py-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-primary px-3 py-2.5 text-primary-foreground">
         <div>
           <h2 className="flex items-center gap-2 font-semibold">
             <ListChecks className="size-4" aria-hidden />
             Work to complete
           </h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-primary-foreground/75">
             Open records across your active classes that still need attention.
           </p>
         </div>
@@ -465,7 +471,11 @@ function TeacherWorkQueue({ items }: { items: WorkItem[] }) {
           variant="outline"
           // The chip sits on the primary bar, so it takes its colours from that
           // bar rather than from the page behind it.
-          className="bg-card tabular-nums"
+          className={
+            items.length
+              ? "border-transparent bg-primary-foreground/15 text-primary-foreground"
+              : "border-primary-foreground/40 text-primary-foreground"
+          }
         >
           {items.length} open
         </Badge>
@@ -552,18 +562,47 @@ function StatTile({
   value,
   hint,
   tone = "default",
+  accent,
 }: {
   icon: React.ReactNode
   label: string
   value: string | number
   hint?: string
   tone?: "default" | "warning"
+  accent: "blue" | "violet" | "emerald" | "amber"
 }) {
+  const accents = {
+    blue: {
+      card: "border-l-blue-600",
+      icon: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+      value: "text-blue-700 dark:text-blue-300",
+    },
+    violet: {
+      card: "border-l-violet-600",
+      icon: "bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
+      value: "text-violet-700 dark:text-violet-300",
+    },
+    emerald: {
+      card: "border-l-emerald-600",
+      icon: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+      value: "text-emerald-700 dark:text-emerald-300",
+    },
+    amber: {
+      card: "border-l-amber-500",
+      icon: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+      value: "text-amber-700 dark:text-amber-300",
+    },
+  }[accent]
+
   return (
-    <div className="border-r border-b p-3 lg:border-b-0">
-      <div className="space-y-0.5">
+    // Card already brings py-6; a stat tile is a label and a number, so it does
+    // not need a second helping of vertical padding stacked on top of that.
+    <Card className={`gap-0 border-l-4 py-4 ${accents.card}`}>
+      <CardContent className="space-y-0.5">
         <div className="flex items-center gap-2 text-muted-foreground">
-          <span className="flex size-7 items-center justify-center rounded-sm bg-muted text-muted-foreground">
+          <span
+            className={`flex size-7 items-center justify-center ${accents.icon}`}
+          >
             {icon}
           </span>
           <span className="text-xs font-bold tracking-wide uppercase">
@@ -573,14 +612,14 @@ function StatTile({
         <p
           className={
             tone === "warning"
-              ? "text-xl font-semibold text-amber-700 tabular-nums sm:text-2xl dark:text-amber-300"
-              : "text-xl font-semibold tabular-nums sm:text-2xl"
+              ? "text-2xl font-semibold text-amber-700 tabular-nums dark:text-amber-300"
+              : `text-2xl font-semibold tabular-nums ${accents.value}`
           }
         >
           {value}
         </p>
         {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

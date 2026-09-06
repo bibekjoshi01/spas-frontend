@@ -2,7 +2,6 @@ import { useMemo, useState } from "react"
 import {
   BookOpen,
   CalendarCheck,
-  ChevronDown,
   ClipboardCheck,
   ClipboardList,
   Star,
@@ -97,15 +96,15 @@ export function ManagementStudentReportDialog({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         overlayClassName="z-[90]"
-        className="z-[100] flex h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-none flex-col gap-0 overflow-hidden p-0 sm:max-w-none sm:p-0"
+        className="z-[100] h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto sm:max-w-none"
       >
-        <DialogHeader className="shrink-0 border-b bg-muted/20 p-4 pr-12 sm:p-5 sm:pr-12">
-          <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <DialogTitle className="truncate text-base sm:text-lg">
+        <DialogHeader className="pr-10">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <DialogTitle>
                 {data?.student.fullName ?? "Student report"}
               </DialogTitle>
-              <DialogDescription className="mt-1 truncate text-xs sm:text-sm">
+              <DialogDescription className="mt-1">
                 {data
                   ? `${data.student.programCode} · Batch ${data.student.batchYear} · Roll ${data.student.rollNumber}`
                   : "Loading the complete academic performance record…"}
@@ -120,87 +119,79 @@ export function ManagementStudentReportDialog({
           </div>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
-          <QueryState
-            isLoading={report.isLoading}
-            isFetching={report.isFetching && !report.isLoading}
-            error={report.error}
-            isEmpty={!data}
-            onRetry={report.refetch}
-            skeleton={<StudentReportSkeleton />}
-            emptyTitle="Student report unavailable"
-            emptyMessage="This student is outside your management scope or has no accessible record."
-          >
-            {data && (
-              <div className="space-y-4">
-                {semesters.length > 0 && (
-                  <SemesterTabs
-                    groups={semesters}
-                    activeSemester={activeSemester}
-                    onSelect={(selected) =>
-                      setSelection({ studentId, semester: selected })
-                    }
-                  />
-                )}
+        <QueryState
+          isLoading={report.isLoading}
+          isFetching={report.isFetching && !report.isLoading}
+          error={report.error}
+          isEmpty={!data}
+          onRetry={report.refetch}
+          skeleton={<StudentReportSkeleton />}
+          emptyTitle="Student report unavailable"
+          emptyMessage="This student is outside your management scope or has no accessible record."
+        >
+          {data && (
+            <div className="space-y-4">
+              {semesters.length > 0 && (
+                <SemesterTabs
+                  groups={semesters}
+                  activeSemester={activeSemester}
+                  onSelect={(selected) =>
+                    setSelection({ studentId, semester: selected })
+                  }
+                />
+              )}
 
-                <section className="border bg-card">
-                  <div className="border-b bg-band-info px-3 py-2.5">
-                    <h3 className="font-semibold text-band-info-foreground">
-                      Student profile
-                    </h3>
-                    <p className="text-xs text-band-info-foreground/70">
-                      Identity, contact and academic placement.
-                    </p>
-                  </div>
-                  <dl className="grid gap-x-8 gap-y-3 p-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                    <Detail
-                      label="Roll number"
-                      value={data.student.rollNumber}
-                    />
-                    <Detail
-                      label="Registration"
-                      value={data.student.registrationNumber}
-                    />
-                    <Detail label="Program" value={data.student.programName} />
-                    <Detail
-                      label="Department"
-                      value={data.student.departmentName}
-                    />
-                    <Detail
-                      label="Admission batch"
-                      value={String(data.student.batchYear)}
-                    />
-                    <Detail
-                      label="Student status"
-                      value={displayStatus(data.student.status)}
-                    />
-                    <Detail label="Email" value={data.student.email} />
-                    <Detail
-                      label="Primary phone"
-                      value={data.student.phoneNo}
-                    />
-                    <Detail
-                      label="Alternate phone"
-                      value={data.student.alternatePhoneNo}
-                    />
-                    <Detail
-                      label="Academic record"
-                      value={`${semesters.length} semesters · ${data.subjects.length} subjects`}
-                    />
-                  </dl>
-                </section>
-
-                {semester ? (
-                  <SemesterReport group={semester} />
-                ) : (
-                  <p className="border bg-card p-6 text-center text-sm text-muted-foreground">
-                    No subject records have been created for this student.
+              <section className="border bg-card">
+                <div className="border-b bg-band-info px-3 py-2.5">
+                  <h3 className="font-semibold text-band-info-foreground">
+                    Student profile
+                  </h3>
+                  <p className="text-xs text-band-info-foreground/70">
+                    Identity, contact and academic placement.
                   </p>
-                )}
-              </div>
-            )}
-          </QueryState>
-        </div>
+                </div>
+                <dl className="grid gap-x-8 gap-y-3 p-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                  <Detail label="Roll number" value={data.student.rollNumber} />
+                  <Detail
+                    label="Registration"
+                    value={data.student.registrationNumber}
+                  />
+                  <Detail label="Program" value={data.student.programName} />
+                  <Detail
+                    label="Department"
+                    value={data.student.departmentName}
+                  />
+                  <Detail
+                    label="Admission batch"
+                    value={String(data.student.batchYear)}
+                  />
+                  <Detail
+                    label="Student status"
+                    value={displayStatus(data.student.status)}
+                  />
+                  <Detail label="Email" value={data.student.email} />
+                  <Detail label="Primary phone" value={data.student.phoneNo} />
+                  <Detail
+                    label="Alternate phone"
+                    value={data.student.alternatePhoneNo}
+                  />
+                  <Detail
+                    label="Academic record"
+                    value={`${semesters.length} semesters · ${data.subjects.length} subjects`}
+                  />
+                </dl>
+              </section>
+
+              {semester ? (
+                <SemesterReport group={semester} />
+              ) : (
+                <p className="border bg-card p-6 text-center text-sm text-muted-foreground">
+                  No subject records have been created for this student.
+                </p>
+              )}
+            </div>
+          )}
+        </QueryState>
       </DialogContent>
     </Dialog>
   )
@@ -350,8 +341,8 @@ function SubjectReportCard({
   ).length
 
   return (
-    <details open={defaultOpen} className="group border bg-card">
-      <summary className="cursor-pointer list-none bg-band p-3 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+    <details open={defaultOpen} className="border bg-card">
+      <summary className="cursor-pointer list-none bg-band p-3 [&::-webkit-details-marker]:hidden">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="font-semibold">
@@ -376,10 +367,6 @@ function SubjectReportCard({
             <Badge variant="outline" className="bg-card">
               Rating {subject.classPerformance?.score ?? "—"}/10
             </Badge>
-            <ChevronDown
-              className="size-4 text-muted-foreground transition-transform group-open:rotate-180"
-              aria-hidden
-            />
           </div>
         </div>
       </summary>
@@ -603,10 +590,10 @@ function ReportTable({
   return (
     <section>
       <h4 className="mb-2 text-sm font-semibold">{title}</h4>
-      <div className="overflow-x-auto border bg-card">
-        <Table className="min-w-[40rem]">
+      <div className="overflow-x-auto border">
+        <Table>
           <TableHeader>
-            <TableRow className="border-b-2 border-table-header-border bg-table-header hover:bg-table-header">
+            <TableRow>
               {headers.map((header) => (
                 <TableHead key={header}>{header}</TableHead>
               ))}
@@ -625,7 +612,7 @@ function ReportTable({
               <TableRow>
                 <TableCell
                   colSpan={headers.length}
-                  className="py-8 text-center text-muted-foreground"
+                  className="text-center text-muted-foreground"
                 >
                   No records.
                 </TableCell>

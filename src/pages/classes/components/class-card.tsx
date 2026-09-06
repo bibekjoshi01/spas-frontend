@@ -70,21 +70,15 @@ export function ClassCard({ item, today }: ClassCardProps) {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 divide-x border-y py-2 text-sm">
-          <span className="flex items-center gap-1.5 pr-2 text-muted-foreground">
+        <div className="flex items-center justify-between text-sm">
+          <span className="flex items-center gap-1.5 text-muted-foreground">
             <Users className="size-4" aria-hidden />
-            <span>
-              <strong className="font-semibold text-foreground">
-                {item.studentCount}
-              </strong>{" "}
-              {item.studentCount === 1 ? "student" : "students"}
-            </span>
+            {item.studentCount}{" "}
+            {item.studentCount === 1 ? "student" : "students"}
           </span>
-          <span className="pl-2 text-right text-muted-foreground tabular-nums">
-            <strong className="font-semibold text-foreground">
-              {item.classesHeld}
-            </strong>{" "}
-            {item.classesHeld === 1 ? "class" : "classes"} held
+          <span className="text-muted-foreground tabular-nums">
+            {item.classesHeld} {item.classesHeld === 1 ? "class" : "classes"}{" "}
+            held
           </span>
         </div>
 

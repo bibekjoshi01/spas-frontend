@@ -3,11 +3,7 @@ import { AlertCircle, Inbox, RefreshCw } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  CardGridSkeleton,
-  MetricRowSkeleton,
-  TableSkeleton,
-} from "@/components/skeletons"
+import { TableSkeleton } from "@/components/skeletons"
 import { apiErrorMessage } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
@@ -129,19 +125,23 @@ type SkeletonVariant = "cards" | "table" | "stats"
 function LoadingSkeleton({ variant }: { variant: SkeletonVariant }) {
   if (variant === "stats") {
     return (
-      <div className="space-y-3">
-        <MetricRowSkeleton count={4} className="grid-cols-2 lg:grid-cols-4" />
-        <div className="grid gap-3 lg:grid-cols-2">
-          <Skeleton className="h-52 rounded-sm border" />
-          <Skeleton className="h-52 rounded-sm border" />
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={index} className="h-28 rounded-lg" />
+        ))}
       </div>
     )
   }
 
   if (variant === "table") return <TableSkeleton />
 
-  return <CardGridSkeleton />
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <Skeleton key={index} className="h-40 rounded-lg" />
+      ))}
+    </div>
+  )
 }
 
 /** A dense inline spinner for buttons and toolbars. */

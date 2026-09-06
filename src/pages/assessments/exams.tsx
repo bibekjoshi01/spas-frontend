@@ -1,13 +1,6 @@
 import { useMemo, useState, type KeyboardEvent } from "react"
 import { Link, useSearchParams } from "react-router-dom"
-import {
-  ArrowLeft,
-  ClipboardList,
-  Pencil,
-  Plus,
-  Save,
-  Search,
-} from "lucide-react"
+import { ArrowLeft, ClipboardList, Pencil, Plus, Save } from "lucide-react"
 
 import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
@@ -15,7 +8,6 @@ import { useHasPermission } from "@/hooks/use-has-permissions"
 import { useRememberedClass } from "@/hooks/use-remembered-class"
 import { PageHeader } from "@/components/page-header"
 import { InlineSpinner, QueryState } from "@/components/query-state"
-import { ClassWorkspaceSkeleton } from "@/components/skeletons"
 import { StudentNameSortButton } from "@/components/student-name-sort"
 import {
   sortStudentsByName,
@@ -100,20 +92,9 @@ export default function ExamsPage() {
       )
     })
   }, [chosen?.studentCount, completion, exams.data])
-  const completionCounts = useMemo(() => {
-    const results = exams.data?.results ?? []
-    const complete = results.filter(
-      (exam) => exam.markedCount >= (chosen?.studentCount ?? 0)
-    ).length
-    return {
-      all: results.length,
-      complete,
-      incomplete: results.length - complete,
-    }
-  }, [chosen?.studentCount, exams.data])
 
   return (
-    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
       <PageHeader
         title="Assessments"
         description={
@@ -136,68 +117,44 @@ export default function ExamsPage() {
         }
       />
 
-      {classes.isLoading ? (
-        <ClassWorkspaceSkeleton />
-      ) : (
-        chosen && (
-          <ClassWorkspaceNav value={chosen} active="Assessments" compact />
-        )
-      )}
+      {chosen && <ClassWorkspaceNav value={chosen} active="Assessments" />}
 
-      <div className="border bg-card">
-        <div className="flex flex-col gap-2 p-2 sm:flex-row sm:items-center">
-          {classes.data && (
-            <ClassPicker
-              classes={classChoices}
-              value={allocation}
-              label="My Classes"
-              className="w-full lg:w-[32rem]"
-              onChange={(next) => {
-                setChosenId(next)
-                remember(next)
-                setParams({ class: String(next) })
-              }}
-            />
-          )}
-          <Button
-            size="sm"
-            className="sm:ml-auto"
-            disabled={!canCreate}
-            onClick={() => setIsCreating(true)}
+      <div className="flex flex-col gap-2 border bg-card p-2 lg:flex-row lg:items-center">
+        {classes.data && (
+          <ClassPicker
+            classes={classChoices}
+            value={allocation}
+            label="My Classes"
+            className="w-full lg:w-[32rem]"
+            onChange={(next) => {
+              setChosenId(next)
+              remember(next)
+              setParams({ class: String(next) })
+            }}
+          />
+        )}
+        <Select value={completion} onValueChange={setCompletion}>
+          <SelectTrigger
+            className="w-full lg:w-52"
+            aria-label="Filter assessment completion"
           >
-            <Plus className="size-4" aria-hidden />
-            {isReadOnly ? "Read only" : "Add assessment"}
-          </Button>
-        </div>
-        <div
-          className="flex min-w-0 gap-1 overflow-x-auto border-t px-2"
-          aria-label="Filter assessment completion"
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All assessments</SelectItem>
+            <SelectItem value="incomplete">Marks incomplete</SelectItem>
+            <SelectItem value="complete">Marks complete</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          size="sm"
+          className="lg:ml-auto"
+          disabled={!canCreate}
+          onClick={() => setIsCreating(true)}
         >
-          {(
-            [
-              ["all", "All"],
-              ["incomplete", "Needs marks"],
-              ["complete", "Complete"],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={completion === value}
-              onClick={() => setCompletion(value)}
-              className={`flex h-9 shrink-0 items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
-                completion === value
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {label}
-              <span className="text-xs tabular-nums">
-                {completionCounts[value]}
-              </span>
-            </button>
-          ))}
-        </div>
+          <Plus className="size-4" aria-hidden />
+          {isReadOnly ? "Read only" : "Add assessment"}
+        </Button>
       </div>
 
       <QueryState
@@ -234,8 +191,8 @@ export default function ExamsPage() {
       >
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visibleExams.map((exam) => (
-            <Card key={exam.id} className="h-full border">
-              <CardHeader className="border-b bg-muted/20 pb-3">
+            <Card key={exam.id}>
+              <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-base">{exam.title}</CardTitle>
                   <Badge variant="secondary">
@@ -248,8 +205,8 @@ export default function ExamsPage() {
                   {exam.examDate && ` · ${exam.examDate}`}
                 </p>
               </CardHeader>
-              <CardContent className="flex flex-1 flex-col space-y-3">
-                <div className="grid grid-cols-3 divide-x border text-center text-xs">
+              <CardContent className="space-y-3">
+                <div className="grid divide-y border text-center text-xs sm:grid-cols-3 sm:divide-x sm:divide-y-0">
                   <ExamMetric label="Marked" value={exam.markedCount} />
                   <ExamMetric label="Passed" value={exam.passedCount} />
                   <ExamMetric
@@ -261,11 +218,11 @@ export default function ExamsPage() {
                     }
                   />
                 </div>
-                <div className="mt-auto flex flex-row gap-2">
+                <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    className="min-w-0 flex-1 py-1"
+                    className="flex-1"
                     onClick={() => setOpenExam(exam)}
                   >
                     <ClipboardList className="size-4" aria-hidden />
@@ -275,7 +232,6 @@ export default function ExamsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="min-w-0 flex-1"
                       onClick={() => setEditingExam(exam)}
                     >
                       <Pencil className="size-4" aria-hidden />
@@ -368,8 +324,8 @@ function EditExamDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader className="border-b pr-8 pb-3">
+      <DialogContent className="max-h-[90dvh] sm:max-w-2xl">
+        <DialogHeader>
           <DialogTitle>Edit Assessment</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
@@ -439,16 +395,11 @@ function EditExamDialog({
             </div>
           </div>
         </div>
-        <DialogFooter className="flex-row items-center border-t pt-3">
-          <Button
-            variant="ghost"
-            className="h-9 min-w-0 flex-1 px-2 text-xs sm:h-8 sm:w-auto sm:flex-none sm:px-3 sm:text-sm"
-            onClick={onClose}
-          >
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
           <Button
-            className="h-9 min-w-0 flex-1 px-2 text-xs sm:h-8 sm:w-auto sm:flex-none sm:px-3 sm:text-sm"
             onClick={submit}
             disabled={
               !form.title.trim() ||
@@ -505,8 +456,8 @@ function CreateExamDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader className="border-b pr-8 pb-3">
+      <DialogContent className="max-h-[90dvh] sm:max-w-2xl">
+        <DialogHeader>
           <DialogTitle>New Internal Exam</DialogTitle>
         </DialogHeader>
 
@@ -582,7 +533,7 @@ function CreateExamDialog({
           </div>
         </div>
 
-        <DialogFooter className="flex-row items-center border-t pt-3">
+        <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
@@ -626,10 +577,6 @@ function MarksDialog({
     Record<number, { marks: string; absent: boolean }>
   >({})
   const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
-  const [studentSearch, setStudentSearch] = useState("")
-  const [entryFilter, setEntryFilter] = useState<
-    "all" | "unmarked" | "marked" | "absent"
-  >("all")
   const sortedRoster = useMemo(
     () => sortStudentsByName(roster.data ?? [], nameSort),
     [nameSort, roster.data]
@@ -650,33 +597,6 @@ function MarksDialog({
   }, [roster.data, existing.data])
 
   const entries = useMemo(() => ({ ...saved, ...edits }), [saved, edits])
-  const entryCounts = useMemo(() => {
-    const values = sortedRoster.map((student) => entries[student.enrollment])
-    return {
-      all: values.length,
-      unmarked: values.filter((entry) => !entry?.absent && !entry?.marks)
-        .length,
-      marked: values.filter((entry) => !entry?.absent && Boolean(entry?.marks))
-        .length,
-      absent: values.filter((entry) => entry?.absent).length,
-    }
-  }, [entries, sortedRoster])
-  const visibleRoster = useMemo(() => {
-    const term = studentSearch.trim().toLowerCase()
-    return sortedRoster.filter((student) => {
-      const entry = entries[student.enrollment]
-      const matchesSearch =
-        !term ||
-        student.fullName.toLowerCase().includes(term) ||
-        student.rollNumber.toLowerCase().includes(term)
-      const matchesFilter =
-        entryFilter === "all" ||
-        (entryFilter === "unmarked" && !entry?.absent && !entry?.marks) ||
-        (entryFilter === "marked" && !entry?.absent && Boolean(entry?.marks)) ||
-        (entryFilter === "absent" && entry?.absent)
-      return matchesSearch && matchesFilter
-    })
-  }, [entries, entryFilter, sortedRoster, studentSearch])
 
   const invalid = useMemo(
     () =>
@@ -689,11 +609,7 @@ function MarksDialog({
   )
 
   const focusNextMarksInput = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (
-      !["Enter", "ArrowDown", "ArrowUp"].includes(event.key) ||
-      event.nativeEvent.isComposing
-    )
-      return
+    if (event.key !== "Enter" || event.nativeEvent.isComposing) return
 
     event.preventDefault()
     const inputs = Array.from(
@@ -704,8 +620,7 @@ function MarksDialog({
         ) ?? []
     )
     const currentIndex = inputs.indexOf(event.currentTarget)
-    const direction = event.key === "ArrowUp" ? -1 : 1
-    const nextInput = inputs[currentIndex + direction]
+    const nextInput = inputs[currentIndex + 1]
 
     nextInput?.focus()
     nextInput?.select()
@@ -742,59 +657,16 @@ function MarksDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="grid max-h-[94dvh] w-[calc(100vw-1rem)] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-3 sm:w-[calc(100vw-2rem)] sm:max-w-xl sm:p-6">
-        <DialogHeader className="min-w-0 border-b pr-8 pb-3">
-          <DialogTitle className="text-base leading-snug sm:text-lg">
-            {exam.title}
-          </DialogTitle>
-          <DialogDescription className="text-xs sm:text-sm">
+      <DialogContent className="grid max-h-[94dvh] w-[calc(100vw-1rem)] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-3 sm:w-[calc(100vw-2rem)] sm:max-w-[80rem] sm:p-6">
+        <DialogHeader className="min-w-0 pr-8">
+          <DialogTitle className="leading-snug">{exam.title}</DialogTitle>
+          <DialogDescription>
             {readOnly ? "Viewing" : "Enter"} marks out of {exam.fullMarks} for
             each student. Roll numbers and names remain fully visible.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex min-h-0 flex-col gap-2 overflow-hidden">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div
-              className="flex min-w-0 gap-1 overflow-x-auto"
-              aria-label="Filter students by marks status"
-            >
-              {(
-                [
-                  ["all", "All"],
-                  ["unmarked", "Unmarked"],
-                  ["marked", "Marked"],
-                  ["absent", "Absent"],
-                ] as const
-              ).map(([value, label]) => (
-                <Button
-                  key={value}
-                  type="button"
-                  size="sm"
-                  variant={entryFilter === value ? "secondary" : "ghost"}
-                  className="h-8 shrink-0 px-2 text-xs"
-                  aria-pressed={entryFilter === value}
-                  onClick={() => setEntryFilter(value)}
-                >
-                  {label}{" "}
-                  <span className="tabular-nums">{entryCounts[value]}</span>
-                </Button>
-              ))}
-            </div>
-            <div className="relative w-full sm:w-52">
-              <Search
-                className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
-              <Input
-                value={studentSearch}
-                onChange={(event) => setStudentSearch(event.target.value)}
-                placeholder="Search student"
-                aria-label="Search students"
-                className="h-8 pl-8 text-xs"
-              />
-            </div>
-          </div>
+        <div className="min-h-0 overflow-hidden">
           <QueryState
             isLoading={roster.isLoading || existing.isLoading}
             error={roster.error ?? existing.error}
@@ -808,12 +680,18 @@ function MarksDialog({
             emptyMessage="Register students onto this class first."
           >
             <div className="h-full max-h-[72dvh] overflow-auto rounded-lg border">
-              <table className="w-full table-fixed border-collapse bg-table-surface text-xs sm:text-sm">
+              <table className="w-full min-w-[46rem] border-collapse bg-table-surface text-sm">
                 <thead className="sticky top-0 z-10 bg-table-header text-table-header-foreground">
                   <tr className="border-b">
                     <th
                       scope="col"
-                      className="px-2 py-2 text-left text-[10px] font-semibold tracking-wide text-muted-foreground uppercase sm:px-3 sm:text-[11px]"
+                      className="min-w-52 px-3 py-2 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+                    >
+                      Roll number
+                    </th>
+                    <th
+                      scope="col"
+                      className="min-w-64 px-3 py-2 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
                     >
                       <StudentNameSortButton
                         direction={nameSort}
@@ -822,30 +700,20 @@ function MarksDialog({
                     </th>
                     <th
                       scope="col"
-                      className="w-20 px-1 py-2 text-right text-[10px] font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase sm:w-28 sm:px-3 sm:text-[11px]"
+                      className="w-32 px-3 py-2 text-right text-[11px] font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase"
                     >
                       Marks / {exam.fullMarks}
                     </th>
                     <th
                       scope="col"
-                      className="w-20 px-1 py-2 text-center text-[10px] font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase sm:w-24 sm:px-3 sm:text-[11px]"
+                      className="w-28 px-3 py-2 text-center text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
                     >
                       Status
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {visibleRoster.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={3}
-                        className="h-24 px-3 text-center text-muted-foreground"
-                      >
-                        No students match this filter.
-                      </td>
-                    </tr>
-                  )}
-                  {visibleRoster.map((student) => {
+                  {sortedRoster.map((student) => {
                     const entry = entries[student.enrollment] ?? {
                       marks: "",
                       absent: false,
@@ -858,15 +726,13 @@ function MarksDialog({
                         key={student.enrollment}
                         className="transition-colors hover:bg-muted/40"
                       >
-                        <td className="px-2 py-2.5 leading-5 sm:px-3">
-                          <span className="block text-xs font-medium wrap-break-word sm:text-sm">
-                            {student.fullName}
-                          </span>
-                          <span className="block truncate font-mono text-[10px] text-muted-foreground tabular-nums sm:text-xs">
-                            Roll {student.rollNumber}
-                          </span>
+                        <td className="px-3 py-2.5 font-mono text-xs leading-5 break-all text-muted-foreground tabular-nums">
+                          {student.rollNumber}
                         </td>
-                        <td className="px-1 py-2.5 sm:px-3">
+                        <td className="px-3 py-2.5 leading-5 font-medium break-words">
+                          {student.fullName}
+                        </td>
+                        <td className="px-3 py-2.5">
                           <Input
                             type="number"
                             data-marks-entry="true"
@@ -878,7 +744,7 @@ function MarksDialog({
                             disabled={readOnly || entry.absent}
                             aria-label={`Marks for ${student.fullName}`}
                             aria-invalid={tooHigh}
-                            className={`ml-auto h-8 w-16 text-right text-xs tabular-nums sm:w-24 sm:text-sm ${
+                            className={`ml-auto h-8 w-28 text-right tabular-nums ${
                               tooHigh ? "border-destructive" : ""
                             }`}
                             onChange={(event) =>
@@ -893,12 +759,12 @@ function MarksDialog({
                             onKeyDown={focusNextMarksInput}
                           />
                         </td>
-                        <td className="px-1 py-2.5 text-center sm:px-3">
+                        <td className="px-3 py-2.5 text-center">
                           <Button
                             type="button"
                             size="sm"
                             variant={entry.absent ? "destructive" : "outline"}
-                            className="h-8 min-w-16 px-1.5 text-[11px] sm:min-w-20 sm:px-2 sm:text-xs"
+                            className="h-8 min-w-20 px-2 text-xs"
                             aria-pressed={entry.absent}
                             disabled={readOnly}
                             onClick={() =>
@@ -923,22 +789,17 @@ function MarksDialog({
           </QueryState>
         </div>
 
-        <DialogFooter className="flex-row items-center border-t pt-3">
+        <DialogFooter className="border-t pt-3">
           {invalid && (
-            <p className="mr-auto text-[11px] text-destructive sm:text-xs">
+            <p className="mr-auto text-xs text-destructive">
               Marks must be between 0 and {exam.fullMarks}.
             </p>
           )}
-          <Button
-            variant="ghost"
-            className="h-9 min-w-0 flex-1 sm:h-8 sm:w-auto sm:flex-none"
-            onClick={onClose}
-          >
+          <Button variant="ghost" onClick={onClose}>
             {readOnly ? "Close" : "Cancel"}
           </Button>
           {!readOnly && (
             <Button
-              className="h-9 min-w-0 flex-1 sm:h-8 sm:w-auto sm:flex-none"
               onClick={submit}
               disabled={
                 isSaving || invalid || existing.isLoading || !!existing.error

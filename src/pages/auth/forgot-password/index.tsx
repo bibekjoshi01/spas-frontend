@@ -12,7 +12,6 @@ import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { PasswordInput } from "@/components/ui/password-input"
 import { BrandLogo } from "@/pages/auth/login/components/brand-logo"
 import {
   confirmPasswordReset,
@@ -165,7 +164,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-background px-5 py-8 sm:px-8">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
-        <div className="rounded-sm border bg-card px-6 py-8 sm:px-9 sm:py-10">
+        <div className="bg-card px-6 py-8 sm:px-9 sm:py-10">
           <BrandLogo className="mb-8" />
 
           {step !== "success" && (
@@ -308,8 +307,9 @@ export default function ForgotPasswordPage() {
               </p>
               <div className="mt-6 space-y-[5px]">
                 <Label htmlFor="new-password">New password</Label>
-                <PasswordInput
+                <Input
                   id="new-password"
+                  type="password"
                   value={newPassword}
                   onChange={(event) => setNewPassword(event.target.value)}
                   autoComplete="new-password"
@@ -318,8 +318,9 @@ export default function ForgotPasswordPage() {
               </div>
               <div className="mt-4 space-y-[5px]">
                 <Label htmlFor="confirm-password">Confirm new password</Label>
-                <PasswordInput
+                <Input
                   id="confirm-password"
+                  type="password"
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   autoComplete="new-password"

@@ -68,7 +68,7 @@ export function AttendanceCalendar({
     )
     .join(" – ")
   return (
-    <div className="w-full min-w-0 space-y-3 p-1 sm:p-2">
+    <div className="w-full space-y-3 p-3 sm:w-[25rem]">
       <div className="flex items-center justify-between gap-2">
         <Button
           size="icon"
@@ -83,7 +83,7 @@ export function AttendanceCalendar({
           <ChevronLeft />
         </Button>
         <div className="text-center">
-          <div className="text-base font-semibold sm:text-lg">
+          <div className="text-xl font-semibold">
             {month.nameNepali} {nepali(data.year)}
           </div>
           <div className="text-xs text-muted-foreground">{range}</div>
@@ -101,10 +101,10 @@ export function AttendanceCalendar({
           <ChevronRight />
         </Button>
       </div>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-1.5 sm:gap-2">
+      <div className="flex justify-center gap-2">
         <select
           aria-label="Nepali month"
-          className="h-8 min-w-0 rounded-md border border-input bg-background px-2 text-xs text-foreground [color-scheme:light] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm dark:bg-input/30 dark:[color-scheme:dark] [&>option]:bg-popover [&>option]:text-popover-foreground"
+          className="min-w-0 rounded border bg-white px-2 py-1 text-sm"
           value={month.index}
           onChange={(event) => setMonthIndex(Number(event.target.value))}
         >
@@ -116,7 +116,7 @@ export function AttendanceCalendar({
         </select>
         <select
           aria-label="Nepali year"
-          className="h-8 min-w-0 rounded-md border border-input bg-background px-2 text-xs text-foreground [color-scheme:light] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm dark:bg-input/30 dark:[color-scheme:dark] [&>option]:bg-popover [&>option]:text-popover-foreground"
+          className="rounded border bg-white px-2 py-1 text-sm"
           value={data.year}
           onChange={(event) => {
             setYear(Number(event.target.value))
@@ -133,9 +133,8 @@ export function AttendanceCalendar({
           ))}
         </select>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className="px-2"
           onClick={() => {
             setYear(undefined)
             setMonthIndex(undefined)
@@ -174,19 +173,18 @@ export function AttendanceCalendar({
               title={title || undefined}
               onClick={() => onSelect(day.date)}
               className={cn(
-                "relative flex min-h-11 flex-col items-center justify-center rounded-md border bg-background transition-colors hover:bg-accent focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-12 dark:bg-input/20",
-                closed && "text-destructive",
-                selected === day.date &&
-                  "border-primary bg-primary text-primary-foreground ring-1 ring-primary hover:bg-primary/90 [&_.calendar-ad-date]:text-primary-foreground/75",
-                day.date === today && selected !== day.date && "border-primary"
+                "relative flex min-h-12 flex-col items-center justify-center rounded border bg-white hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40",
+                closed && "text-red-600",
+                selected === day.date && "ring-2 ring-primary",
+                day.date === today && "border-primary"
               )}
             >
               <span className="text-lg leading-6">{day.dayLabel}</span>
-              <span className="calendar-ad-date text-[10px] text-muted-foreground">
+              <span className="text-[10px] text-muted-foreground">
                 {englishDate(day.date).getDate()}
               </span>
               {recorded && (
-                <span className="absolute top-1 right-1 size-1.5 rounded-full bg-emerald-600 ring-1 ring-background" />
+                <span className="absolute top-1 right-1 size-1.5 rounded-full bg-emerald-600" />
               )}
             </button>
           )

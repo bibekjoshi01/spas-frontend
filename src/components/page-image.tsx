@@ -5,8 +5,16 @@ interface PageImageProps {
 }
 
 const PageImage = ({ src, alt, className }: PageImageProps) => (
-  <img src={src} alt={alt} className={cn("h-auto w-full", className)} />
+  <img
+    src={src}
+    alt={alt}
+    style={{
+      maxWidth: "100%",
+      height: "60vh",
+      marginBottom: "20px",
+    }}
+    className={className}
+  />
 )
 
 export default PageImage
-import { cn } from "@/lib/utils"

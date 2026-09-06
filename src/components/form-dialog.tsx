@@ -69,20 +69,15 @@ export function FormDialog({
 
           {children}
 
-          <DialogFooter className="flex-row items-center pt-2">
+          <DialogFooter className="pt-2">
             <Button
               type="button"
               variant="ghost"
-              className="h-9 min-w-0 flex-1 px-2 text-xs sm:h-8 sm:w-auto sm:flex-none sm:px-3 sm:text-sm"
               onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className="h-9 min-w-0 flex-1 px-2 text-xs sm:h-8 sm:w-auto sm:flex-none sm:px-3 sm:text-sm"
-              disabled={!canSubmit || isSubmitting}
-            >
+            <Button type="submit" disabled={!canSubmit || isSubmitting}>
               {isSubmitting && <InlineSpinner />}
               {submitLabel}
             </Button>

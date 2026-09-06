@@ -3,14 +3,11 @@ import { Link, useSearchParams } from "react-router-dom"
 import {
   ArrowLeft,
   CalendarCheck,
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
+  CheckCircle2,
+  Clock3,
   Eye,
   Pencil,
   Plus,
-  Search,
-  X,
 } from "lucide-react"
 
 import { ClassPicker } from "@/components/class-picker"
@@ -18,7 +15,6 @@ import { AttendanceCalendar } from "@/components/attendance-calendar"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
 import { PageHeader } from "@/components/page-header"
 import { InlineSpinner, QueryState } from "@/components/query-state"
-import { ClassWorkspaceSkeleton } from "@/components/skeletons"
 import { StudentNameSortButton } from "@/components/student-name-sort"
 import {
   sortStudentsByName,
@@ -26,28 +22,10 @@ import {
 } from "@/lib/utils/student-sort"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { useHasPermission } from "@/hooks/use-has-permissions"
 import { useRememberedClass } from "@/hooks/use-remembered-class"
 import {
   ATTENDANCE_LABELS,
-  ATTENDANCE_STATUSES,
   type AttendanceStatus,
   type AttendanceSessionSummary,
   useGetAttendanceSessionQuery,
@@ -91,7 +69,6 @@ export default function AttendancePage() {
   const [chosenId, setChosenId] = useState<number | null>(
     Number(params.get("class")) || null
   )
-  const [calendarOpen, setCalendarOpen] = useState(false)
 
   const allocation = chosenId ?? initial
   const selectedDate = fromDateKey(params.get("date"))
@@ -114,17 +91,6 @@ export default function AttendancePage() {
     (!semesterEnd || date <= semesterEnd)
   const selectedDateIsInSemester = dateIsInSemester(selectedDate)
   const todayIsInSemester = dateIsInSemester(today)
-  const recordedDateKeys = useMemo(
-    () =>
-      Array.from(
-        new Set(sessions.data?.results.map((session) => session.date) ?? [])
-      ).sort(),
-    [sessions.data]
-  )
-  const previousRecordedDate = [...recordedDateKeys]
-    .reverse()
-    .find((key) => key < selectedKey)
-  const nextRecordedDate = recordedDateKeys.find((key) => key > selectedKey)
   const selectedDay = useGetClassCalendarDayQuery(
     { allocation: allocation ?? 0, date: selectedKey },
     { skip: !allocation }
@@ -150,9 +116,6 @@ export default function AttendancePage() {
     sessionParam === "none"
       ? null
       : Number(sessionParam) || selectedSessions[0]?.id || null
-  const selectedSession =
-    selectedSessions.find((session) => session.id === selectedSessionId) ??
-    selectedSessions[0]
 
   const chooseClass = (next: number) => {
     setChosenId(next)
@@ -163,7 +126,6 @@ export default function AttendancePage() {
   const chooseDate = (next?: Date) => {
     if (!next || !allocation) return
     setParams({ class: String(allocation), date: toDateKey(next) })
-    setCalendarOpen(false)
   }
 
   const todayKey = toDateKey(today)
@@ -173,17 +135,30 @@ export default function AttendancePage() {
     ? `/attendance/${allocation}/${todayKey}?period=${todaySessions[0].period}`
     : `/attendance/${allocation}/${todayKey}`
 
+  const viewTodayInline = () => {
+    if (!allocation || !todaySessions[0]) return
+    setParams({
+      class: String(allocation),
+      date: todayKey,
+      session: String(todaySessions[0].id),
+    })
+  }
+
   const toggleSession = (session: AttendanceSessionSummary) => {
     const next = new URLSearchParams({
       class: String(session.allocation),
       date: session.date,
     })
-    next.set("session", String(session.id))
+    if (selectedSessionId === session.id) {
+      next.set("session", "none")
+    } else {
+      next.set("session", String(session.id))
+    }
     setParams(next)
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-[1400px] space-y-3 p-3 md:p-4">
       <PageHeader
         title="Attendance"
         description="Take today's attendance or review a recorded day."
@@ -202,53 +177,34 @@ export default function AttendancePage() {
         }
       />
 
-      {classes.isLoading ? (
-        <ClassWorkspaceSkeleton compact />
-      ) : (
-        chosen && (
-          <ClassWorkspaceNav value={chosen} active="Attendance" compact />
-        )
-      )}
+      {chosen && <ClassWorkspaceNav value={chosen} active="Attendance" />}
 
-      <section
-        className="flex flex-col gap-2 border bg-card p-2 lg:flex-row lg:items-center"
-        aria-label="Attendance class selection"
-      >
+      <div className="flex flex-col gap-2 border bg-card p-2 sm:flex-row sm:items-center">
+        <span className="shrink-0 text-sm font-medium">Select class</span>
         <ClassPicker
           classes={classes.data ?? []}
           value={allocation}
           onChange={chooseClass}
           label="Select class"
-          className="sm:w-80"
+          className="sm:w-[28rem]"
         />
-        {selectedSession &&
-          isWritable &&
-          selectedDateIsInSemester &&
-          canEditAttendance &&
-          selectedOpen && (
-            <Button asChild size="sm" className="w-full lg:ml-auto lg:w-auto">
-              <Link
-                to={`/attendance/${selectedSession.allocation}/${selectedSession.date}?period=${selectedSession.period}`}
-              >
-                <Pencil className="size-4" aria-hidden />
-                Edit attendance
-              </Link>
-            </Button>
-          )}
         {allocation &&
           isWritable &&
           todayIsInSemester &&
-          !todaySessions.length &&
-          canAddAttendance &&
-          todayOpen && (
-            <Button asChild size="sm" className="w-full lg:ml-auto lg:w-auto">
+          (todaySessions.length ? (
+            <Button size="sm" className="sm:ml-auto" onClick={viewTodayInline}>
+              <Eye className="size-4" aria-hidden />
+              View today's attendance
+            </Button>
+          ) : canAddAttendance && todayOpen ? (
+            <Button asChild size="sm" className="sm:ml-auto">
               <Link to={todayHref}>
                 <Plus className="size-4" aria-hidden />
                 Take attendance today
               </Link>
             </Button>
-          )}
-      </section>
+          ) : null)}
+      </div>
 
       <QueryState
         isLoading={classes.isLoading || sessions.isLoading}
@@ -262,96 +218,47 @@ export default function AttendancePage() {
         emptyTitle="No classes allocated"
         emptyMessage="Attendance becomes available after a class is allocated to you."
       >
-        <div className="grid gap-3">
+        <div className="grid gap-3 lg:grid-cols-[auto_minmax(0,1fr)]">
+          <section
+            className="self-start border bg-card"
+            aria-label="Attendance calendar"
+          >
+            <div className="border-b bg-band px-3 py-2">
+              <h2 className="font-semibold">Attendance calendar</h2>
+              <p className="text-xs text-muted-foreground">
+                Recorded dates have a green marker. Blank dates are not
+                absences.
+              </p>
+            </div>
+            {allocation && (
+              <AttendanceCalendar
+                key={`${allocation}:${selectedKey}`}
+                allocation={allocation}
+                selected={selectedKey}
+                onSelect={(value) => chooseDate(fromDateKey(value))}
+                recordedDates={
+                  sessions.data?.results.map((session) => session.date) ?? []
+                }
+              />
+            )}
+          </section>
+
           <section className="min-w-0 border bg-card">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2.5">
-              <div className="flex min-w-0 items-start gap-2">
-                <CalendarCheck
-                  className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-                  aria-hidden
-                />
-                <div className="min-w-0">
-                  <h2 className="truncate text-sm font-semibold">
-                    {selectedDate.toLocaleDateString(undefined, {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </h2>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {chosen?.name ?? "Choose a class"}
-                  </p>
-                </div>
-              </div>
-              <div
-                className="flex w-full flex-wrap items-center gap-1.5 border-t pt-2 sm:w-auto sm:border-t-0 sm:pt-0"
-                role="group"
-                aria-label="Choose attendance date"
-              >
-                <Button
-                  variant="outline"
-                  size="xs"
-                  disabled={!previousRecordedDate}
-                  onClick={() =>
-                    previousRecordedDate &&
-                    chooseDate(fromDateKey(previousRecordedDate))
-                  }
-                >
-                  <ChevronLeft className="size-3" aria-hidden />
-                  Previous
-                </Button>
-                <Button
-                  variant={selectedKey === todayKey ? "secondary" : "outline"}
-                  size="xs"
-                  disabled={!allocation || !todayIsInSemester}
-                  onClick={() => chooseDate(today)}
-                >
-                  Today
-                </Button>
-                <Button
-                  variant="outline"
-                  size="xs"
-                  disabled={!nextRecordedDate}
-                  onClick={() =>
-                    nextRecordedDate &&
-                    chooseDate(fromDateKey(nextRecordedDate))
-                  }
-                >
-                  Next
-                  <ChevronRight className="size-3" aria-hidden />
-                </Button>
-                <Sheet open={calendarOpen} onOpenChange={setCalendarOpen}>
-                  <SheetTrigger asChild>
-                    <Button
-                      variant={calendarOpen ? "secondary" : "outline"}
-                      size="xs"
-                    >
-                      <CalendarDays className="size-3" aria-hidden />
-                      Choose date
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent className="w-full gap-0 sm:max-w-md">
-                    <SheetHeader className="border-b pr-12">
-                      <SheetTitle>Choose attendance date</SheetTitle>
-                      <SheetDescription>
-                        Choose a Nepali calendar date. Recorded dates have a
-                        green marker.
-                      </SheetDescription>
-                    </SheetHeader>
-                    <div className="min-w-0 overflow-y-auto p-2 sm:p-3">
-                      {allocation && (
-                        <AttendanceCalendar
-                          key={`${allocation}:${selectedKey}`}
-                          allocation={allocation}
-                          selected={selectedKey}
-                          onSelect={(value) => chooseDate(fromDateKey(value))}
-                          recordedDates={recordedDateKeys}
-                        />
-                      )}
-                    </div>
-                  </SheetContent>
-                </Sheet>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-band px-3 py-2">
+              <div>
+                <h2 className="font-semibold">
+                  {selectedDate.toLocaleDateString(undefined, {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  {chosen
+                    ? `${chosen.code} — ${chosen.name}`
+                    : "Choose a class"}
+                </p>
               </div>
               {chosen && !isWritable && (
                 <Badge variant="outline">
@@ -394,18 +301,24 @@ export default function AttendancePage() {
                     key={session.id}
                     session={session}
                     expanded={selectedSessionId === session.id}
+                    canEdit={Boolean(
+                      isWritable &&
+                      selectedDateIsInSemester &&
+                      canEditAttendance &&
+                      selectedOpen
+                    )}
                     onToggle={() => toggleSession(session)}
                   />
                 ))}
               </ul>
             ) : (
-              <div className="flex min-h-40 flex-col items-center justify-center p-4 text-center sm:min-h-56 sm:p-6">
+              <div className="flex min-h-56 flex-col items-center justify-center p-6 text-center">
                 <CalendarCheck
                   className="mb-3 size-8 text-muted-foreground"
                   aria-hidden
                 />
                 <p className="font-medium">No attendance recorded</p>
-                <p className="mt-1 max-w-sm text-xs text-muted-foreground sm:text-sm">
+                <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                   This date remains blank and does not count as a held class or
                   student absence.
                 </p>
@@ -439,25 +352,53 @@ export default function AttendancePage() {
 function SessionRow({
   session,
   expanded,
+  canEdit,
   onToggle,
 }: {
   session: AttendanceSessionSummary
   expanded: boolean
+  canEdit: boolean
   onToggle: () => void
 }) {
   return (
-    <li className={expanded ? undefined : "border-l-2 border-l-emerald-600"}>
-      {!expanded && (
-        <div className="flex items-center justify-between gap-3 px-3 py-2.5">
-          <span className="text-xs font-semibold sm:text-sm">
-            Period {session.period}
+    <li>
+      <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex size-9 shrink-0 items-center justify-center bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+            <CheckCircle2 className="size-5" aria-hidden />
           </span>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Recorded attendance</span>
+              {session.period > 1 && (
+                <Badge variant="outline" className="gap-1">
+                  <Clock3 className="size-3" aria-hidden />
+                  Period {session.period}
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {session.presentCount} present · {session.markedCount} marked
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={onToggle}>
             <Eye className="size-4" aria-hidden />
-            View details
+            {expanded ? "Hide attendance" : "View attendance"}
           </Button>
+          {canEdit && (
+            <Button asChild size="sm">
+              <Link
+                to={`/attendance/${session.allocation}/${session.date}?period=${session.period}`}
+              >
+                <Pencil className="size-4" aria-hidden />
+                Edit attendance
+              </Link>
+            </Button>
+          )}
         </div>
-      )}
+      </div>
       {expanded && <InlineSessionDetail session={session} />}
     </li>
   )
@@ -470,39 +411,13 @@ function InlineSessionDetail({
 }) {
   const detail = useGetAttendanceSessionQuery(session.id)
   const [nameSort, setNameSort] = useState<StudentNameSortDirection>("default")
-  const [statusFilter, setStatusFilter] = useState<AttendanceStatus | "ALL">(
-    "ALL"
+  const records = useMemo(
+    () => sortStudentsByName(detail.data?.records ?? [], nameSort),
+    [detail.data?.records, nameSort]
   )
-  const [search, setSearch] = useState("")
-  const records = useMemo(() => {
-    const sorted = sortStudentsByName(detail.data?.records ?? [], nameSort)
-    const byStatus =
-      statusFilter === "ALL"
-        ? sorted
-        : sorted.filter((record) => record.status === statusFilter)
-    const query = search.trim().toLowerCase()
-    if (!query) return byStatus
-    return byStatus.filter((record) =>
-      [record.fullName, record.rollNumber, record.phoneNo]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(query))
-    )
-  }, [detail.data?.records, nameSort, search, statusFilter])
-  const statusCounts = useMemo(() => {
-    const counts: Record<AttendanceStatus, number> = {
-      PRESENT: 0,
-      ABSENT: 0,
-      LATE: 0,
-      EXCUSED: 0,
-    }
-    detail.data?.records.forEach((record) => {
-      counts[record.status] += 1
-    })
-    return counts
-  }, [detail.data?.records])
 
   return (
-    <div className="border-t bg-band p-2 sm:p-3">
+    <div className="border-t bg-band p-3">
       {detail.isLoading ? (
         <div className="flex min-h-24 items-center justify-center">
           <InlineSpinner />
@@ -515,111 +430,47 @@ function InlineSessionDetail({
           </Button>
         </div>
       ) : (
-        <div className="overflow-hidden border bg-table-surface">
-          <div className="flex flex-col gap-2 border-b bg-card p-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-center gap-2">
-              <div
-                className="flex min-w-0 items-center gap-1 overflow-x-auto"
-                role="group"
-                aria-label="Filter attendance by status"
-              >
-                <Button
-                  variant={statusFilter === "ALL" ? "secondary" : "ghost"}
-                  size="xs"
-                  aria-pressed={statusFilter === "ALL"}
-                  onClick={() => setStatusFilter("ALL")}
-                >
-                  All {detail.data?.records.length ?? 0}
-                </Button>
-                {ATTENDANCE_STATUSES.map((status) => (
-                  <Button
-                    key={status}
-                    variant={statusFilter === status ? "secondary" : "ghost"}
-                    size="xs"
-                    aria-pressed={statusFilter === status}
-                    onClick={() => setStatusFilter(status)}
-                  >
-                    {ATTENDANCE_LABELS[status]} {statusCounts[status]}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <div className="flex h-8 w-full min-w-0 items-center border bg-background px-1.5 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 sm:h-9 sm:w-64 sm:shrink-0 sm:px-2">
-              <Search
-                className="size-3.5 shrink-0 text-muted-foreground sm:size-4"
-                aria-hidden
-              />
-              <Input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search students"
-                aria-label="Search students"
-                className="h-7 min-w-0 border-0 bg-transparent px-1.5 text-xs shadow-none focus-visible:border-0 focus-visible:ring-0 sm:h-8 sm:px-2 sm:text-sm dark:bg-transparent"
-              />
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch("")}
-                  className="flex size-6 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none sm:size-7"
-                  aria-label="Clear student search"
-                >
-                  <X className="size-3 sm:size-3.5" aria-hidden />
-                </button>
-              )}
-            </div>
-          </div>
-          {records.length ? (
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-table-header">
-                  <TableHead className="hidden w-12 sm:table-cell">#</TableHead>
-                  <TableHead className="w-20 sm:w-28">Roll</TableHead>
-                  <TableHead>
-                    <StudentNameSortButton
-                      direction={nameSort}
-                      onChange={setNameSort}
-                    />
-                  </TableHead>
-                  <TableHead className="hidden w-40 lg:table-cell">
-                    Phone
-                  </TableHead>
-                  <TableHead className="w-20 sm:w-28">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {records.map((record, index) => (
-                  <TableRow key={record.id}>
-                    <TableCell className="hidden text-muted-foreground tabular-nums sm:table-cell">
-                      {index + 1}
-                    </TableCell>
-                    <TableCell className="font-mono text-[10px] sm:text-xs">
-                      {record.rollNumber}
-                    </TableCell>
-                    <TableCell className="max-w-32 truncate font-medium sm:max-w-none">
-                      {record.fullName}
-                    </TableCell>
-                    <TableCell className="hidden text-muted-foreground tabular-nums lg:table-cell">
-                      {record.phoneNo || "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={`${STATUS_STYLES[record.status]} px-1.5 text-[10px] sm:px-2 sm:text-xs`}
-                      >
-                        {ATTENDANCE_LABELS[record.status]}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="flex min-h-24 items-center justify-center px-3 py-6 text-xs text-muted-foreground">
-              {search
-                ? "No students match your search."
-                : "No students have this attendance status."}
-            </div>
-          )}
+        <div className="overflow-x-auto border bg-table-surface">
+          <table className="w-full bg-table-surface text-sm">
+            <thead className="border-b bg-table-header text-left text-table-header-foreground">
+              <tr>
+                <th className="w-14 px-3 py-2 font-semibold">#</th>
+                <th className="w-28 px-3 py-2 font-semibold">Roll</th>
+                <th className="px-3 py-2 font-semibold">
+                  <StudentNameSortButton
+                    direction={nameSort}
+                    onChange={setNameSort}
+                  />
+                </th>
+                <th className="w-40 px-3 py-2 font-semibold">Phone</th>
+                <th className="w-32 px-3 py-2 font-semibold">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {records.map((record, index) => (
+                <tr key={record.id}>
+                  <td className="px-3 py-2 text-muted-foreground tabular-nums">
+                    {index + 1}
+                  </td>
+                  <td className="px-3 py-2 font-mono text-xs">
+                    {record.rollNumber}
+                  </td>
+                  <td className="px-3 py-2 font-medium">{record.fullName}</td>
+                  <td className="px-3 py-2 text-muted-foreground tabular-nums">
+                    {record.phoneNo || "—"}
+                  </td>
+                  <td className="px-3 py-2">
+                    <Badge
+                      variant="outline"
+                      className={STATUS_STYLES[record.status]}
+                    >
+                      {ATTENDANCE_LABELS[record.status]}
+                    </Badge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

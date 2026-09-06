@@ -23,8 +23,8 @@ export function ExportMenu({
 }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild className="h-8! sm:h-9!">
-        <Button size="xs" variant="outline" disabled={disabled || !!exporting}>
+      <DropdownMenuTrigger asChild>
+        <Button size="sm" variant="outline" disabled={disabled || !!exporting}>
           {exporting ? (
             <InlineSpinner />
           ) : (

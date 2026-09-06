@@ -62,7 +62,7 @@ export default function AttendanceAttentionPage() {
   const threshold = useEligibilityThreshold()
 
   return (
-    <div className="mx-auto max-w-6xl space-y-3 p-3 md:p-4">
+    <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
       <PageHeader
         title="Attendance attention"
         description={`Active students below ${formatPercentage(threshold)} attendance in the classes you manage.`}
@@ -93,10 +93,7 @@ export default function AttendanceAttentionPage() {
                 setFilters({ program, batch: "all" })
               }
             >
-              <SelectTrigger
-                className="w-full sm:w-52"
-                aria-label="Filter by program"
-              >
+              <SelectTrigger className="w-52" aria-label="Filter by program">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -110,7 +107,7 @@ export default function AttendanceAttentionPage() {
             </Select>
 
             <Combobox
-              className="w-full sm:w-52"
+              className="w-52"
               aria-label="Filter by batch"
               value={filters.batch}
               onValueChange={(batch) => setFilters({ batch: batch || "all" })}
@@ -131,10 +128,7 @@ export default function AttendanceAttentionPage() {
                 setFilters({ ordering })
               }}
             >
-              <SelectTrigger
-                className="w-full sm:w-52"
-                aria-label="Sort attendance"
-              >
+              <SelectTrigger className="w-52" aria-label="Sort attendance">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -196,8 +190,7 @@ export default function AttendanceAttentionPage() {
             ),
           },
           {
-            header: <span className="hidden sm:inline">Contact</span>,
-            className: "hidden sm:table-cell",
+            header: "Contact",
             cell: (row) => (
               <div className="space-y-0.5 text-xs">
                 <div>{row.phoneNo || "No phone"}</div>
@@ -239,15 +232,19 @@ export default function AttendanceAttentionPage() {
                   {row.presentCount + row.lateCount} attended of{" "}
                   {row.classesHeld}
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {row.absentCount} absent · {row.lateCount} late ·{" "}
-                  {row.excusedCount} excused
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Last record: {row.lastAttendanceDate || "—"}
-                </div>
               </div>
             ),
+          },
+          {
+            header: "Status counts",
+            className: "whitespace-nowrap text-xs",
+            cell: (row) =>
+              `${row.absentCount} absent · ${row.lateCount} late · ${row.excusedCount} excused`,
+          },
+          {
+            header: "Last record",
+            className: "whitespace-nowrap text-sm text-muted-foreground",
+            cell: (row) => row.lastAttendanceDate || "—",
           },
           {
             header: "",

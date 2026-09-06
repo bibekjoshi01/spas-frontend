@@ -90,7 +90,6 @@ export default function PerformanceSettings() {
     <div className="mx-auto max-w-4xl space-y-3 p-3 md:p-4">
       <PageHeader
         title="Performance Settings"
-        description="Configure score weights, attendance eligibility, and student portal access."
         actions={
           <Button
             onClick={save}
@@ -282,34 +281,25 @@ export default function PerformanceSettings() {
               Retry
             </Button>
           ) : (
-            <div className="flex shrink-0 items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">
-                {isSavingPortal
-                  ? "Updating…"
-                  : portal.data?.loginEnabled
-                    ? "Enabled"
-                    : "Disabled"}
-              </span>
-              <Checkbox
-                className="shrink-0"
-                id="student-login"
-                checked={portal.data?.loginEnabled ?? false}
-                disabled={portal.isError || isSavingPortal}
-                onCheckedChange={async (checked) => {
-                  const loginEnabled = checked === true
-                  try {
-                    await updatePortal({ loginEnabled }).unwrap()
-                    notifier.success(
-                      loginEnabled
-                        ? "Student login enabled."
-                        : "Student login disabled."
-                    )
-                  } catch {
-                    notifier.error("Could not update student login.")
-                  }
-                }}
-              />
-            </div>
+            <Checkbox
+              className="shrink-0"
+              id="student-login"
+              checked={portal.data?.loginEnabled ?? false}
+              disabled={portal.isError || isSavingPortal}
+              onCheckedChange={async (checked) => {
+                const loginEnabled = checked === true
+                try {
+                  await updatePortal({ loginEnabled }).unwrap()
+                  notifier.success(
+                    loginEnabled
+                      ? "Student login enabled."
+                      : "Student login disabled."
+                  )
+                } catch {
+                  notifier.error("Could not update student login.")
+                }
+              }}
+            />
           )}
         </div>
       </section>

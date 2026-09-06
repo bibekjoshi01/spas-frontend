@@ -84,7 +84,7 @@ export function ResourceList<T>({
   return (
     <div className="space-y-3">
       {hasToolbar && (
-        <div className="flex flex-wrap items-stretch justify-between gap-3 rounded-sm border bg-card p-2 sm:items-start">
+        <div className="flex flex-wrap items-stretch justify-between gap-3 rounded-sm border bg-card p-2 sm:items-center">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 [&_[data-slot=select-trigger]]:max-w-full">
             {search && (
               <div className="relative w-full sm:w-72">
@@ -117,7 +117,7 @@ export function ResourceList<T>({
           </div>
 
           {action && (
-            <div className="flex w-full items-center justify-end sm:w-auto sm:self-start">
+            <div className="flex w-full items-center justify-end sm:w-auto">
               {action}
             </div>
           )}

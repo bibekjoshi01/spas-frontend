@@ -4,7 +4,6 @@ import { Pencil, Plus, Trash2 } from "lucide-react"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { ActiveField, Field, FormDialog } from "@/components/form-dialog"
 import { ResourceList, RowActions } from "@/components/resource-list"
-import { RowActionsMenu } from "@/components/row-actions-menu"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -73,7 +72,7 @@ export function DepartmentsSection() {
             onValueChange={(value) => setFilters({ is_active: value })}
           >
             <SelectTrigger
-              className="w-full sm:w-32"
+              className="w-32"
               aria-label="Filter by status"
               clearable={filters.is_active !== "all"}
               onClear={() => setFilters({ is_active: "all" })}
@@ -92,11 +91,7 @@ export function DepartmentsSection() {
         }}
         action={
           canAdd ? (
-            <Button
-              size="sm"
-              className="w-full sm:w-auto"
-              onClick={() => setIsCreating(true)}
-            >
+            <Button size="sm" onClick={() => setIsCreating(true)}>
               <Plus className="size-4" aria-hidden />
               New department
             </Button>
@@ -125,15 +120,13 @@ export function DepartmentsSection() {
             cell: (_row, rowIndex) => offset + rowIndex + 1,
           },
           {
-            header: "Department",
-            cell: (row) => (
-              <div>
-                <span className="block font-medium">{row.name}</span>
-                <span className="block font-mono text-xs text-muted-foreground">
-                  {row.code}
-                </span>
-              </div>
-            ),
+            header: "Code",
+            className: "w-24 font-mono text-xs",
+            cell: (row) => row.code,
+          },
+          {
+            header: "Name",
+            cell: (row) => <span className="font-medium">{row.name}</span>,
           },
           {
             header: "HOD",
@@ -156,41 +149,30 @@ export function DepartmentsSection() {
           {
             header: "",
             className: "w-24 text-right",
-            cell: (row) =>
-              canEdit || canDelete ? (
-                <RowActions>
-                  <RowActionsMenu
-                    triggerLabel={`Actions for ${row.name}`}
-                    title={row.name}
-                    description={`${row.code} · ${row.programCount} programs`}
-                    actions={[
-                      ...(canEdit
-                        ? [
-                            {
-                              label: "Edit department",
-                              description:
-                                "Update identity, leadership, or status.",
-                              icon: <Pencil className="size-4" aria-hidden />,
-                              onSelect: () => setEditing(row),
-                            },
-                          ]
-                        : []),
-                      ...(canDelete
-                        ? [
-                            {
-                              label: "Archive department",
-                              description:
-                                "Removes it from active academic setup.",
-                              icon: <Trash2 className="size-4" aria-hidden />,
-                              onSelect: () => setArchiving(row),
-                              destructive: true,
-                            },
-                          ]
-                        : []),
-                    ]}
-                  />
-                </RowActions>
-              ) : null,
+            cell: (row) => (
+              <RowActions>
+                {canEdit && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Edit ${row.name}`}
+                    onClick={() => setEditing(row)}
+                  >
+                    <Pencil className="size-4" aria-hidden />
+                  </Button>
+                )}
+                {canDelete && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Archive ${row.name}`}
+                    onClick={() => setArchiving(row)}
+                  >
+                    <Trash2 className="size-4 text-destructive" aria-hidden />
+                  </Button>
+                )}
+              </RowActions>
+            ),
           },
         ]}
       />
