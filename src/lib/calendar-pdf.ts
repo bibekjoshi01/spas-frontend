@@ -103,7 +103,7 @@ export async function downloadCalendarPdf(
   function newPage() {
     ctx.fillStyle = "#fff"
     ctx.fillRect(0, 0, WIDTH, HEIGHT)
-    text("Academic calendar", WIDTH / 2, 36, 20, "#111", true, "center")
+    text("Academic Calendar", WIDTH / 2, 36, 20, "#111", true, "center")
   }
 
   function savePage() {
@@ -298,21 +298,7 @@ export async function downloadCalendarPdf(
     "#111",
     true
   )
-  text(
-    "Selected months, excluding weekends and marked holidays.",
-    MARGIN,
-    y + 30,
-    10,
-    "#555"
-  )
-  text(
-    "Weekends and holidays are shown in this colour.",
-    MARGIN,
-    y + 47,
-    10,
-    holidayColor
-  )
-  y += 70
+  y += 36
   panel(events, "Important Dates", MARGIN, y, false, eventColor)
   panel(holidays, "Holidays", MARGIN + panelWidth + 20, y, false, holidayColor)
   while (events.length || holidays.length) {

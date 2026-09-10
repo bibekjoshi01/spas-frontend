@@ -23,32 +23,26 @@ const ROLES: {
   key: keyof Omit<CalendarTheme, "showGregorianDates">
   label: string
   hint: string
-  /** The field the API reports an invalid colour against. */
-  errorKey: string
 }[] = [
   {
     key: "accentColor",
     label: "Accent",
     hint: "Month headings on screen, and the ring around today.",
-    errorKey: "themeAccentColor",
   },
   {
     key: "holidayColor",
     label: "Holiday",
     hint: "Closed days and Saturdays.",
-    errorKey: "themeHolidayColor",
   },
   {
     key: "eventColor",
     label: "Event",
     hint: "Exams and everything else marked.",
-    errorKey: "themeEventColor",
   },
   {
     key: "downloadBandColor",
     label: "Download band",
     hint: "The header across each month of the downloaded calendar.",
-    errorKey: "themeDownloadBandColor",
   },
 ]
 
@@ -119,7 +113,7 @@ export function CalendarThemeDialog({ onClose }: { onClose: () => void }) {
                 label={role.label}
                 htmlFor={`theme-${role.key}`}
                 hint={role.hint}
-                error={errors[role.errorKey]}
+                error={errors[role.key]}
               >
                 <div className="flex items-center gap-2">
                   <input
