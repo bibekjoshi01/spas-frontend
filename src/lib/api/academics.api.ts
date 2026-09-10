@@ -571,16 +571,33 @@ export interface CalendarMonth {
   days: CalendarDay[]
 }
 
+/** The palette a college paints its calendar in. */
+export interface CalendarTheme {
+  accentColor: string
+  holidayColor: string
+  eventColor: string
+  showGregorianDates: boolean
+}
+
+export const DEFAULT_CALENDAR_THEME: CalendarTheme = {
+  accentColor: "#334155",
+  holidayColor: "#dc2626",
+  eventColor: "#0064be",
+  showGregorianDates: true,
+}
+
 export interface CalendarYear {
   system: CalendarSystem
   year: number
   minYear: number
   maxYear: number
   weekendDays: number[]
+  /** Travels with the year, so a student is painted the same as a teacher. */
+  theme: CalendarTheme
   months: CalendarMonth[]
 }
 
-export interface CalendarSettings {
+export interface CalendarSettings extends CalendarTheme {
   weekendDays: number[]
 }
 
@@ -619,7 +636,13 @@ export const calendarApi = rootAPI.injectEndpoints({
       query: () => ({ url: `${ACADEMICS}/calendar/settings` }),
       providesTags: ["AcademicCalendar"],
     }),
-    updateCalendarSettings: build.mutation<CalendarSettings, CalendarSettings>({
+    // A PUT carries only what changed; fields left out keep their stored
+    // value, so the weekend panel and the theme dialog cannot clobber each
+    // other.
+    updateCalendarSettings: build.mutation<
+      CalendarSettings,
+      Partial<CalendarSettings>
+    >({
       query: (data) => ({
         url: `${ACADEMICS}/calendar/settings`,
         method: "PUT",

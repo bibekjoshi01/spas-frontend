@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { type CSSProperties, useState } from "react"
 import {
   CalendarSearch,
   ChevronLeft,
@@ -24,6 +24,7 @@ import {
   type CalendarMonth,
   fieldErrorsFrom,
   formErrorFrom,
+  DEFAULT_CALENDAR_THEME,
   useGetCalendarSettingsQuery,
   useGetCalendarYearQuery,
   useGetStudentCalendarYearQuery,
@@ -119,6 +120,14 @@ export function AcademicCalendarSection() {
   )
   const calendar = isStudent ? portal : staff
   const data = calendar.currentData
+  // The palette arrives with the year and is set once on the root, so every
+  // `cal-*` class below resolves to this college's own colours.
+  const theme = data?.theme ?? DEFAULT_CALENDAR_THEME
+  const palette = {
+    "--cal-accent": theme.accentColor,
+    "--cal-holiday": theme.holidayColor,
+    "--cal-event": theme.eventColor,
+  } as CSSProperties
   const today = localDateKey()
 
   const markedCount =
@@ -150,7 +159,7 @@ export function AcademicCalendarSection() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" style={palette}>
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm border bg-card p-2">
         <div className="flex items-center gap-2">
           <Button
@@ -227,6 +236,7 @@ export function AcademicCalendarSection() {
                 year={data.year}
                 today={today}
                 weekendDays={data.weekendDays}
+                showGregorian={theme.showGregorianDates}
                 onPick={setOpenDate}
               />
             ))}
@@ -267,15 +277,15 @@ function Legend() {
   return (
     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
       <span className="flex items-center gap-1.5">
-        <span className="size-3 rounded-sm bg-destructive/15 ring-1 ring-destructive/50" />
+        <span className="cal-holiday size-3 rounded-sm bg-card ring-1 ring-current/50" />
         Holiday
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="size-3 rounded-sm bg-info/15 ring-1 ring-info/50" />
+        <span className="cal-event size-3 rounded-sm bg-card ring-1 ring-current/50" />
         Event
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="size-3 rounded-sm bg-band" />
+        <span className="cal-band size-3 rounded-sm bg-card" />
         Weekend
       </span>
     </div>
@@ -381,12 +391,14 @@ function MonthCard({
   year,
   today,
   weekendDays,
+  showGregorian,
   onPick,
 }: {
   month: CalendarMonth
   year: number
   today: string
   weekendDays: number[]
+  showGregorian: boolean
   onPick: (date: string) => void
 }) {
   const leading = month.days.length ? column(month.days[0]) : 0
@@ -404,7 +416,7 @@ function MonthCard({
 
   return (
     <section className="overflow-hidden border bg-card">
-      <div className="flex items-baseline justify-between gap-2 border-b bg-band px-3 py-2">
+      <div className="cal-band flex items-baseline justify-between gap-2 border-b px-3 py-2">
         <h3 className="font-semibold">{monthHeading(month)}</h3>
         <span className="shrink-0 text-sm font-semibold">
           {month.nameNepali} {toNepaliDigits(year)}
@@ -417,7 +429,7 @@ function MonthCard({
             key={day.iso}
             className={cn(
               "bg-card py-1.5 text-center text-[11px] font-semibold text-muted-foreground",
-              weekendDays.includes(day.iso) && "text-destructive"
+              weekendDays.includes(day.iso) && "cal-holiday-ink"
             )}
           >
             {day.np}
@@ -434,6 +446,7 @@ function MonthCard({
             key={day.date}
             day={day}
             isToday={day.date === today}
+            showGregorian={showGregorian}
             onPick={onPick}
           />
         ))}
@@ -448,10 +461,12 @@ function MonthCard({
 function DayCell({
   day,
   isToday,
+  showGregorian,
   onPick,
 }: {
   day: CalendarDay
   isToday: boolean
+  showGregorian: boolean
   onPick: (date: string) => void
 }) {
   const holiday = day.entries.some((entry) => entry.kind === "HOLIDAY")
@@ -470,23 +485,25 @@ function DayCell({
       onClick={() => onPick(day.date)}
       className={cn(
         "relative flex aspect-square flex-col justify-between bg-card px-1.5 py-1 text-left transition-colors hover:bg-accent focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-        day.isWeekend && "bg-band",
-        holiday && "bg-destructive/15 text-destructive",
-        event && "bg-info/15 text-info",
-        isToday && "ring-2 ring-primary ring-inset"
+        day.isWeekend && "cal-band",
+        holiday && "cal-holiday",
+        event && "cal-event",
+        isToday && "cal-today ring-2 ring-inset"
       )}
     >
       <span
         className={cn(
           "text-sm leading-none font-semibold tabular-nums",
-          (day.isWeekend || holiday) && !event && "text-destructive"
+          (day.isWeekend || holiday) && !event && "cal-holiday-ink"
         )}
       >
         {day.dayLabel}
       </span>
-      <span className="self-end text-[10px] leading-none text-muted-foreground tabular-nums">
-        {englishDay(day.date)}
-      </span>
+      {showGregorian && (
+        <span className="self-end text-[10px] leading-none text-muted-foreground tabular-nums">
+          {englishDay(day.date)}
+        </span>
+      )}
       {titles.length > 1 && (
         <span className="absolute top-1 right-1 size-1.5 rounded-full bg-current opacity-70" />
       )}
@@ -519,7 +536,7 @@ function YearSkeleton() {
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: 6 }).map((_, index) => (
         <div key={index} className="border bg-card">
-          <div className="border-b bg-band px-3 py-2">
+          <div className="cal-band border-b px-3 py-2">
             <Skeleton className="h-4 w-40" />
           </div>
           <div className="grid grid-cols-7 gap-px bg-border">

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { type CSSProperties, useState } from "react"
 import { CalendarOff, PartyPopper } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -78,7 +78,16 @@ export function CalendarImportantDates({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex max-h-[calc(100vh-2rem)] flex-col sm:max-w-3xl">
+      <DialogContent
+        className="flex max-h-[calc(100vh-2rem)] flex-col sm:max-w-3xl"
+        style={
+          {
+            "--cal-holiday": year.theme.holidayColor,
+            "--cal-event": year.theme.eventColor,
+            "--cal-accent": year.theme.accentColor,
+          } as CSSProperties
+        }
+      >
         <DialogHeader className="pr-10">
           <DialogTitle>Important dates · {year.year} BS</DialogTitle>
           <DialogDescription>
@@ -129,10 +138,8 @@ export function CalendarImportantDates({
                   >
                     <span
                       className={cn(
-                        "flex w-16 shrink-0 flex-col items-center rounded-sm border py-1",
-                        entry.kind === "HOLIDAY"
-                          ? "bg-destructive/15 text-destructive"
-                          : "bg-info/15 text-info"
+                        "flex w-16 shrink-0 flex-col items-center rounded-sm border bg-card py-1",
+                        entry.kind === "HOLIDAY" ? "cal-holiday" : "cal-event"
                       )}
                     >
                       <span className="text-base leading-none font-bold tabular-nums">

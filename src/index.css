@@ -280,6 +280,79 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * Calendar palette.
+ *
+ * A college prints this calendar and hangs it on a wall, so the three colours
+ * come from its own settings and are set on the grid as inline custom
+ * properties. Each is used twice — a wash behind the cell and the label on
+ * top — which is why one stored value can serve both themes: the wash is
+ * mixed into whatever surface is behind it, and in the dark theme the label is
+ * lifted toward white so that a deep brand colour stays readable.
+ */
+:root {
+  --cal-accent: #334155;
+  --cal-holiday: #dc2626;
+  --cal-event: #0064be;
+  --cal-wash: 15%;
+  --cal-band-wash: 12%;
+  --cal-ink-lift: 0%;
+}
+
+.dark {
+  --cal-wash: 26%;
+  --cal-band-wash: 30%;
+  --cal-ink-lift: 55%;
+}
+
+@layer components {
+  /*
+   * The wash is painted as a background *image*, not a background colour.
+   *
+   * A cell already carries `bg-card` from a utility, and utilities are layered
+   * after components, so a `background-color` here would lose to it. A
+   * one-colour gradient sits on top of that surface instead, which is what the
+   * wash is meant to do anyway.
+   */
+  .cal-band {
+    --cal-fill: color-mix(
+      in oklab,
+      var(--cal-accent) var(--cal-band-wash),
+      transparent
+    );
+    background-image: linear-gradient(var(--cal-fill), var(--cal-fill));
+  }
+
+  .cal-holiday {
+    --cal-fill: color-mix(
+      in oklab,
+      var(--cal-holiday) var(--cal-wash),
+      transparent
+    );
+    background-image: linear-gradient(var(--cal-fill), var(--cal-fill));
+    color: color-mix(in oklab, white var(--cal-ink-lift), var(--cal-holiday));
+  }
+
+  .cal-event {
+    --cal-fill: color-mix(
+      in oklab,
+      var(--cal-event) var(--cal-wash),
+      transparent
+    );
+    background-image: linear-gradient(var(--cal-fill), var(--cal-fill));
+    color: color-mix(in oklab, white var(--cal-ink-lift), var(--cal-event));
+  }
+
+  /* The label alone, for a weekday that is red by convention rather than by entry. */
+  .cal-holiday-ink {
+    color: color-mix(in oklab, white var(--cal-ink-lift), var(--cal-holiday));
+  }
+
+  .cal-today {
+    --tw-ring-color: var(--cal-accent);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
