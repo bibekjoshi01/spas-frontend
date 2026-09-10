@@ -104,7 +104,7 @@ export function AttendanceCalendar({
       <div className="flex justify-center gap-2">
         <select
           aria-label="Nepali month"
-          className="min-w-0 rounded border bg-white px-2 py-1 text-sm"
+          className="min-w-0 rounded border bg-card px-2 py-1 text-sm text-foreground"
           value={month.index}
           onChange={(event) => setMonthIndex(Number(event.target.value))}
         >
@@ -116,7 +116,7 @@ export function AttendanceCalendar({
         </select>
         <select
           aria-label="Nepali year"
-          className="rounded border bg-white px-2 py-1 text-sm"
+          className="rounded border bg-card px-2 py-1 text-sm text-foreground"
           value={data.year}
           onChange={(event) => {
             setYear(Number(event.target.value))
@@ -173,8 +173,8 @@ export function AttendanceCalendar({
               title={title || undefined}
               onClick={() => onSelect(day.date)}
               className={cn(
-                "relative flex min-h-12 flex-col items-center justify-center rounded border bg-white hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40",
-                closed && "text-red-600",
+                "relative flex min-h-12 flex-col items-center justify-center rounded border bg-card hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40",
+                closed && "text-destructive",
                 selected === day.date && "ring-2 ring-primary",
                 day.date === today && "border-primary"
               )}
