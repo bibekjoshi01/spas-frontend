@@ -1,4 +1,4 @@
-import type { CalendarMonth } from "@/lib/api"
+import type { CalendarMonth, CalendarTheme } from "@/lib/api"
 import { calendarDisplayEntries } from "@/lib/utils/calendar"
 import nepaliFontUrl from "@/assets/fonts/NotoSansDevanagari.ttf?url"
 
@@ -7,8 +7,6 @@ export interface CalendarExportMonth {
   month: CalendarMonth
 }
 
-const RED = "#bf0800"
-const BORDER = "#e3a17a"
 const WIDTH = 794
 const HEIGHT = 1123
 const MARGIN = 36
@@ -16,6 +14,16 @@ const BOTTOM = HEIGHT - MARGIN
 const SCALE = 3
 const nepali = (value: number) =>
   String(value).replace(/\d/g, (digit) => "०१२३४५६७८९"[Number(digit)])
+
+/** `#1d4ed8` mixed `amount` of the way to white, for a rule or a wash. */
+function tint(hex: string, amount: number): string {
+  const value = hex.replace("#", "")
+  const channel = (index: number) => {
+    const base = parseInt(value.slice(index * 2, index * 2 + 2), 16)
+    return Math.round(base + (255 - base) * amount)
+  }
+  return `rgb(${channel(0)}, ${channel(1)}, ${channel(2)})`
+}
 
 let fontReady: Promise<FontFace> | undefined
 
@@ -35,8 +43,17 @@ function loadFont() {
 }
 
 /** Export only the selected, server-converted dates; no client-side BS conversion. */
-export async function downloadCalendarPdf(selected: CalendarExportMonth[]) {
+export async function downloadCalendarPdf(
+  selected: CalendarExportMonth[],
+  theme: CalendarTheme
+) {
   if (!selected.length) throw new Error("Select at least one month.")
+  // The printed calendar is the college's, so it is painted in the college's
+  // colours: headings take the accent, closed days the holiday colour, and
+  // anything else marked the event colour. The rule is the accent thinned
+  // most of the way to white, so one setting carries the whole page.
+  const { holidayColor, eventColor, downloadBandColor } = theme
+  const ruleColor = tint(downloadBandColor, 0.68)
   const months = [
     ...new Map(
       selected.map((item) => [`${item.year}-${item.month.index}`, item])
@@ -78,7 +95,7 @@ export async function downloadCalendarPdf(selected: CalendarExportMonth[]) {
   function box(x: number, y: number, w: number, h: number, fill = "#fff") {
     ctx.fillStyle = fill
     ctx.fillRect(x, y, w, h)
-    ctx.strokeStyle = BORDER
+    ctx.strokeStyle = ruleColor
     ctx.lineWidth = 0.7
     ctx.strokeRect(x, y, w, h)
   }
@@ -106,7 +123,7 @@ export async function downloadCalendarPdf(selected: CalendarExportMonth[]) {
   function drawMonth(item: CalendarExportMonth, x: number, y: number) {
     const w = (WIDTH - MARGIN * 2 - 24) / 3
     const cell = w / 7
-    box(x, y, w, 40, RED)
+    box(x, y, w, 40, downloadBandColor)
     text(
       `${item.month.nameNepali} ${nepali(item.year)}`,
       x + w / 2,
@@ -144,15 +161,15 @@ export async function downloadCalendarPdf(selected: CalendarExportMonth[]) {
       const top = y + 62 + Math.floor(index / 7) * 22
       box(left, top, cell, 22)
       if (!day) continue
-      const holiday = day.entries.some(
-        (entry) => entry.isActive && entry.kind === "HOLIDAY"
-      )
+      const marked = day.entries.filter((entry) => entry.isActive)
+      const holiday = marked.some((entry) => entry.kind === "HOLIDAY")
+      const event = marked.length > 0 && !holiday
       text(
         day.dayLabel,
         left + cell / 2,
         top + 11,
         12,
-        day.isWeekend || holiday ? RED : "#111",
+        holiday || day.isWeekend ? holidayColor : event ? eventColor : "#111",
         false,
         "center"
       )
@@ -207,12 +224,13 @@ export async function downloadCalendarPdf(selected: CalendarExportMonth[]) {
     title: string,
     x: number,
     y: number,
-    continued: boolean
+    continued: boolean,
+    color: string
   ) {
-    text(title + (continued ? " (continued)" : ""), x, y + 10, 14, RED, true)
+    text(title + (continued ? " (continued)" : ""), x, y + 10, 14, color, true)
     y += 26
-    box(x, y, dateWidth, 26, RED)
-    box(x + dateWidth, y, panelWidth - dateWidth, 26, RED)
+    box(x, y, dateWidth, 26, color)
+    box(x + dateWidth, y, panelWidth - dateWidth, 26, color)
     text("Date", x + 6, y + 13, 12, "#fff", true)
     text("Occasion", x + dateWidth + 6, y + 13, 12, "#fff", true)
     y += 26
@@ -287,16 +305,30 @@ export async function downloadCalendarPdf(selected: CalendarExportMonth[]) {
     10,
     "#555"
   )
-  text("Red dates indicate weekends or holidays.", MARGIN, y + 47, 10, RED)
+  text(
+    "Weekends and holidays are shown in this colour.",
+    MARGIN,
+    y + 47,
+    10,
+    holidayColor
+  )
   y += 70
-  panel(events, "Important Dates", MARGIN, y, false)
-  panel(holidays, "Holidays", MARGIN + panelWidth + 20, y, false)
+  panel(events, "Important Dates", MARGIN, y, false, eventColor)
+  panel(holidays, "Holidays", MARGIN + panelWidth + 20, y, false, holidayColor)
   while (events.length || holidays.length) {
     savePage()
     newPage()
-    if (events.length) panel(events, "Important Dates", MARGIN, 70, true)
+    if (events.length)
+      panel(events, "Important Dates", MARGIN, 70, true, eventColor)
     if (holidays.length)
-      panel(holidays, "Holidays", MARGIN + panelWidth + 20, 70, true)
+      panel(
+        holidays,
+        "Holidays",
+        MARGIN + panelWidth + 20,
+        70,
+        true,
+        holidayColor
+      )
   }
   savePage()
   const first = months[0]

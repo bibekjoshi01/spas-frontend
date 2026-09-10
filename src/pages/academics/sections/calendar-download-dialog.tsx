@@ -63,7 +63,7 @@ export function CalendarDownloadDialog({
         setPending(true)
         try {
           const { downloadCalendarPdf } = await import("@/lib/calendar-pdf")
-          await downloadCalendarPdf(Object.values(selected))
+          await downloadCalendarPdf(Object.values(selected), initialYear.theme)
           onClose()
         } catch (error) {
           setError(

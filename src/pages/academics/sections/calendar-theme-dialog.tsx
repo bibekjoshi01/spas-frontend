@@ -23,17 +23,32 @@ const ROLES: {
   key: keyof Omit<CalendarTheme, "showGregorianDates">
   label: string
   hint: string
+  /** The field the API reports an invalid colour against. */
+  errorKey: string
 }[] = [
   {
     key: "accentColor",
     label: "Accent",
-    hint: "Month headings and the ring around today.",
+    hint: "Month headings on screen, and the ring around today.",
+    errorKey: "themeAccentColor",
   },
-  { key: "holidayColor", label: "Holiday", hint: "Closed days and Saturdays." },
+  {
+    key: "holidayColor",
+    label: "Holiday",
+    hint: "Closed days and Saturdays.",
+    errorKey: "themeHolidayColor",
+  },
   {
     key: "eventColor",
     label: "Event",
     hint: "Exams and everything else marked.",
+    errorKey: "themeEventColor",
+  },
+  {
+    key: "downloadBandColor",
+    label: "Download band",
+    hint: "The header across each month of the downloaded calendar.",
+    errorKey: "themeDownloadBandColor",
   },
 ]
 
@@ -56,6 +71,7 @@ export function CalendarThemeDialog({ onClose }: { onClose: () => void }) {
         accentColor: settings.data.accentColor,
         holidayColor: settings.data.holidayColor,
         eventColor: settings.data.eventColor,
+        downloadBandColor: settings.data.downloadBandColor,
         showGregorianDates: settings.data.showGregorianDates,
       }
     : DEFAULT_CALENDAR_THEME
@@ -71,7 +87,7 @@ export function CalendarThemeDialog({ onClose }: { onClose: () => void }) {
       open
       onOpenChange={(next) => !next && onClose()}
       title="Calendar Theme"
-      description="How this college paints its calendar. Everyone sees these colours."
+      description="How this college paints its calendar, on screen and in the downloaded copy. Everyone sees these colours."
       formError={formErrorFrom(state.error)}
       isSubmitting={state.isLoading}
       canSubmit={!invalid && !settings.isLoading}
@@ -101,15 +117,7 @@ export function CalendarThemeDialog({ onClose }: { onClose: () => void }) {
               label={role.label}
               htmlFor={`theme-${role.key}`}
               hint={role.hint}
-              error={
-                errors[
-                  role.key === "accentColor"
-                    ? "themeAccentColor"
-                    : role.key === "holidayColor"
-                      ? "themeHolidayColor"
-                      : "themeEventColor"
-                ]
-              }
+              error={errors[role.errorKey]}
             >
               <div className="flex items-center gap-2">
                 <input

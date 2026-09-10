@@ -576,6 +576,13 @@ export interface CalendarTheme {
   accentColor: string
   holidayColor: string
   eventColor: string
+  /**
+   * The header band across each month of the downloaded calendar.
+   *
+   * Separate from the on-screen accent on purpose: a printed wall chart wants
+   * a strong band, and the screen wants a quiet one.
+   */
+  downloadBandColor: string
   showGregorianDates: boolean
 }
 
@@ -583,6 +590,7 @@ export const DEFAULT_CALENDAR_THEME: CalendarTheme = {
   accentColor: "#334155",
   holidayColor: "#dc2626",
   eventColor: "#0064be",
+  downloadBandColor: "#bf0800",
   showGregorianDates: true,
 }
 
