@@ -3,6 +3,7 @@ import { Eye, Pencil, Plus, Trash2, Upload } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { ImportDialog } from "@/components/import-dialog"
+import { PageHeader } from "@/components/page-header"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { ResourceList, RowActions } from "@/components/resource-list"
 import { Combobox } from "@/components/ui/combobox"
@@ -109,6 +110,22 @@ export function StudentsSection() {
 
   return (
     <>
+      <PageHeader
+        title="Students"
+        description="Everyone admitted, and which batch they belong to."
+        actions={
+          canAdd && canEdit ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsImporting(true)}
+            >
+              <Upload className="size-4" aria-hidden />
+              Import
+            </Button>
+          ) : null
+        }
+      />
       <ResourceList
         rows={data?.results}
         rowKey={(row) => row.id}
@@ -184,22 +201,10 @@ export function StudentsSection() {
         }}
         action={
           canAdd ? (
-            <div className="flex items-center gap-2">
-              {canEdit && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsImporting(true)}
-                >
-                  <Upload className="size-4" aria-hidden />
-                  Import
-                </Button>
-              )}
-              <Button size="sm" onClick={() => setIsCreating(true)}>
-                <Plus className="size-4" aria-hidden />
-                Admit a student
-              </Button>
-            </div>
+            <Button size="sm" onClick={() => setIsCreating(true)}>
+              <Plus className="size-4" aria-hidden />
+              Admit a student
+            </Button>
           ) : null
         }
         emptyTitle={filters.search ? "Nobody matches that" : "No students yet"}

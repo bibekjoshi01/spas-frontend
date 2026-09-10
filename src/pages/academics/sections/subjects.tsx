@@ -3,6 +3,7 @@ import { Pencil, Plus, Trash2, Upload } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { ImportDialog } from "@/components/import-dialog"
+import { PageHeader } from "@/components/page-header"
 import { ActiveField, Field, FormDialog } from "@/components/form-dialog"
 import { ResourceList, RowActions } from "@/components/resource-list"
 import { Badge } from "@/components/ui/badge"
@@ -70,6 +71,22 @@ export function SubjectsSection() {
 
   return (
     <>
+      <PageHeader
+        title="Subjects"
+        description="The curriculum: what is taught, in which semester of which programme."
+        actions={
+          canAdd && canEdit ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsImporting(true)}
+            >
+              <Upload className="size-4" aria-hidden />
+              Import
+            </Button>
+          ) : null
+        }
+      />
       <ResourceList
         rows={data?.results}
         rowKey={(row) => row.id}
@@ -154,22 +171,10 @@ export function SubjectsSection() {
         }}
         action={
           canAdd ? (
-            <div className="flex items-center gap-2">
-              {canEdit && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsImporting(true)}
-                >
-                  <Upload className="size-4" aria-hidden />
-                  Import
-                </Button>
-              )}
-              <Button size="sm" onClick={() => setIsCreating(true)}>
-                <Plus className="size-4" aria-hidden />
-                New subject
-              </Button>
-            </div>
+            <Button size="sm" onClick={() => setIsCreating(true)}>
+              <Plus className="size-4" aria-hidden />
+              New subject
+            </Button>
           ) : null
         }
         emptyTitle="No subjects here"

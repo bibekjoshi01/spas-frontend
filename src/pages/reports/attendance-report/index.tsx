@@ -136,6 +136,13 @@ export default function AttendanceReportPage() {
       <PageHeader
         title="Attendance reports"
         description="Daily, weekly, and custom-range attendance across the classes you manage."
+        actions={
+          <ExportMenu
+            exporting={exporting}
+            disabled={!data?.count}
+            onExport={(format) => void exportReport(format)}
+          />
+        }
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -419,13 +426,6 @@ export default function AttendanceReportPage() {
               end_date: today,
             }),
         }}
-        action={
-          <ExportMenu
-            exporting={exporting}
-            disabled={!data?.count}
-            onExport={(format) => void exportReport(format)}
-          />
-        }
         emptyTitle="No attendance sessions found"
         emptyMessage="No held classes match this date range and filter selection."
         columns={[

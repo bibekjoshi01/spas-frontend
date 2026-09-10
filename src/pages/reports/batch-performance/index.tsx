@@ -185,6 +185,13 @@ export default function BatchPerformanceReportPage() {
       <PageHeader
         title="Batch performance"
         description="Semester-level attendance and performance for every student in your management scope."
+        actions={
+          <ExportMenu
+            exporting={exporting}
+            disabled={!effectiveSemesterId || !data?.count}
+            onExport={(format) => void exportReport(format)}
+          />
+        }
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -368,13 +375,6 @@ export default function BatchPerformanceReportPage() {
             setFilters({ attention: "all", ordering: "full_name" })
           },
         }}
-        action={
-          <ExportMenu
-            exporting={exporting}
-            disabled={!effectiveSemesterId || !data?.count}
-            onExport={(format) => void exportReport(format)}
-          />
-        }
         emptyTitle={
           effectiveSemesterId ? "No students found" : "Select a semester"
         }
