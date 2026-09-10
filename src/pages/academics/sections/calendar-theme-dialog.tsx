@@ -92,6 +92,7 @@ export function CalendarThemeDialog({ onClose }: { onClose: () => void }) {
       isSubmitting={state.isLoading}
       canSubmit={!invalid && !settings.isLoading}
       submitLabel="Save theme"
+      contentClassName="sm:max-w-2xl"
       onSubmit={async () => {
         try {
           await update(theme).unwrap()
@@ -104,53 +105,55 @@ export function CalendarThemeDialog({ onClose }: { onClose: () => void }) {
       }}
     >
       {settings.isLoading ? (
-        <div className="space-y-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           {ROLES.map((role) => (
-            <Skeleton key={role.key} className="h-10 w-full" />
+            <Skeleton key={role.key} className="h-16 w-full" />
           ))}
         </div>
       ) : (
         <>
-          {ROLES.map((role) => (
-            <Field
-              key={role.key}
-              label={role.label}
-              htmlFor={`theme-${role.key}`}
-              hint={role.hint}
-              error={errors[role.errorKey]}
-            >
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  aria-label={`${role.label} colour`}
-                  value={
-                    HEX.test(theme[role.key])
-                      ? theme[role.key]
-                      : DEFAULT_CALENDAR_THEME[role.key]
-                  }
-                  onChange={(event) =>
-                    set({
-                      [role.key]: event.target.value,
-                    } as Partial<CalendarTheme>)
-                  }
-                  className="size-8 shrink-0 cursor-pointer rounded-sm border border-input bg-card p-0.5"
-                />
-                <Input
-                  id={`theme-${role.key}`}
-                  value={theme[role.key]}
-                  spellCheck={false}
-                  onChange={(event) =>
-                    set({
-                      [role.key]: event.target.value,
-                    } as Partial<CalendarTheme>)
-                  }
-                  placeholder={DEFAULT_CALENDAR_THEME[role.key]}
-                  className="w-32 font-mono"
-                  aria-invalid={!HEX.test(theme[role.key]) || undefined}
-                />
-              </div>
-            </Field>
-          ))}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {ROLES.map((role) => (
+              <Field
+                key={role.key}
+                label={role.label}
+                htmlFor={`theme-${role.key}`}
+                hint={role.hint}
+                error={errors[role.errorKey]}
+              >
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    aria-label={`${role.label} colour`}
+                    value={
+                      HEX.test(theme[role.key])
+                        ? theme[role.key]
+                        : DEFAULT_CALENDAR_THEME[role.key]
+                    }
+                    onChange={(event) =>
+                      set({
+                        [role.key]: event.target.value,
+                      } as Partial<CalendarTheme>)
+                    }
+                    className="size-8 shrink-0 cursor-pointer rounded-sm border border-input bg-card p-0.5"
+                  />
+                  <Input
+                    id={`theme-${role.key}`}
+                    value={theme[role.key]}
+                    spellCheck={false}
+                    onChange={(event) =>
+                      set({
+                        [role.key]: event.target.value,
+                      } as Partial<CalendarTheme>)
+                    }
+                    placeholder={DEFAULT_CALENDAR_THEME[role.key]}
+                    className="w-32 font-mono"
+                    aria-invalid={!HEX.test(theme[role.key]) || undefined}
+                  />
+                </div>
+              </Field>
+            ))}
+          </div>
 
           <Field label="Dates">
             <Label className="flex cursor-pointer items-center gap-2 text-sm font-normal">
