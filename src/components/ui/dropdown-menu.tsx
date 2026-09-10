@@ -18,16 +18,22 @@ function DropdownMenuPortal({
   )
 }
 
+/**
+ * The trigger sets no height of its own.
+ *
+ * Every trigger here is `asChild` over a control that already has one, and
+ * Radix's Slot joins the two class strings rather than merging them — so a
+ * height set here does not replace the child's, it sits beside it and wins on
+ * source order. An `h-11` here quietly made every dropdown trigger in the app
+ * 44px: the export button, the row action menus, the filter chooser.
+ */
 function DropdownMenuTrigger({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
-  const { className = "", ...rest } = props
-
   return (
     <DropdownMenuPrimitive.Trigger
       data-slot="dropdown-menu-trigger"
-      className={cn("h-11", className)}
-      {...rest}
+      {...props}
     />
   )
 }

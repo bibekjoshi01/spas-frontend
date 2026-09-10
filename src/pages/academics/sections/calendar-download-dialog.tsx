@@ -145,10 +145,9 @@ export function CalendarDownloadDialog({
               return (
                 <Label
                   key={key}
-                  className="flex cursor-pointer items-center gap-2 rounded-sm border bg-white p-3 text-slate-900"
+                  className="flex cursor-pointer items-center gap-2 rounded-sm border bg-card p-3 text-card-foreground"
                 >
                   <Checkbox
-                    className="data-[state=checked]:text-slate-900"
                     checked={Boolean(selected[key])}
                     onCheckedChange={(checked) =>
                       setSelected((previous) => {
@@ -161,7 +160,7 @@ export function CalendarDownloadDialog({
                   />
                   <span>
                     {month.nameNepali}{" "}
-                    <span className="block text-xs font-normal text-slate-600">
+                    <span className="block text-xs font-normal text-muted-foreground">
                       {month.name}
                     </span>
                   </span>
