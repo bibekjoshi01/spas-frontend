@@ -1,6 +1,7 @@
 import { lazy, Suspense, useMemo, useState } from "react"
 import { Search } from "lucide-react"
 
+import { InternalEvaluationButton } from "@/components/internal-evaluation-dialog"
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { ExportMenu } from "@/components/export-menu"
 import { QueryState } from "@/components/query-state"
@@ -149,11 +150,14 @@ export function AllocationReportDialog({
                   {allocation.teacher.fullName}
                 </DialogDescription>
               </div>
-              <ExportMenu
-                exporting={exporting}
-                disabled={!rows.length}
-                onExport={(format) => void exportReport(format)}
-              />
+              <div className="flex flex-wrap items-center gap-2">
+                <InternalEvaluationButton allocation={allocation.id} />
+                <ExportMenu
+                  exporting={exporting}
+                  disabled={!rows.length}
+                  onExport={(format) => void exportReport(format)}
+                />
+              </div>
             </div>
           </DialogHeader>
 

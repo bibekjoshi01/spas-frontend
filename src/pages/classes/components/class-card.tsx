@@ -9,6 +9,7 @@ import {
   Users,
 } from "lucide-react"
 
+import { InternalEvaluationButton } from "@/components/internal-evaluation-dialog"
 import { AttendanceMeter } from "@/components/attendance-meter"
 import { TrendBadge } from "@/components/attendance-trend"
 import { Badge } from "@/components/ui/badge"
@@ -118,6 +119,7 @@ export function ClassCard({ item, today }: ClassCardProps) {
             </Link>
           </Button>
         </div>
+        <InternalEvaluationButton allocation={item.allocation} />
       </CardContent>
     </Card>
   )

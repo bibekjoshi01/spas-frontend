@@ -259,6 +259,7 @@ function ProgramForm({
     name: program?.name ?? "",
     code: program?.code ?? "",
     totalSemesters: String(program?.totalSemesters ?? 8),
+    academicLevel: program?.academicLevel ?? "",
     coordinator: program?.coordinator ? String(program.coordinator.id) : "",
   })
   const [isActive, setIsActive] = useState(program?.isActive ?? true)
@@ -280,6 +281,7 @@ function ProgramForm({
       name: form.name.trim(),
       code: form.code.trim(),
       totalSemesters: Number(form.totalSemesters),
+      academicLevel: form.academicLevel.trim(),
       coordinator: form.coordinator ? Number(form.coordinator) : null,
     }
 
@@ -374,6 +376,22 @@ function ProgramForm({
         </Field>
       </div>
 
+      <Field
+        label="Academic level"
+        htmlFor="program-level"
+        error={errors.academicLevel}
+        hint="Required on internal evaluation sheets, for example Bachelor or Master."
+      >
+        <Input
+          id="program-level"
+          maxLength={50}
+          value={form.academicLevel}
+          onChange={(event) =>
+            setForm({ ...form, academicLevel: event.target.value })
+          }
+          placeholder="Bachelor"
+        />
+      </Field>
       <Field
         label="Coordinator"
         error={errors.coordinator}

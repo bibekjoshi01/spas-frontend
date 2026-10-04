@@ -24,6 +24,7 @@ const AcademicCalendar = lazy(() => import("@/pages/academics/calendar"))
 
 const People = lazy(() => import("@/pages/people/students"))
 const Accounts = lazy(() => import("@/pages/people/accounts"))
+const InstitutionSettings = lazy(() => import("@/pages/settings/institution"))
 const PerformanceSettings = lazy(() => import("@/pages/settings/performance"))
 const AuditTrailPage = lazy(() => import("@/pages/audit"))
 const StudentDashboard = lazy(() => import("@/pages/student"))
@@ -237,6 +238,13 @@ export const privateRoutes: AppRoute[] = [
     // this only decides who sees the screen at all.
     permission: "view_user",
     title: "Audit Trail",
+    showInSidebar: true,
+  },
+  {
+    path: "/settings/institution",
+    element: InstitutionSettings,
+    superuserOnly: true,
+    title: "Institution Details",
     showInSidebar: true,
   },
   {

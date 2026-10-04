@@ -31,6 +31,7 @@ const CACHE_TAGS = [
   "AssignmentSubmissions",
   "ClassPerformance",
   // Academic structure
+  "Institution",
   "Department",
   "Program",
   "Batch",

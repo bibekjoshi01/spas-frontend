@@ -225,6 +225,14 @@ export const NAV_ITEMS: NavItem[] = [
     section: "Administration",
   },
   {
+    label: "Institution Details",
+    href: "/settings/institution",
+    icon: Building2,
+    breadcrumb: "Institution Details",
+    section: "Administration",
+    superuserOnly: true,
+  },
+  {
     label: "Performance Settings",
     href: "/settings/performance",
     superuserOnly: true,

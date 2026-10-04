@@ -358,6 +358,9 @@ function SubjectForm({
     code: subject?.code ?? "",
     name: subject?.name ?? "",
     creditHours: String(subject?.creditHours ?? 3),
+    internalFullMarks: String(subject?.internalFullMarks ?? 40),
+    internalPassMarks: String(subject?.internalPassMarks ?? 16),
+    assessmentComponent: subject?.assessmentComponent ?? "THEORY",
     isElective: subject?.isElective ?? false,
   })
   const [isActive, setIsActive] = useState(subject?.isActive ?? true)
@@ -377,6 +380,9 @@ function SubjectForm({
       code: form.code.trim(),
       name: form.name.trim(),
       creditHours: Number(form.creditHours),
+      internalFullMarks: Number(form.internalFullMarks),
+      internalPassMarks: Number(form.internalPassMarks),
+      assessmentComponent: form.assessmentComponent,
       isElective: form.isElective,
     }
 
@@ -502,6 +508,64 @@ function SubjectForm({
         </label>
       </div>
 
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field
+          label="Internal full marks"
+          htmlFor="subject-internal-full"
+          error={errors.internalFullMarks}
+          hint="The weighted performance score is scaled to this total."
+        >
+          <Input
+            id="subject-internal-full"
+            type="number"
+            min={1}
+            max={1000}
+            step={1}
+            value={form.internalFullMarks}
+            onChange={(event) =>
+              setForm({ ...form, internalFullMarks: event.target.value })
+            }
+          />
+        </Field>
+        <Field
+          label="Internal pass marks"
+          htmlFor="subject-internal-pass"
+          error={errors.internalPassMarks}
+        >
+          <Input
+            id="subject-internal-pass"
+            type="number"
+            min={0}
+            max={Number(form.internalFullMarks)}
+            step={1}
+            value={form.internalPassMarks}
+            onChange={(event) =>
+              setForm({ ...form, internalPassMarks: event.target.value })
+            }
+          />
+        </Field>
+      </div>
+      <Field
+        label="Internal assessment component"
+        error={errors.assessmentComponent}
+        hint="Printed as the paper label on the sheet."
+      >
+        <Select
+          value={form.assessmentComponent}
+          onValueChange={(value: typeof form.assessmentComponent) =>
+            setForm({ ...form, assessmentComponent: value })
+          }
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="THEORY">Theory</SelectItem>
+            <SelectItem value="PRACTICAL">Practical</SelectItem>
+            <SelectItem value="COMBINED">Combined</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
       {subject && (
         <ActiveField
           checked={isActive}

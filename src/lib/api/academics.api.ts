@@ -27,6 +27,7 @@ export interface Program {
   uuid: string
   name: string
   code: string
+  academicLevel: string
   totalSemesters: number
   department: { id: number; name: string; code: string }
   coordinator: UserBrief | null
@@ -76,6 +77,9 @@ export interface Subject {
   name: string
   program: { id: number; name: string; code: string }
   semester: number
+  internalFullMarks: number
+  internalPassMarks: number
+  assessmentComponent: "THEORY" | "PRACTICAL" | "COMBINED"
   creditHours: number
   isElective: boolean
   isActive: boolean
@@ -207,6 +211,7 @@ export const academicsApi = rootAPI.injectEndpoints({
         department: number
         name: string
         code: string
+        academicLevel?: string
         totalSemesters?: number
         coordinator?: number | null
       }
@@ -368,6 +373,9 @@ export const academicsApi = rootAPI.injectEndpoints({
         semester: number
         code: string
         name: string
+        internalFullMarks?: number
+        internalPassMarks?: number
+        assessmentComponent?: "THEORY" | "PRACTICAL" | "COMBINED"
         creditHours?: number
         isElective?: boolean
       }
