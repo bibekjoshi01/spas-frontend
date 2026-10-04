@@ -104,11 +104,8 @@ axiosInstance.interceptors.response.use(
     if (sessionChanged(errorConfig))
       throw new axios.CanceledError("Account changed.")
 
-    // Network Errors
-    if (axios.isCancel(error)) {
-      notifier.error(`Request cancelled: ${error.message}`)
-      throw error
-    }
+    // Cancellations are the app's own doing (an account switch), not news.
+    if (axios.isCancel(error)) throw error
 
     if (error.code === "ERR_NETWORK") {
       notifier.error("Network error.")
@@ -192,26 +189,8 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error)
     }
 
-    // Other Errors
-    switch (error.response?.status) {
-      case 403:
-        notifier.error("Permission denied.")
-        break
-
-      case 404:
-        notifier.error("Resource not found.")
-        break
-
-      case 405:
-        notifier.error("Method not allowed.")
-        break
-
-      default:
-        if (error.response?.status >= 500) {
-          notifier.error("Server error. Please try again later.")
-        }
-    }
-
+    // Everything else is reported by the screen that made the request, in
+    // its own words and usually in place; a generic toast here only doubled it.
     throw error
   }
 )

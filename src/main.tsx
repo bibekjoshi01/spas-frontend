@@ -49,7 +49,7 @@ async function bootstrap() {
               <TooltipProvider>
                 <ThemeProvider>
                   <RouterProvider router={router} />
-                  <Toaster richColors position="top-right" />
+                  <Toaster position="top-right" />
                 </ThemeProvider>
               </TooltipProvider>
             </PersistGate>
