@@ -297,6 +297,7 @@ axiosInstance.defaults.adapter = async (config) => {
   else if (path.endsWith("roles")) data = list([])
   else if (path.endsWith("students")) data = list([student])
   else if (path.endsWith("roster")) data = [roster]
+  else if (path.endsWith("/marks")) data = []
   else if (path.endsWith("class-performance"))
     data = [{ ...roster, score: 8, remarks: "Consistent participation" }]
   else if (path.endsWith("audit-mod/resources"))

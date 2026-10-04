@@ -36,7 +36,9 @@ import {
   useRecordAttendanceMutation,
   useGetClassCalendarDayQuery,
   fieldErrorsFrom,
+  teachingApi,
 } from "@/lib/api"
+import { useAppDispatch } from "@/lib/redux/hooks"
 import { notifier } from "@/lib/utils/notifier"
 import { localDateKey } from "@/lib/utils/date"
 import { cn } from "@/lib/utils"
@@ -56,6 +58,7 @@ export default function AttendanceSessionPage() {
     date: string
   }>()
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
   const [searchParams] = useSearchParams()
 
   const allocation = Number(allocationId)
@@ -100,8 +103,12 @@ export default function AttendanceSessionPage() {
     { skip: !previousSession }
   )
 
-  const [record, { isLoading: isSaving, error: saveError }] =
+  const [record, { isLoading: isRecording, error: saveError }] =
     useRecordAttendanceMutation()
+  // Between the POST returning and the saved session being refetched the
+  // screen has nothing saved to fall back on, so it stays "saving" until then.
+  const [isSettling, setIsSettling] = useState(false)
+  const isSaving = isRecording || isSettling
   const calendar = useGetClassCalendarDayQuery(
     { allocation, date: sessionDate },
     { skip: !allocation }
@@ -255,12 +262,26 @@ export default function AttendanceSessionPage() {
         })),
       }).unwrap()
 
+      // Keep the edits on screen until the saved copy is back; clearing them
+      // first flashed a new session's whole roster back to unmarked.
+      setIsSettling(true)
+      await Promise.allSettled([
+        existing.refetch(),
+        dispatch(
+          teachingApi.endpoints.getAttendanceSession.initiate(result.id, {
+            subscribe: false,
+            forceRefetch: true,
+          })
+        ),
+      ])
       notifier.success(`Attendance saved for ${result.marked} students.`)
       setEdits({})
       setReasonEdits({})
       setReasonEnrollment(null)
     } catch (error) {
       notifier.error(apiErrorMessage(error, "Could not save attendance."))
+    } finally {
+      setIsSettling(false)
     }
   }
 

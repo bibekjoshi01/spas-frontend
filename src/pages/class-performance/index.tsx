@@ -6,6 +6,7 @@ import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
 import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
+import { UnsavedChangesGuard } from "@/components/unsaved-changes-guard"
 import { StudentNameSortButton } from "@/components/student-name-sort"
 import {
   sortStudentsByName,
@@ -78,7 +79,7 @@ export default function ClassPerformancePage() {
     return (
       draft &&
       (draft.score !== (row.score === null ? "" : String(row.score)) ||
-        draft.remarks !== row.remarks)
+        draft.remarks.trim() !== row.remarks)
     )
   })
   const hasInvalidScores = Object.values(drafts).some((draft) =>
@@ -136,6 +137,11 @@ export default function ClassPerformancePage() {
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-3 p-3 md:p-4">
+      <UnsavedChangesGuard
+        when={dirty.length > 0 && !saving.isLoading}
+        message="Your class performance changes have not been saved. Leaving now will discard them."
+        pageOnly
+      />
       <PageHeader
         title="Class Performance"
         description={

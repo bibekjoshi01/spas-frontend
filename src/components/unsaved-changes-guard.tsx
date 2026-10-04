@@ -11,8 +11,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-export function UnsavedChangesGuard({ when }: { when: boolean }) {
-  const blocker = useBlocker(when)
+export function UnsavedChangesGuard({
+  when,
+  message = "Your attendance changes have not been saved. Leaving now will discard them.",
+  pageOnly = false,
+}: {
+  when: boolean
+  message?: string
+  /** Let query-string changes through when they don't discard the edits. */
+  pageOnly?: boolean
+}) {
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      when && (!pageOnly || currentLocation.pathname !== nextLocation.pathname)
+  )
 
   useEffect(() => {
     if (!when) return
@@ -26,10 +38,7 @@ export function UnsavedChangesGuard({ when }: { when: boolean }) {
       <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Leave without saving?</DialogTitle>
-          <DialogDescription>
-            Your attendance changes have not been saved. Leaving now will
-            discard them.
-          </DialogDescription>
+          <DialogDescription>{message}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => blocker.reset?.()}>

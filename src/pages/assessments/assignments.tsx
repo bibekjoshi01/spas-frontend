@@ -4,6 +4,7 @@ import { ArrowLeft, ClipboardCheck, Pencil, Plus, Save } from "lucide-react"
 
 import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
+import { useDiscardConfirm } from "@/hooks/use-discard-confirm"
 import { useHasPermission } from "@/hooks/use-has-permissions"
 import { useRememberedClass } from "@/hooks/use-remembered-class"
 import { PageHeader } from "@/components/page-header"
@@ -511,6 +512,13 @@ function StatusDialog({
   }, [roster.data, existing.data])
 
   const statuses = useMemo(() => ({ ...saved, ...edits }), [saved, edits])
+  const dirty = Object.entries(edits).some(
+    ([enrollment, status]) => saved[Number(enrollment)] !== status
+  )
+  const { requestClose, confirm } = useDiscardConfirm(
+    dirty && !isSaving,
+    onClose
+  )
 
   const submit = async () => {
     if (!roster.data) return
@@ -533,124 +541,127 @@ function StatusDialog({
   }
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[94dvh] w-[calc(100vw-1rem)] max-w-none overflow-hidden p-3 sm:w-[calc(100vw-2rem)] sm:max-w-[72rem] sm:p-6">
-        <DialogHeader>
-          <DialogTitle>{assignment.title}</DialogTitle>
-        </DialogHeader>
+    <>
+      {confirm}
+      <Dialog open onOpenChange={(open) => !open && requestClose()}>
+        <DialogContent className="max-h-[94dvh] w-[calc(100vw-1rem)] max-w-none overflow-hidden p-3 sm:w-[calc(100vw-2rem)] sm:max-w-[72rem] sm:p-6">
+          <DialogHeader>
+            <DialogTitle>{assignment.title}</DialogTitle>
+          </DialogHeader>
 
-        {!readOnly && (
-          <div className="flex justify-end gap-2 pb-1">
-            {STATUS_ORDER.map((status) => (
-              <Button
-                key={status}
-                size="sm"
-                variant="outline"
-                className="text-xs"
-                disabled={existing.isLoading || !!existing.error}
-                onClick={() => {
-                  if (!roster.data) return
-                  const next: Record<number, AssignmentStatus> = {}
-                  roster.data.forEach((entry) => {
-                    next[entry.enrollment] = status
-                  })
-                  setEdits(next)
-                }}
-              >
-                All {ASSIGNMENT_LABELS[status].toLowerCase()}
-              </Button>
-            ))}
-          </div>
-        )}
-
-        <QueryState
-          isLoading={roster.isLoading || existing.isLoading}
-          error={roster.error ?? existing.error}
-          onRetry={() => {
-            roster.refetch()
-            existing.refetch()
-          }}
-          isEmpty={(roster.data?.length ?? 0) === 0}
-          skeleton={<ListSkeleton rows={8} />}
-          emptyTitle="No students registered"
-          emptyMessage="Register students onto this class first."
-        >
-          <ul className="max-h-[72dvh] divide-y overflow-y-auto rounded-lg border bg-table-surface">
-            <li className="sticky top-0 z-10 flex items-center border-b bg-table-header p-2.5 text-table-header-foreground">
-              <span className="w-40 shrink-0">Roll</span>
-              <StudentNameSortButton
-                direction={nameSort}
-                onChange={setNameSort}
-              />
-            </li>
-            {sortedRoster.map((student) => (
-              <li
-                key={student.enrollment}
-                className="flex items-center justify-between gap-3 p-2.5"
-              >
-                <div className="flex min-w-0 items-center gap-2">
-                  <span className="w-40 shrink-0 font-mono text-xs break-all text-muted-foreground tabular-nums">
-                    {student.rollNumber}
-                  </span>
-                  <span className="truncate text-sm">{student.fullName}</span>
-                </div>
-
-                <div
-                  className="flex shrink-0 gap-1"
-                  role="group"
-                  aria-label={`Status for ${student.fullName}`}
-                >
-                  {STATUS_ORDER.map((status) => {
-                    const active = statuses[student.enrollment] === status
-                    return (
-                      <Button
-                        key={status}
-                        type="button"
-                        size="sm"
-                        variant={active ? "default" : "outline"}
-                        data-active={active}
-                        aria-pressed={active}
-                        disabled={readOnly}
-                        className={cn(
-                          "h-8 px-2.5 text-xs",
-                          STATUS_STYLES[status]
-                        )}
-                        onClick={() =>
-                          setEdits({
-                            ...edits,
-                            [student.enrollment]: status,
-                          })
-                        }
-                      >
-                        {ASSIGNMENT_LABELS[status]}
-                      </Button>
-                    )
-                  })}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </QueryState>
-
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
           {!readOnly && (
-            <Button
-              onClick={submit}
-              disabled={isSaving || existing.isLoading || !!existing.error}
-            >
-              {isSaving ? (
-                <InlineSpinner />
-              ) : (
-                <Save className="size-4" aria-hidden />
-              )}
-              Save
-            </Button>
+            <div className="flex justify-end gap-2 pb-1">
+              {STATUS_ORDER.map((status) => (
+                <Button
+                  key={status}
+                  size="sm"
+                  variant="outline"
+                  className="text-xs"
+                  disabled={existing.isLoading || !!existing.error}
+                  onClick={() => {
+                    if (!roster.data) return
+                    const next: Record<number, AssignmentStatus> = {}
+                    roster.data.forEach((entry) => {
+                      next[entry.enrollment] = status
+                    })
+                    setEdits(next)
+                  }}
+                >
+                  All {ASSIGNMENT_LABELS[status].toLowerCase()}
+                </Button>
+              ))}
+            </div>
           )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+
+          <QueryState
+            isLoading={roster.isLoading || existing.isLoading}
+            error={roster.error ?? existing.error}
+            onRetry={() => {
+              roster.refetch()
+              existing.refetch()
+            }}
+            isEmpty={(roster.data?.length ?? 0) === 0}
+            skeleton={<ListSkeleton rows={8} />}
+            emptyTitle="No students registered"
+            emptyMessage="Register students onto this class first."
+          >
+            <ul className="max-h-[72dvh] divide-y overflow-y-auto rounded-lg border bg-table-surface">
+              <li className="sticky top-0 z-10 flex items-center border-b bg-table-header p-2.5 text-table-header-foreground">
+                <span className="w-40 shrink-0">Roll</span>
+                <StudentNameSortButton
+                  direction={nameSort}
+                  onChange={setNameSort}
+                />
+              </li>
+              {sortedRoster.map((student) => (
+                <li
+                  key={student.enrollment}
+                  className="flex items-center justify-between gap-3 p-2.5"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="w-40 shrink-0 font-mono text-xs break-all text-muted-foreground tabular-nums">
+                      {student.rollNumber}
+                    </span>
+                    <span className="truncate text-sm">{student.fullName}</span>
+                  </div>
+
+                  <div
+                    className="flex shrink-0 gap-1"
+                    role="group"
+                    aria-label={`Status for ${student.fullName}`}
+                  >
+                    {STATUS_ORDER.map((status) => {
+                      const active = statuses[student.enrollment] === status
+                      return (
+                        <Button
+                          key={status}
+                          type="button"
+                          size="sm"
+                          variant={active ? "default" : "outline"}
+                          data-active={active}
+                          aria-pressed={active}
+                          disabled={readOnly}
+                          className={cn(
+                            "h-8 px-2.5 text-xs",
+                            STATUS_STYLES[status]
+                          )}
+                          onClick={() =>
+                            setEdits({
+                              ...edits,
+                              [student.enrollment]: status,
+                            })
+                          }
+                        >
+                          {ASSIGNMENT_LABELS[status]}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </QueryState>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={requestClose}>
+              Cancel
+            </Button>
+            {!readOnly && (
+              <Button
+                onClick={submit}
+                disabled={isSaving || existing.isLoading || !!existing.error}
+              >
+                {isSaving ? (
+                  <InlineSpinner />
+                ) : (
+                  <Save className="size-4" aria-hidden />
+                )}
+                Save
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

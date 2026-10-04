@@ -18,6 +18,7 @@ interface ConfirmDialogProps {
   title: string
   description: string
   confirmLabel?: string
+  cancelLabel?: string
   isPending?: boolean
   /**
    * A refusal from the server, shown in place rather than as a toast.
@@ -42,6 +43,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel = "Archive",
+  cancelLabel = "Cancel",
   isPending,
   error,
   onConfirm,
@@ -64,7 +66,7 @@ export function ConfirmDialog({
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
+            {cancelLabel}
           </Button>
           <Button
             variant="destructive"

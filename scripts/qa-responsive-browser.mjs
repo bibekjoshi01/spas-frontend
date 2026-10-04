@@ -312,6 +312,47 @@ try {
     await pause(350)
     await screenshot(path.split("?")[0].slice(1))
   }
+  // Escape over unsaved marks asks first instead of discarding them.
+  const escape = async () => {
+    for (const type of ["keyDown", "keyUp"])
+      await send("Input.dispatchKeyEvent", {
+        type,
+        key: "Escape",
+        code: "Escape",
+        windowsVirtualKeyCode: 27,
+      })
+    await pause(250)
+  }
+  const marksOpen = () =>
+    evaluate(`!!document.querySelector('input[data-marks-entry="true"]')`)
+  const discardAsked = () =>
+    evaluate(`document.body.textContent.includes('Discard unsaved changes?')`)
+  await evaluate(`window.mountResponsive('/assessments?class=1')`)
+  await pause(450)
+  await click("Enter marks")
+  assert(await marksOpen(), "Marks dialog did not open")
+  await escape()
+  assert(!(await marksOpen()), "Untouched marks dialog did not close")
+  await click("Enter marks")
+  await evaluate(
+    `(()=>{const input=document.querySelector('input[data-marks-entry="true"]');input.focus();Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'42');input.dispatchEvent(new Event('input',{bubbles:true}))})()`
+  )
+  await pause(150)
+  await escape()
+  assert(await discardAsked(), "Escape discarded unsaved marks silently")
+  assert(await marksOpen(), "Marks dialog closed behind the prompt")
+  await click("Keep editing")
+  assert(!(await discardAsked()), "Keep editing left the prompt open")
+  assert(await marksOpen(), "Keeping edits closed the marks dialog")
+  assert.equal(
+    await evaluate(
+      `document.querySelector('input[data-marks-entry="true"]').value`
+    ),
+    "42"
+  )
+  await escape()
+  await click("Discard")
+  assert(!(await marksOpen()), "Discard did not close the marks dialog")
   for (const mode of ["empty", "error"]) {
     await evaluate(
       `window.fixtureMode=${JSON.stringify(mode)};window.mountResponsive('/academics/departments')`
@@ -325,7 +366,7 @@ try {
     )
   }
   console.log(
-    "Passed: keyboard table scrolling, pagination reset on search, clear filters, long select labels, searchable dropdown keyboard selection, short viewport scrolling, long forms, empty/error states."
+    "Passed: keyboard table scrolling, pagination reset on search, clear filters, long select labels, searchable dropdown keyboard selection, short viewport scrolling, long forms, discard prompt over unsaved marks, empty/error states."
   )
 } finally {
   socket?.close()

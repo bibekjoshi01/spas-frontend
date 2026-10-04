@@ -4,6 +4,7 @@ import { ArrowLeft, ClipboardList, Pencil, Plus, Save } from "lucide-react"
 
 import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
+import { useDiscardConfirm } from "@/hooks/use-discard-confirm"
 import { useHasPermission } from "@/hooks/use-has-permissions"
 import { useRememberedClass } from "@/hooks/use-remembered-class"
 import { PageHeader } from "@/components/page-header"
@@ -597,6 +598,15 @@ function MarksDialog({
   }, [roster.data, existing.data])
 
   const entries = useMemo(() => ({ ...saved, ...edits }), [saved, edits])
+  const dirty = Object.entries(edits).some(
+    ([enrollment, entry]) =>
+      saved[Number(enrollment)]?.marks !== entry.marks ||
+      saved[Number(enrollment)]?.absent !== entry.absent
+  )
+  const { requestClose, confirm } = useDiscardConfirm(
+    dirty && !isSaving,
+    onClose
+  )
 
   const invalid = useMemo(
     () =>
@@ -656,165 +666,169 @@ function MarksDialog({
   }
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="grid max-h-[94dvh] w-[calc(100vw-1rem)] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-3 sm:w-[calc(100vw-2rem)] sm:max-w-[80rem] sm:p-6">
-        <DialogHeader className="min-w-0 pr-8">
-          <DialogTitle className="leading-snug">{exam.title}</DialogTitle>
-          <DialogDescription>
-            {readOnly ? "Viewing" : "Enter"} marks out of {exam.fullMarks} for
-            each student. Roll numbers and names remain fully visible.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      {confirm}
+      <Dialog open onOpenChange={(open) => !open && requestClose()}>
+        <DialogContent className="grid max-h-[94dvh] w-[calc(100vw-1rem)] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-3 sm:w-[calc(100vw-2rem)] sm:max-w-[80rem] sm:p-6">
+          <DialogHeader className="min-w-0 pr-8">
+            <DialogTitle className="leading-snug">{exam.title}</DialogTitle>
+            <DialogDescription>
+              {readOnly ? "Viewing" : "Enter"} marks out of {exam.fullMarks} for
+              each student. Roll numbers and names remain fully visible.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="min-h-0 overflow-hidden">
-          <QueryState
-            isLoading={roster.isLoading || existing.isLoading}
-            error={roster.error ?? existing.error}
-            onRetry={() => {
-              roster.refetch()
-              existing.refetch()
-            }}
-            isEmpty={(roster.data?.length ?? 0) === 0}
-            skeleton="table"
-            emptyTitle="No students registered"
-            emptyMessage="Register students onto this class first."
-          >
-            <div className="h-full max-h-[72dvh] overflow-auto rounded-lg border">
-              <table className="w-full min-w-[46rem] border-collapse bg-table-surface text-sm">
-                <thead className="sticky top-0 z-10 bg-table-header text-table-header-foreground">
-                  <tr className="border-b">
-                    <th
-                      scope="col"
-                      className="min-w-52 px-3 py-2 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
-                    >
-                      Roll number
-                    </th>
-                    <th
-                      scope="col"
-                      className="min-w-64 px-3 py-2 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
-                    >
-                      <StudentNameSortButton
-                        direction={nameSort}
-                        onChange={setNameSort}
-                      />
-                    </th>
-                    <th
-                      scope="col"
-                      className="w-32 px-3 py-2 text-right text-[11px] font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase"
-                    >
-                      Marks / {exam.fullMarks}
-                    </th>
-                    <th
-                      scope="col"
-                      className="w-28 px-3 py-2 text-center text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
-                    >
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {sortedRoster.map((student) => {
-                    const entry = entries[student.enrollment] ?? {
-                      marks: "",
-                      absent: false,
-                    }
-                    const tooHigh =
-                      entry.marks !== "" && Number(entry.marks) > exam.fullMarks
-
-                    return (
-                      <tr
-                        key={student.enrollment}
-                        className="transition-colors hover:bg-muted/40"
-                      >
-                        <td className="px-3 py-2.5 font-mono text-xs leading-5 break-all text-muted-foreground tabular-nums">
-                          {student.rollNumber}
-                        </td>
-                        <td className="px-3 py-2.5 leading-5 font-medium break-words">
-                          {student.fullName}
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <Input
-                            type="number"
-                            data-marks-entry="true"
-                            inputMode="decimal"
-                            min={0}
-                            max={exam.fullMarks}
-                            step="0.5"
-                            value={entry.marks}
-                            disabled={readOnly || entry.absent}
-                            aria-label={`Marks for ${student.fullName}`}
-                            aria-invalid={tooHigh}
-                            className={`ml-auto h-8 w-28 text-right tabular-nums ${
-                              tooHigh ? "border-destructive" : ""
-                            }`}
-                            onChange={(event) =>
-                              setEdits({
-                                ...entries,
-                                [student.enrollment]: {
-                                  ...entry,
-                                  marks: event.target.value,
-                                },
-                              })
-                            }
-                            onKeyDown={focusNextMarksInput}
-                          />
-                        </td>
-                        <td className="px-3 py-2.5 text-center">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={entry.absent ? "destructive" : "outline"}
-                            className="h-8 min-w-20 px-2 text-xs"
-                            aria-pressed={entry.absent}
-                            disabled={readOnly}
-                            onClick={() =>
-                              setEdits({
-                                ...entries,
-                                [student.enrollment]: {
-                                  marks: entry.absent ? entry.marks : "",
-                                  absent: !entry.absent,
-                                },
-                              })
-                            }
-                          >
-                            Absent
-                          </Button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </QueryState>
-        </div>
-
-        <DialogFooter className="border-t pt-3">
-          {invalid && (
-            <p className="mr-auto text-xs text-destructive">
-              Marks must be between 0 and {exam.fullMarks}.
-            </p>
-          )}
-          <Button variant="ghost" onClick={onClose}>
-            {readOnly ? "Close" : "Cancel"}
-          </Button>
-          {!readOnly && (
-            <Button
-              onClick={submit}
-              disabled={
-                isSaving || invalid || existing.isLoading || !!existing.error
-              }
+          <div className="min-h-0 overflow-hidden">
+            <QueryState
+              isLoading={roster.isLoading || existing.isLoading}
+              error={roster.error ?? existing.error}
+              onRetry={() => {
+                roster.refetch()
+                existing.refetch()
+              }}
+              isEmpty={(roster.data?.length ?? 0) === 0}
+              skeleton="table"
+              emptyTitle="No students registered"
+              emptyMessage="Register students onto this class first."
             >
-              {isSaving ? (
-                <InlineSpinner />
-              ) : (
-                <Save className="size-4" aria-hidden />
-              )}
-              Save marks
+              <div className="h-full max-h-[72dvh] overflow-auto rounded-lg border">
+                <table className="w-full min-w-[46rem] border-collapse bg-table-surface text-sm">
+                  <thead className="sticky top-0 z-10 bg-table-header text-table-header-foreground">
+                    <tr className="border-b">
+                      <th
+                        scope="col"
+                        className="min-w-52 px-3 py-2 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+                      >
+                        Roll number
+                      </th>
+                      <th
+                        scope="col"
+                        className="min-w-64 px-3 py-2 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+                      >
+                        <StudentNameSortButton
+                          direction={nameSort}
+                          onChange={setNameSort}
+                        />
+                      </th>
+                      <th
+                        scope="col"
+                        className="w-32 px-3 py-2 text-right text-[11px] font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase"
+                      >
+                        Marks / {exam.fullMarks}
+                      </th>
+                      <th
+                        scope="col"
+                        className="w-28 px-3 py-2 text-center text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+                      >
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {sortedRoster.map((student) => {
+                      const entry = entries[student.enrollment] ?? {
+                        marks: "",
+                        absent: false,
+                      }
+                      const tooHigh =
+                        entry.marks !== "" &&
+                        Number(entry.marks) > exam.fullMarks
+
+                      return (
+                        <tr
+                          key={student.enrollment}
+                          className="transition-colors hover:bg-muted/40"
+                        >
+                          <td className="px-3 py-2.5 font-mono text-xs leading-5 break-all text-muted-foreground tabular-nums">
+                            {student.rollNumber}
+                          </td>
+                          <td className="px-3 py-2.5 leading-5 font-medium break-words">
+                            {student.fullName}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <Input
+                              type="number"
+                              data-marks-entry="true"
+                              inputMode="decimal"
+                              min={0}
+                              max={exam.fullMarks}
+                              step="0.5"
+                              value={entry.marks}
+                              disabled={readOnly || entry.absent}
+                              aria-label={`Marks for ${student.fullName}`}
+                              aria-invalid={tooHigh}
+                              className={`ml-auto h-8 w-28 text-right tabular-nums ${
+                                tooHigh ? "border-destructive" : ""
+                              }`}
+                              onChange={(event) =>
+                                setEdits({
+                                  ...entries,
+                                  [student.enrollment]: {
+                                    ...entry,
+                                    marks: event.target.value,
+                                  },
+                                })
+                              }
+                              onKeyDown={focusNextMarksInput}
+                            />
+                          </td>
+                          <td className="px-3 py-2.5 text-center">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={entry.absent ? "destructive" : "outline"}
+                              className="h-8 min-w-20 px-2 text-xs"
+                              aria-pressed={entry.absent}
+                              disabled={readOnly}
+                              onClick={() =>
+                                setEdits({
+                                  ...entries,
+                                  [student.enrollment]: {
+                                    marks: entry.absent ? entry.marks : "",
+                                    absent: !entry.absent,
+                                  },
+                                })
+                              }
+                            >
+                              Absent
+                            </Button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </QueryState>
+          </div>
+
+          <DialogFooter className="border-t pt-3">
+            {invalid && (
+              <p className="mr-auto text-xs text-destructive">
+                Marks must be between 0 and {exam.fullMarks}.
+              </p>
+            )}
+            <Button variant="ghost" onClick={requestClose}>
+              {readOnly ? "Close" : "Cancel"}
             </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            {!readOnly && (
+              <Button
+                onClick={submit}
+                disabled={
+                  isSaving || invalid || existing.isLoading || !!existing.error
+                }
+              >
+                {isSaving ? (
+                  <InlineSpinner />
+                ) : (
+                  <Save className="size-4" aria-hidden />
+                )}
+                Save marks
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

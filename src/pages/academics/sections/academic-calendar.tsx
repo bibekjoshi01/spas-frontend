@@ -358,6 +358,9 @@ function WeekendPolicy() {
             onClick={async () => {
               try {
                 await update({ weekendDays: chosen }).unwrap()
+                // Drop the draft only once the saved days are back, or the
+                // boxes flick to the old days while the refetch is in flight.
+                await settings.refetch()
                 setDraft(null)
                 notifier.success("Weekend days saved.")
               } catch {
