@@ -160,7 +160,7 @@ export function AcademicCalendarSection() {
 
   return (
     <div className="space-y-3" style={palette}>
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm border bg-card p-2">
+      <div className="flex flex-col items-center gap-3 rounded-sm border bg-card p-3 sm:flex-row sm:flex-wrap sm:justify-between sm:p-2">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -190,10 +190,11 @@ export function AcademicCalendarSection() {
           </Button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
           <Button
             variant="outline"
             size="sm"
+            className="w-full max-w-xs sm:w-auto"
             disabled={!data || calendar.isFetching || calendar.isError}
             onClick={() => setShowDownload(true)}
           >
@@ -203,6 +204,7 @@ export function AcademicCalendarSection() {
           <Button
             variant="outline"
             size="sm"
+            className="w-full max-w-xs sm:w-auto"
             disabled={!data || calendar.isFetching || calendar.isError}
             onClick={() => setShowImportant(true)}
           >
@@ -275,7 +277,7 @@ export function AcademicCalendarSection() {
 
 function Legend() {
   return (
-    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
       <span className="flex items-center gap-1.5">
         <span className="cal-holiday size-3 rounded-sm bg-card ring-1 ring-current/50" />
         Holiday

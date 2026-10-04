@@ -19,6 +19,7 @@
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "test:responsive": "node scripts/qa-responsive-browser.mjs",
+    "test:student-portal": "node scripts/qa-student-portal-browser.mjs",
     "test:session": "node scripts/qa-session-browser.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

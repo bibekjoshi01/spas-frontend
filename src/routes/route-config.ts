@@ -70,7 +70,7 @@ export const privateRoutes: AppRoute[] = [
     element: StudentDashboard,
     role: "STUDENT",
     skeleton: "dashboard",
-    title: "My Performance",
+    title: "Student Portal",
     showInSidebar: true,
   },
   {
