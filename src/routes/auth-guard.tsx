@@ -19,9 +19,7 @@ let validationRequest: {
 export default function AuthGuard() {
   const dispatch = useAppDispatch()
   const location = useLocation()
-  const { isAuthenticated, sessionStatus, profile } = useAppSelector(
-    (state) => state.auth
-  )
+  const { isAuthenticated, profile } = useAppSelector((state) => state.auth)
   // Refresh tokens identify the session while access tokens rotate/expire.
   const sessionKey = auth.getRefresh() || auth.getAccess()
   const [validation, setValidation] = useState<{
@@ -106,7 +104,10 @@ export default function AuthGuard() {
     )
   }
 
-  if (sessionStatus !== "ready" || validation?.key !== sessionKey) {
+  // Block only until this session is first validated. Focus rechecks run in
+  // the background; unmounting <Outlet /> for them would close open dialogs
+  // and reload every screen whenever the user switches windows.
+  if (validation?.key !== sessionKey) {
     return (
       <div className="grid min-h-screen place-items-center bg-background">
         <div className="text-center">
