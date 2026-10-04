@@ -29,6 +29,7 @@ import {
   sessionInvalidated,
   setProfile,
 } from "@/pages/auth/redux/auth.slice"
+import type { IUserProfile } from "@/pages/auth/redux/auth.types"
 
 const persistConfig = {
   key: "root",
@@ -39,17 +40,36 @@ const persistedReducer = persistReducer(persistConfig, rootReducer)
 
 const accountBoundaryListener = createListenerMiddleware()
 
+/** Everything about a profile that decides what the server will return. */
+const accessFingerprint = (profile: IUserProfile | null | undefined) =>
+  profile
+    ? JSON.stringify([
+        profile.id,
+        profile.isSuperuser,
+        (profile.roles ?? []).map((role) => role.codename).sort(),
+        [...(profile.permissions ?? [])].sort(),
+      ])
+    : null
+
 accountBoundaryListener.startListening({
   matcher: isAnyOf(loginSuccess, logoutSuccess, sessionInvalidated, setProfile),
   effect: (action, api) => {
+    // A fresh profile may reflect revoked permissions or an account switched
+    // in another tab, but the session recheck on every window focus and a
+    // profile edit also land here. Only a change of identity or access is a
+    // boundary; wiping the cache for anything else blanks every open screen.
+    if (setProfile.match(action)) {
+      const previous = (api.getOriginalState() as RootState).auth.profile
+      if (accessFingerprint(previous) === accessFingerprint(action.payload))
+        return
+    }
+
     // RTK Query cache entries are scoped to the account that fetched them.
     // Keeping them through an account switch can expose stale admin rows to a
     // teacher and can make screens request resources the new account cannot
     // access. Reset all server data at every authentication boundary.
     api.dispatch(rootAPI.util.resetApiState())
 
-    // A fresh profile may reflect revoked permissions or an account switched
-    // in another tab. Re-fetch protected data under that current identity.
     if (setProfile.match(action)) return
     if (sessionInvalidated.match(action)) auth.clear()
 

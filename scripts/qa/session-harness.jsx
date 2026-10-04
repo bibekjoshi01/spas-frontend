@@ -152,6 +152,26 @@ w.cacheCheck = async () => {
     after: Object.keys(store.getState()[rootAPI.reducerPath].queries).length,
   }
 }
+const cachedQueries = () =>
+  Object.keys(store.getState()[rootAPI.reducerPath].queries).length
+w.focusCheck = async () => {
+  await store.dispatch(
+    rootAPI.util.upsertQueryData("getClasses", undefined, [{ allocation: 99 }])
+  )
+  const mounts = w.workspaceMounts
+  window.dispatchEvent(new Event("focus"))
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  const focus = {
+    remounted: w.workspaceMounts !== mounts,
+    rechecked: w.requests.filter((url) => url.endsWith("/account/me")).length,
+    cacheKept: cachedQueries() > 0,
+  }
+  // A profile whose access changed is still an account boundary.
+  store.dispatch(
+    setProfile({ ...store.getState().auth.profile, permissions: ["other"] })
+  )
+  return { ...focus, cacheAfterAccessChange: cachedQueries() }
+}
 w.ready = true
 
 const { axiosInstance } = await import("/src/lib/redux/axios.ts")

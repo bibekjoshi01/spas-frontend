@@ -127,6 +127,11 @@ try {
   assert(
     await evaluate(`document.body.textContent.includes('PRIVATE WORKSPACE')`)
   )
+  const focus = await evaluate("window.focusCheck()")
+  assert(focus.rechecked >= 2, "Window focus did not recheck the session")
+  assert(!focus.remounted, "Window focus remounted the workspace")
+  assert(focus.cacheKept, "Window focus wiped cached server data")
+  assert.equal(focus.cacheAfterAccessChange, 0)
   await evaluate(`window.mount('/admin')`)
   await pause(700)
   assert(await evaluate(`document.body.textContent.includes('ACCESS DENIED')`))
@@ -159,7 +164,7 @@ try {
     "Passed: stale account responses and late token refresh are rejected."
   )
   console.log(
-    "Passed: no protected render before validation; expired access restored with refresh; invalid login preserves session; transient refresh failure supports retry; teacher denied admin route; logout clears cached records."
+    "Passed: no protected render before validation; expired access restored with refresh; invalid login preserves session; window focus rechecks without remounting or wiping cache; transient refresh failure supports retry; teacher denied admin route; logout clears cached records."
   )
 } finally {
   socket?.close()
