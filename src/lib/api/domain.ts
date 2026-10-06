@@ -376,6 +376,34 @@ export interface AssignmentSubmission {
   remarks: string
 }
 
+export interface AssignmentDocument {
+  type?: string
+  text?: string
+  attrs?: { level?: number; start?: number; type?: null }
+  marks?: Array<{ type: string }>
+  content?: AssignmentDocument[]
+}
+
+export interface AssignmentAttachment {
+  id: number
+  name: string
+  size: number
+}
+
+export interface AssignmentDetail extends Assignment {
+  description: AssignmentDocument
+  attachments: AssignmentAttachment[]
+}
+
+export interface AssignmentWrite {
+  title: string
+  assignedDate: string
+  dueDate: string | null
+  description: AssignmentDocument
+  newFiles: File[]
+  removeAttachments: number[]
+}
+
 export interface Student {
   id: number
   uuid: string

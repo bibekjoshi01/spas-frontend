@@ -6,6 +6,8 @@ import type {
   ManagementStudentReport,
   SemesterStatus,
   AttendanceStatus,
+  AssignmentDocument,
+  AssignmentAttachment,
 } from "./domain"
 import type { Paginated } from "./types"
 
@@ -95,6 +97,15 @@ export interface StudentPortalSettings {
   updatedAt: string | null
 }
 
+export type StudentPortalAssignmentDetail =
+  ClassStudentDetail["assignments"][number] & {
+    description: AssignmentDocument
+    attachments: AssignmentAttachment[]
+    subjectCode: string
+    subjectName: string
+    teacherName: string
+  }
+
 export const studentPortalApi = rootAPI.injectEndpoints({
   endpoints: (build) => ({
     getStudentPortalOverview: build.query<StudentPortalOverview, void>({
@@ -104,6 +115,15 @@ export const studentPortalApi = rootAPI.injectEndpoints({
     getStudentPortalSubject: build.query<StudentPortalSubject, number>({
       query: (enrollment) => ({
         url: `performance-mod/student-portal/subjects/${enrollment}`,
+      }),
+      providesTags: ["StudentPortal"],
+    }),
+    getStudentPortalAssignment: build.query<
+      StudentPortalAssignmentDetail,
+      number
+    >({
+      query: (id) => ({
+        url: `performance-mod/student-portal/assignments/${id}`,
       }),
       providesTags: ["StudentPortal"],
     }),
@@ -138,6 +158,7 @@ export const studentPortalApi = rootAPI.injectEndpoints({
 export const {
   useGetStudentPortalOverviewQuery,
   useGetStudentPortalSubjectQuery,
+  useGetStudentPortalAssignmentQuery,
   useGetStudentPortalAttendanceQuery,
   useGetStudentPortalSettingsQuery,
   useUpdateStudentPortalSettingsMutation,

@@ -35,7 +35,7 @@ export default function InitialPasswordChange() {
       })
       auth.setTokens(tokens)
       dispatch(setProfile(await fetchMe()))
-      notifier.success("Password changed. Welcome to your student portal.")
+      notifier.success("Password changed. You can now use your account.")
     } catch (requestError) {
       setError(apiErrorMessage(requestError, "Could not change your password."))
     } finally {
@@ -55,8 +55,8 @@ export default function InitialPasswordChange() {
             Create your private password
           </h1>
           <p className="text-sm text-muted-foreground">
-            Your roll number was only a temporary password. Change it before
-            opening your records.
+            Replace your temporary password with a private password before using
+            your account.
           </p>
         </div>
         <div className="space-y-2">

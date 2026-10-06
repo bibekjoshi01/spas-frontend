@@ -22,8 +22,14 @@ import {
 import { formatPercentage } from "@/lib/utils"
 
 import { StudentSubjectDialog } from "./subject-detail"
+import { StudentAssignments } from "./assignments"
 
-const sections = ["Overview", "My subjects", "Academic record"] as const
+const sections = [
+  "Overview",
+  "My subjects",
+  "Assignments",
+  "Academic record",
+] as const
 const lifecycle = {
   RUNNING: "Current",
   UPCOMING: "Upcoming",
@@ -104,6 +110,9 @@ export default function StudentDashboard() {
       >
         {data && (
           <div className="space-y-5">
+            {section === "Assignments" && (
+              <StudentAssignments overview={data} />
+            )}
             {section === "Overview" && (
               <>
                 <section className="grid gap-3 sm:grid-cols-3">

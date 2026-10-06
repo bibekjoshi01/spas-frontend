@@ -95,6 +95,8 @@ axios.defaults.adapter = async (config) => {
     )
   }
   if (config.url.endsWith("/internal-evaluation")) return response(preview())
+  if (config.url.endsWith("/performance-weights"))
+    return response({ attendanceEligibilityThreshold: 75 })
   if (config.url.includes("/institutions")) {
     if (config.method === "delete") {
       window.institution = null
@@ -137,6 +139,23 @@ const { setProfile } = await import("/src/pages/auth/redux/auth.slice.ts")
 const { rootAPI } = await import("/src/lib/redux/api-slice.ts")
 const { InternalEvaluationButton } =
   await import("/src/components/internal-evaluation-dialog.tsx")
+const { ClassWorkspaceNav } =
+  await import("/src/components/class-workspace-nav.tsx")
+const { ClassCard } =
+  await import("/src/pages/classes/components/class-card.tsx")
+const classSummary = {
+  allocation: 11,
+  code: "MTH301",
+  name: "Engineering Mathematics III",
+  semester: 3,
+  semesterStatus: "RUNNING",
+  programCode: "BCT",
+  batchYear: 2082,
+  meetings: [],
+  studentCount: 0,
+  classesHeld: 0,
+  attendancePercentage: 0,
+}
 const { default: InstitutionSettings } =
   await import("/src/pages/settings/institution.tsx")
 let root
@@ -169,6 +188,11 @@ window.mount = (page = "evaluation", allowed = true) => {
         <MemoryRouter>
           {page === "institution" ? (
             <InstitutionSettings />
+          ) : page === "workspace" ? (
+            <div className="space-y-4 p-4">
+              <ClassCard item={classSummary} today="2026-10-06" />
+              <ClassWorkspaceNav value={classSummary} active="Overview" />
+            </div>
           ) : (
             <InternalEvaluationButton allocation={11} />
           )}

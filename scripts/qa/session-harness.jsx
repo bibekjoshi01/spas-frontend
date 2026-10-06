@@ -43,7 +43,34 @@ axios.defaults.adapter = async (config) => {
       response({ detail: "Invalid credentials" }, 401)
     )
   }
-  if (config.url?.endsWith("/account/login")) return unauthorized()
+  if (config.url?.endsWith("/account/login")) {
+    if (!w.allowTeacherLogin) return unauthorized()
+    w.loginCredentials = JSON.parse(config.data)
+    return response({
+      ...profile,
+      ...w.profileOverrides,
+      tokens: { access: "temporary-access", refresh: "temporary-refresh" },
+    })
+  }
+  if (config.url?.endsWith("/account/change-password")) {
+    w.passwordChanges = JSON.parse(config.data)
+    if (w.rejectPasswordChange)
+      throw new AxiosError(
+        "Invalid current password",
+        "ERR_BAD_REQUEST",
+        config,
+        undefined,
+        response({ currentPassword: ["Current password is incorrect."] }, 400)
+      )
+    w.profileOverrides = {
+      ...w.profileOverrides,
+      mustChangePassword: false,
+      permissions: profile.permissions,
+    }
+    return response({
+      tokens: { access: "private-access", refresh: "private-refresh" },
+    })
+  }
   if (config.url?.endsWith("/token/refresh")) {
     if (w.holdRefresh)
       await new Promise((resolve) => {
@@ -152,6 +179,8 @@ const { setProfile, sessionInvalidated, logoutSuccess } =
 const { default: AuthGuard } = await import("/src/routes/auth-guard.tsx")
 const { default: PermissionGuard } =
   await import("/src/routes/permission-guard.tsx")
+const { LoginForm } =
+  await import("/src/pages/auth/login/components/login-form.tsx")
 const { loginRequest } = await import("/src/pages/auth/redux/auth.api.ts")
 const { rootAPI } = await import("/src/lib/redux/api-slice.ts")
 const { StudentsSection } =
@@ -174,11 +203,15 @@ w.mount = async (path = "/workspace") => {
   w.workspaceMounts = 0
   w.requests = []
   w.importRequests = []
-  Cookies.set("refresh", "test-refresh")
   Cookies.remove("access")
-  store.dispatch(
-    setProfile({ ...profile, isSuperuser: true, permissions: ["view_user"] })
-  )
+  if (path === "/login") {
+    Cookies.remove("refresh")
+  } else {
+    Cookies.set("refresh", "test-refresh")
+    store.dispatch(
+      setProfile({ ...profile, isSuperuser: true, permissions: ["view_user"] })
+    )
+  }
   host = document.createElement("div")
   actionsHost = document.createElement("div")
   document.body.append(actionsHost)
@@ -191,6 +224,7 @@ w.mount = async (path = "/workspace") => {
           <Routes>
             <Route element={<AuthGuard />}>
               <Route path="/workspace" element={<Workspace />} />
+              <Route path="/dashboard" element={<Workspace />} />
               <Route
                 path="/students"
                 element={
@@ -209,7 +243,10 @@ w.mount = async (path = "/workspace") => {
               />
             </Route>
             <Route path="/401" element={<div>ACCESS DENIED</div>} />
-            <Route path="/login" element={<div>LOGIN</div>} />
+            <Route
+              path="/login"
+              element={w.allowTeacherLogin ? <LoginForm /> : <div>LOGIN</div>}
+            />
           </Routes>
         </MemoryRouter>
       </HeaderActionsSlotContext.Provider>

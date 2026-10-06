@@ -29,15 +29,22 @@ const PERMISSIONS = [
 
 export function InternalEvaluationButton({
   allocation,
+  className,
 }: {
   allocation: number
+  className?: string
 }) {
   const allowed = useHasPermission(PERMISSIONS, true)
   const [open, setOpen] = useState(false)
   if (!allowed) return null
   return (
     <>
-      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+      <Button
+        size="sm"
+        variant="outline"
+        className={className}
+        onClick={() => setOpen(true)}
+      >
         <FileText className="size-4" aria-hidden />
         Internal evaluation sheet
       </Button>

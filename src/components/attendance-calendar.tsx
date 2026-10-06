@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useGetAttendanceCalendarQuery } from "@/lib/api"
 import { localDateKey } from "@/lib/utils/date"
@@ -102,36 +102,48 @@ export function AttendanceCalendar({
         </Button>
       </div>
       <div className="flex justify-center gap-2">
-        <select
-          aria-label="Nepali month"
-          className="min-w-0 rounded border bg-card px-2 py-1 text-sm text-foreground"
-          value={month.index}
-          onChange={(event) => setMonthIndex(Number(event.target.value))}
-        >
-          {data.months.map((item) => (
-            <option key={item.index} value={item.index}>
-              {item.nameNepali}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label="Nepali year"
-          className="rounded border bg-card px-2 py-1 text-sm text-foreground"
-          value={data.year}
-          onChange={(event) => {
-            setYear(Number(event.target.value))
-            setMonthIndex(month.index)
-          }}
-        >
-          {Array.from(
-            { length: data.maxYear - data.minYear + 1 },
-            (_, i) => data.minYear + i
-          ).map((item) => (
-            <option key={item} value={item}>
-              {nepali(item)} / {item}
-            </option>
-          ))}
-        </select>
+        <div className="relative min-w-0">
+          <select
+            aria-label="Nepali month"
+            className="block w-full min-w-0 appearance-none rounded border bg-card py-1 pr-8 pl-2 text-sm text-foreground"
+            value={month.index}
+            onChange={(event) => setMonthIndex(Number(event.target.value))}
+          >
+            {data.months.map((item) => (
+              <option key={item.index} value={item.index}>
+                {item.nameNepali}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            className="pointer-events-none absolute top-1/2 right-2 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+        </div>
+        <div className="relative min-w-0">
+          <select
+            aria-label="Nepali year"
+            className="block w-full min-w-0 appearance-none rounded border bg-card py-1 pr-8 pl-2 text-sm text-foreground"
+            value={data.year}
+            onChange={(event) => {
+              setYear(Number(event.target.value))
+              setMonthIndex(month.index)
+            }}
+          >
+            {Array.from(
+              { length: data.maxYear - data.minYear + 1 },
+              (_, i) => data.minYear + i
+            ).map((item) => (
+              <option key={item} value={item}>
+                {nepali(item)} / {item}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            className="pointer-events-none absolute top-1/2 right-2 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+        </div>
         <Button
           variant="ghost"
           size="sm"
@@ -190,7 +202,7 @@ export function AttendanceCalendar({
           )
         })}
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-center text-xs text-muted-foreground">
         Red: weekend or holiday · Green dot: recorded
       </p>
     </div>

@@ -497,7 +497,7 @@ function UserForm({ user, onClose }: { user?: AppUser; onClose: () => void }) {
             hint={
               user
                 ? "Leave blank to keep the current temporary password."
-                : "The user can change this after signing in."
+                : "The user must replace this at first sign-in."
             }
           >
             <Input

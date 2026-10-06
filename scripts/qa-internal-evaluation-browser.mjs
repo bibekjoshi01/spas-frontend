@@ -112,6 +112,36 @@ try {
     )
   }
 
+  await evaluate("window.mount('workspace')")
+  await waitText("Class workspace")
+  assert(
+    !(await evaluate(
+      "document.querySelector('[data-slot=card]').textContent.includes('Internal evaluation sheet')"
+    ))
+  )
+  for (const width of [320, 1280]) {
+    await send("Emulation.setDeviceMetricsOverride", {
+      width,
+      height: 900,
+      deviceScaleFactor: 1,
+      mobile: width < 500,
+    })
+    await pause(200)
+    assert(
+      await evaluate(`(() => {
+      const workspace = document.querySelector('[aria-label="Class workspace"]')
+      const button = Array.from(workspace.querySelectorAll('button')).find(b => b.textContent.includes('Internal evaluation sheet'))
+      const status = workspace.querySelector('[data-slot="badge"]')
+      return button.getBoundingClientRect().bottom <= status.getBoundingClientRect().top && document.documentElement.scrollWidth <= window.innerWidth + 1
+    })()`),
+      `Workspace sheet action should stay above the status at ${width}px`
+    )
+    const shot = await send("Page.captureScreenshot", { format: "png" })
+    await writeFile(
+      join(tmpdir(), `spas-workspace-sheet-${width}.png`),
+      Buffer.from(shot.data, "base64")
+    )
+  }
   await click("Internal evaluation sheet")
   await waitText("Assignments: 1 unevaluated assignment(s).")
   assert(
@@ -171,7 +201,7 @@ try {
       "Array.from(document.querySelectorAll('button')).filter(b=>b.textContent.includes('Download ') && b.textContent.includes('sheet')).every(b=>b.disabled)"
     )
   )
-  await evaluate("window.mount('evaluation', false)")
+  await evaluate("window.mount('workspace', false)")
   await pause(200)
   assert(
     !(await evaluate(

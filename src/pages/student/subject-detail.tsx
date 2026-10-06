@@ -1,6 +1,7 @@
 import { useState } from "react"
 
 import { AttendanceMeter } from "@/components/attendance-meter"
+import { AssignmentDetailsDialog } from "@/components/assignment-details-dialog"
 import { QueryState } from "@/components/query-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -51,6 +52,7 @@ export function StudentSubjectDialog({
 }) {
   const query = useGetStudentPortalSubjectQuery(enrollment)
   const data = query.data
+  const [assignmentId, setAssignmentId] = useState<number | null>(null)
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-5xl">
@@ -191,6 +193,13 @@ export function StudentSubjectDialog({
                             Teacher feedback: {item.remarks}
                           </p>
                         )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setAssignmentId(item.assignmentId)}
+                        >
+                          View assignment details
+                        </Button>
                       </CardContent>
                     </Card>
                   ))
@@ -257,6 +266,13 @@ export function StudentSubjectDialog({
           )}
         </QueryState>
       </DialogContent>
+      {assignmentId && (
+        <AssignmentDetailsDialog
+          assignmentId={assignmentId}
+          student
+          onClose={() => setAssignmentId(null)}
+        />
+      )}
     </Dialog>
   )
 }

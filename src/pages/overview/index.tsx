@@ -128,7 +128,7 @@ export default function OverviewPage() {
                     <CardHeader className="grid-cols-[minmax(0,1fr)_auto] !grid-rows-1 items-center">
                       <CardTitle className="text-base">
                         {isTeacher
-                          ? "Active teaching schedule"
+                          ? "Active Teaching Schedule"
                           : "Active classes in your scope"}
                       </CardTitle>
                       <Badge
@@ -209,7 +209,7 @@ export default function OverviewPage() {
                   <CardHeader>
                     <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-base">
-                        Needs attention
+                        Needs Attention
                       </CardTitle>
                       <Badge variant="outline" className="tabular-nums">
                         {data.stats.studentsBelowEligibility}

@@ -2,6 +2,8 @@ import { rootAPI } from "@/lib/redux/api-slice"
 
 import type {
   Assignment,
+  AssignmentDetail,
+  AssignmentWrite,
   AssignmentStatus,
   AssignmentSubmission,
   BatchSemesterPerformanceReport,
@@ -29,6 +31,29 @@ import type {
 } from "./types"
 
 const PERFORMANCE = "performance-mod"
+
+function assignmentFormData(
+  body: Partial<AssignmentWrite> & { allocation?: number }
+) {
+  const data = new FormData()
+  for (const [key, value] of Object.entries(body)) {
+    if (key === "newFiles") {
+      ;(value as File[]).forEach((file, index) =>
+        data.append(`newFiles[${index}]`, file)
+      )
+    } else if (key === "removeAttachments") {
+      ;(value as number[]).forEach((id, index) =>
+        data.append(`removeAttachments[${index}]`, String(id))
+      )
+    } else {
+      data.append(
+        key,
+        key === "description" ? JSON.stringify(value) : String(value ?? "")
+      )
+    }
+  }
+  return data
+}
 
 export interface PerformanceWeights {
   attendanceWeight: number
@@ -347,17 +372,12 @@ export const teachingApi = rootAPI.injectEndpoints({
 
     createAssignment: build.mutation<
       MessageWithIdResponse,
-      {
-        allocation: number
-        title: string
-        assignedDate: string
-        dueDate?: string | null
-      }
+      AssignmentWrite & { allocation: number }
     >({
       query: (body) => ({
         url: `${PERFORMANCE}/assignments`,
         method: "POST",
-        data: body,
+        data: assignmentFormData(body),
       }),
       invalidatesTags: ["Assignment", "Overview"],
     }),
@@ -366,13 +386,13 @@ export const teachingApi = rootAPI.injectEndpoints({
       MessageWithIdResponse,
       {
         id: number
-        body: Partial<Pick<Assignment, "title" | "assignedDate" | "dueDate">>
+        body: Partial<AssignmentWrite>
       }
     >({
       query: ({ id, body }) => ({
         url: `${PERFORMANCE}/assignments/${id}`,
         method: "PATCH",
-        data: body,
+        data: assignmentFormData(body),
       }),
       invalidatesTags: ["Assignment"],
     }),
@@ -383,6 +403,11 @@ export const teachingApi = rootAPI.injectEndpoints({
         method: "DELETE",
       }),
       invalidatesTags: ["Assignment", "Overview"],
+    }),
+
+    getAssignment: build.query<AssignmentDetail, number>({
+      query: (id) => ({ url: `${PERFORMANCE}/assignments/${id}` }),
+      providesTags: ["Assignment"],
     }),
 
     getAssignmentSubmissions: build.query<AssignmentSubmission[], number>({
@@ -447,6 +472,7 @@ export const {
   useGetExamMarksQuery,
   useSaveExamMarksMutation,
   useGetAssignmentsQuery,
+  useGetAssignmentQuery,
   useCreateAssignmentMutation,
   useUpdateAssignmentMutation,
   useDeleteAssignmentMutation,

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
+import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import {
   CalendarDays,
   Check,
@@ -354,12 +354,7 @@ export default function AttendanceSessionPage() {
         }}
         skeleton="table"
         emptyTitle="No students on this class"
-        emptyMessage="Register students onto the class before taking attendance."
-        emptyAction={
-          <Button asChild variant="outline" size="sm">
-            <Link to="/students">Manage students</Link>
-          </Button>
-        }
+        emptyMessage="Contact your department head to add students to this subject."
       >
         <div className="space-y-4">
           {!canWrite &&

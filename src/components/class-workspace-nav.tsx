@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
+import { InternalEvaluationButton } from "@/components/internal-evaluation-dialog"
 import { useIsSuperUser, usePermissions } from "@/hooks/use-has-permissions"
 import type { ClassSummary } from "@/lib/api"
 import { cn } from "@/lib/utils"
@@ -88,20 +89,26 @@ export function ClassWorkspaceNav({
             {value.semester}
           </p>
         </div>
-        <Badge
-          variant="outline"
-          className={cn(
-            "border-white/25 bg-white/10 text-banner-foreground",
-            value.semesterStatus === "RUNNING" &&
-              "border-emerald-400/60 bg-emerald-500/15 text-emerald-200"
-          )}
-        >
-          {value.semesterStatus === "RUNNING"
-            ? "Running"
-            : value.semesterStatus === "COMPLETED"
-              ? "Read only"
-              : "Upcoming"}
-        </Badge>
+        <div className="flex flex-col items-end gap-2">
+          <InternalEvaluationButton
+            allocation={value.allocation}
+            className="border-white/25 bg-white/10 text-banner-foreground hover:bg-white/20 hover:text-banner-foreground"
+          />
+          <Badge
+            variant="outline"
+            className={cn(
+              "border-white/25 bg-white/10 text-banner-foreground",
+              value.semesterStatus === "RUNNING" &&
+                "border-emerald-400/60 bg-emerald-500/15 text-emerald-200"
+            )}
+          >
+            {value.semesterStatus === "RUNNING"
+              ? "Running"
+              : value.semesterStatus === "COMPLETED"
+                ? "Read only"
+                : "Upcoming"}
+          </Badge>
+        </div>
       </div>
       <nav
         ref={navRef}

@@ -233,6 +233,90 @@ try {
     0,
     "Teacher mounted management UI"
   )
+  await evaluate(
+    `window.allowTeacherLogin=true;window.profileOverrides={mustChangePassword:true,permissions:[]};window.mount('/login')`
+  )
+  await pause(300)
+  for (const [id, value] of [
+    ["persona", "teacher"],
+    ["password", "TemporaryTeacher!2345"],
+  ]) {
+    await evaluate(`(() => {
+      const input = document.getElementById(${JSON.stringify(id)})
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, ${JSON.stringify(value)})
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    })()`)
+  }
+  await evaluate(`document.querySelector('button[type="submit"]').click()`)
+  await pause(700)
+  assert.deepEqual(await evaluate("window.loginCredentials"), {
+    persona: "teacher",
+    password: "TemporaryTeacher!2345",
+  })
+  assert(
+    await evaluate(
+      `document.body.textContent.includes('Create your private password')`
+    ),
+    "A temporary teacher password did not show the first-login prompt"
+  )
+  assert(
+    await evaluate(
+      `document.body.textContent.includes('Replace your temporary password')`
+    )
+  )
+  assert(!(await evaluate(`document.body.textContent.includes('roll number')`)))
+  assert.equal(
+    await evaluate("window.workspaceMounts"),
+    0,
+    "Temporary-password account mounted protected workspace"
+  )
+  for (const [id, value] of [
+    ["initial-current", "TemporaryTeacher!2345"],
+    ["initial-new", "PrivateTeacher!2345"],
+    ["initial-confirm", "PrivateTeacher!2345"],
+  ]) {
+    await evaluate(`(() => {
+      const input = document.getElementById(${JSON.stringify(id)})
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, ${JSON.stringify(value)})
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    })()`)
+  }
+  await evaluate(
+    `window.rejectPasswordChange=true;document.querySelector('button[type="submit"]').click()`
+  )
+  await pause(500)
+  assert(
+    await evaluate(
+      `document.body.textContent.includes('Current password is incorrect.')`
+    )
+  )
+  assert.equal(await evaluate("window.workspaceMounts"), 0)
+  await evaluate(
+    `window.rejectPasswordChange=false;document.querySelector('button[type="submit"]').click()`
+  )
+  await pause(700)
+  assert.equal(await evaluate("window.workspaceMounts"), 1)
+  assert(
+    await evaluate(`document.body.textContent.includes('PRIVATE WORKSPACE')`)
+  )
+  assert.deepEqual(await evaluate("window.passwordChanges"), {
+    currentPassword: "TemporaryTeacher!2345",
+    newPassword: "PrivateTeacher!2345",
+  })
+  assert(await evaluate(`document.cookie.includes('refresh=private-refresh')`))
+  await evaluate(
+    `window.allowTeacherLogin=false;window.profileOverrides={mustChangePassword:false};window.mount()`
+  )
+  await pause(500)
+  assert(
+    !(await evaluate(
+      `document.body.textContent.includes('Create your private password')`
+    )),
+    "An already changed password prompted again"
+  )
+  console.log(
+    "Passed: first-login teacher password prompt blocks workspace, displays errors, rotates tokens, and unlocks only after replacement."
+  )
   const cache = await evaluate("window.cacheCheck()")
   assert(cache.before > 0)
   assert.equal(cache.after, 0)

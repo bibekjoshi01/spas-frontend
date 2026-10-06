@@ -4,6 +4,8 @@ import { ArrowLeft, ClipboardCheck, Pencil, Plus, Save } from "lucide-react"
 
 import { ClassPicker } from "@/components/class-picker"
 import { ClassWorkspaceNav } from "@/components/class-workspace-nav"
+import { AssignmentFormDialog } from "@/components/assignment-form-dialog"
+import { AssignmentDetailsDialog } from "@/components/assignment-details-dialog"
 import { useHasPermission } from "@/hooks/use-has-permissions"
 import { useRememberedClass } from "@/hooks/use-remembered-class"
 import { PageHeader } from "@/components/page-header"
@@ -17,7 +19,6 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DatePickerInput } from "@/components/ui/date-time-picker"
 import {
   Dialog,
   DialogContent,
@@ -25,8 +26,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import {
   Select,
@@ -40,15 +39,12 @@ import {
   type Assignment,
   type AssignmentStatus,
   apiErrorMessage,
-  useCreateAssignmentMutation,
   useGetAssignmentSubmissionsQuery,
   useGetAssignmentsQuery,
   useGetClassesQuery,
   useGetRosterQuery,
   useSaveAssignmentSubmissionsMutation,
-  useUpdateAssignmentMutation,
 } from "@/lib/api"
-import { localDateKey } from "@/lib/utils/date"
 import { notifier } from "@/lib/utils/notifier"
 import { cn } from "@/lib/utils"
 
@@ -77,6 +73,7 @@ export default function AssignmentsPage() {
   )
   const [open, setOpen] = useState<Assignment | null>(null)
   const [editing, setEditing] = useState<Assignment | null>(null)
+  const [details, setDetails] = useState<number | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [completion, setCompletion] = useState("all")
 
@@ -222,6 +219,14 @@ export default function AssignmentsPage() {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-3">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setDetails(assignment.id)}
+                  >
+                    View assignment
+                  </Button>
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>Evaluated · {assignment.doneCount} completed</span>
@@ -265,17 +270,24 @@ export default function AssignmentsPage() {
         </div>
       </QueryState>
 
-      {allocation && canCreate && (
-        <CreateAssignmentDialog
+      {allocation && canCreate && isCreating && (
+        <AssignmentFormDialog
           allocation={allocation}
-          open={isCreating}
-          onOpenChange={setIsCreating}
+          onClose={() => setIsCreating(false)}
         />
       )}
       {editing && canChange && (
-        <EditAssignmentDialog
-          assignment={editing}
+        <AssignmentFormDialog
+          allocation={editing.allocation}
+          assignmentId={editing.id}
           onClose={() => setEditing(null)}
+        />
+      )}
+
+      {details && (
+        <AssignmentDetailsDialog
+          assignmentId={details}
+          onClose={() => setDetails(null)}
         />
       )}
 
@@ -288,192 +300,6 @@ export default function AssignmentsPage() {
         />
       )}
     </div>
-  )
-}
-
-function EditAssignmentDialog({
-  assignment,
-  onClose,
-}: {
-  assignment: Assignment
-  onClose: () => void
-}) {
-  const [update, { isLoading }] = useUpdateAssignmentMutation()
-  const [form, setForm] = useState({
-    title: assignment.title,
-    assignedDate: assignment.assignedDate,
-    dueDate: assignment.dueDate ?? "",
-  })
-
-  async function submit() {
-    try {
-      await update({
-        id: assignment.id,
-        body: {
-          title: form.title.trim(),
-          assignedDate: form.assignedDate,
-          dueDate: form.dueDate || null,
-        },
-      }).unwrap()
-      notifier.success("Assignment updated.")
-      onClose()
-    } catch (error) {
-      notifier.error(apiErrorMessage(error, "Could not update the assignment."))
-    }
-  }
-
-  return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit Assignment</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-[5px]">
-            <Label htmlFor="edit-assignment-title">Title</Label>
-            <Input
-              id="edit-assignment-title"
-              value={form.title}
-              onChange={(event) =>
-                setForm({ ...form, title: event.target.value })
-              }
-            />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-[5px]">
-              <Label htmlFor="edit-assignment-given">Given</Label>
-              <DatePickerInput
-                id="edit-assignment-given"
-                value={form.assignedDate}
-                onValueChange={(assignedDate) =>
-                  setForm({ ...form, assignedDate })
-                }
-                aria-label="Given date"
-              />
-            </div>
-            <div className="space-y-[5px]">
-              <Label htmlFor="edit-assignment-due">Due</Label>
-              <DatePickerInput
-                id="edit-assignment-due"
-                min={form.assignedDate}
-                value={form.dueDate}
-                onValueChange={(dueDate) => setForm({ ...form, dueDate })}
-                aria-label="Due date"
-              />
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={submit}
-            disabled={
-              !form.title.trim() ||
-              !form.assignedDate ||
-              Boolean(form.dueDate && form.dueDate < form.assignedDate) ||
-              isLoading
-            }
-          >
-            {isLoading && <InlineSpinner />}Save changes
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function CreateAssignmentDialog({
-  allocation,
-  open,
-  onOpenChange,
-}: {
-  allocation: number
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
-  const [createAssignment, { isLoading }] = useCreateAssignmentMutation()
-  const today = localDateKey()
-  const [form, setForm] = useState({
-    title: "",
-    assignedDate: today,
-    dueDate: "",
-  })
-
-  const submit = async () => {
-    try {
-      await createAssignment({
-        allocation,
-        title: form.title.trim(),
-        assignedDate: form.assignedDate,
-        dueDate: form.dueDate || null,
-      }).unwrap()
-
-      notifier.success("Assignment created.")
-      onOpenChange(false)
-      setForm({ title: "", assignedDate: today, dueDate: "" })
-    } catch (error) {
-      notifier.error(apiErrorMessage(error, "Could not create the assignment."))
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>New Assignment</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          <div className="space-y-[5px]">
-            <Label htmlFor="assignment-title">Title</Label>
-            <Input
-              id="assignment-title"
-              value={form.title}
-              onChange={(event) =>
-                setForm({ ...form, title: event.target.value })
-              }
-              placeholder="Linked lists exercise"
-            />
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-[5px]">
-              <Label htmlFor="assignment-given">Given</Label>
-              <DatePickerInput
-                id="assignment-given"
-                value={form.assignedDate}
-                onValueChange={(assignedDate) =>
-                  setForm({ ...form, assignedDate })
-                }
-                aria-label="Given date"
-              />
-            </div>
-            <div className="space-y-[5px]">
-              <Label htmlFor="assignment-due">Due</Label>
-              <DatePickerInput
-                id="assignment-due"
-                min={form.assignedDate}
-                value={form.dueDate}
-                onValueChange={(dueDate) => setForm({ ...form, dueDate })}
-                aria-label="Due date"
-              />
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={submit} disabled={!form.title.trim() || isLoading}>
-            {isLoading && <InlineSpinner />}
-            Create
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   )
 }
 
