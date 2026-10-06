@@ -21,8 +21,9 @@ const storage =
   storageModule
 
 import { rootReducer } from "./reducers"
-import { rootAPI } from "./api-slice"
+import { CACHE_TAGS, rootAPI } from "./api-slice"
 import { auth } from "./auth"
+import type { IAuthState } from "@/pages/auth/redux/auth.types"
 import {
   loginSuccess,
   logoutSuccess,
@@ -42,14 +43,35 @@ const accountBoundaryListener = createListenerMiddleware()
 accountBoundaryListener.startListening({
   matcher: isAnyOf(loginSuccess, logoutSuccess, sessionInvalidated, setProfile),
   effect: (action, api) => {
+    if (setProfile.match(action)) {
+      const previous = (api.getOriginalState() as { auth: IAuthState }).auth
+        .profile
+      const current = action.payload
+      const authority = (profile: IAuthState["profile"]) =>
+        JSON.stringify({
+          id: profile?.id,
+          uuid: profile?.uuid,
+          isSuperuser: profile?.isSuperuser,
+          mustChangePassword: profile?.mustChangePassword,
+          permissions: [...(profile?.permissions ?? [])].sort(),
+          roles: (profile?.roles ?? []).map((role) => role.codename).sort(),
+        })
+
+      if (previous && current && authority(previous) === authority(current)) {
+        // Focus checks refresh visible data without clearing pending mutations
+        // such as the CSV preview started when a native file picker closes.
+        api.dispatch(rootAPI.util.invalidateTags([...CACHE_TAGS]))
+        return
+      }
+    }
     // RTK Query cache entries are scoped to the account that fetched them.
     // Keeping them through an account switch can expose stale admin rows to a
     // teacher and can make screens request resources the new account cannot
     // access. Reset all server data at every authentication boundary.
     api.dispatch(rootAPI.util.resetApiState())
 
-    // A fresh profile may reflect revoked permissions or an account switched
-    // in another tab. Re-fetch protected data under that current identity.
+    // Changed authority clears protected data; unchanged authority was
+    // revalidated above without resetting pending mutations.
     if (setProfile.match(action)) return
     if (sessionInvalidated.match(action)) auth.clear()
 

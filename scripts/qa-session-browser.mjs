@@ -112,6 +112,104 @@ try {
     await evaluate("window.loginFailure()"),
     "Invalid login cleared another valid session"
   )
+  await evaluate(
+    `window.profileOverrides={isSuperuser:true};window.mount('/students')`
+  )
+  await pause(700)
+  await evaluate(
+    `Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Import').click()`
+  )
+  await pause(200)
+  await evaluate(
+    `document.querySelector('[aria-label="Batch to import into"]').click()`
+  )
+  await pause(200)
+  await evaluate(`document.querySelector('[role="option"]').click()`)
+  await pause(200)
+  await evaluate(
+    `window.release=null;window.hold=true;window.holdPreview=true;window.dispatchEvent(new Event('focus'));window.chooseCsv()`
+  )
+  for (let i = 0; i < 100; i++) {
+    if (await evaluate("Boolean(window.release && window.releasePreview)"))
+      break
+    await pause(50)
+  }
+  assert(await evaluate("Boolean(window.release && window.releasePreview)"))
+  assert(
+    await evaluate(
+      `document.querySelector('[role="dialog"]')?.textContent.includes('Checking every row')`
+    ),
+    "Returning from the file picker unmounted the import dialog"
+  )
+  await evaluate(
+    "window.release();window.holdPreview=false;window.releasePreview()"
+  )
+  await pause(700)
+  assert(
+    await evaluate(
+      `document.querySelector('[role="dialog"]')?.textContent.includes('Ramesh Thapa')`
+    )
+  )
+  assert.deepEqual(await evaluate("window.importRequests"), [
+    { commit: false, batch: "1", file: "students.csv" },
+  ])
+  await evaluate(
+    `window.networkFailure=true;window.dispatchEvent(new Event('focus'))`
+  )
+  await pause(500)
+  assert(
+    await evaluate(
+      `document.querySelector('[role="dialog"]')?.textContent.includes('students.csv')`
+    ),
+    "A transient focus check discarded the CSV preview"
+  )
+  await evaluate(
+    `window.networkFailure=false;window.importError=true;window.chooseCsv('invalid.csv')`
+  )
+  await pause(500)
+  assert(
+    await evaluate(
+      `document.querySelector('[role="dialog"]')?.textContent.includes('missing required columns: roll_number')`
+    )
+  )
+  assert(
+    await evaluate(
+      `Array.from(document.querySelectorAll('[role="dialog"] button')).find(b=>b.textContent==='Import').disabled`
+    )
+  )
+  await evaluate(`window.importError=false;window.chooseCsv('corrected.csv')`)
+  await pause(500)
+  await evaluate(
+    `Array.from(document.querySelectorAll('[role="dialog"] button')).find(b=>b.textContent==='Import 1 student').click()`
+  )
+  await pause(500)
+  assert.equal(await evaluate("document.querySelector('[role=dialog]')"), null)
+  assert.equal(
+    await evaluate("window.importRequests.filter(r=>r.commit).length"),
+    1
+  )
+  await evaluate(
+    `window.profileOverrides={isSuperuser:false,permissions:[]};window.dispatchEvent(new Event('focus'))`
+  )
+  await pause(500)
+  assert(
+    await evaluate(`document.body.textContent.includes('ACCESS DENIED')`),
+    "Focus checks failed to apply revoked permissions"
+  )
+  await evaluate(`window.profileOverrides={};window.mount()`)
+  await pause(500)
+  await evaluate(
+    `window.meForbidden=true;window.dispatchEvent(new Event('focus'))`
+  )
+  await pause(500)
+  assert(
+    await evaluate(`document.body.textContent.includes('LOGIN')`),
+    "A rejected background session check left protected UI mounted"
+  )
+  await evaluate(`window.meForbidden=false`)
+  console.log(
+    "Passed: CSV preview and upload survive file-picker focus and transient checks; errors stay in the dialog; corrected CSV commits explicitly; revoked access is enforced."
+  )
   await evaluate(`window.networkFailure=true;window.mount()`)
   await pause(700)
   assert(

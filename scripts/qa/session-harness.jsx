@@ -4,6 +4,7 @@ import { Provider } from "react-redux"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import axios, { AxiosError } from "axios"
 import Cookies from "js-cookie"
+import { HeaderActionsSlotContext } from "@/components/header-actions-context"
 
 const w = window
 w.requests = []
@@ -61,8 +62,72 @@ axios.defaults.adapter = async (config) => {
         }
       })
     if (!config.headers.Authorization) return unauthorized()
-    return response(profile)
+    if (w.meForbidden)
+      throw new AxiosError(
+        "Access revoked",
+        "ERR_BAD_REQUEST",
+        config,
+        undefined,
+        response({ detail: "Access revoked" }, 403)
+      )
+    return response({ ...profile, ...w.profileOverrides })
   }
+  if (config.url?.endsWith("/students/import")) {
+    const commit = config.data.get("commit") === "true"
+    w.importRequests.push({
+      commit,
+      batch: config.data.get("batch"),
+      file: config.data.get("file").name,
+    })
+    if (w.holdPreview && !commit)
+      await new Promise((resolve) => {
+        w.releasePreview = resolve
+      })
+    if (w.importError)
+      throw new AxiosError(
+        "Invalid CSV",
+        "ERR_BAD_REQUEST",
+        config,
+        undefined,
+        response(
+          { file: ["That sheet is missing required columns: roll_number."] },
+          400
+        )
+      )
+    return response({
+      committed: commit,
+      summary: { total: 1, create: 1, update: 0, error: 0 },
+      columns: {
+        recognised: ["rollNumber", "firstName", "lastName"],
+        ignored: [],
+      },
+      rows: [
+        {
+          row: 2,
+          action: "create",
+          identity: "042 — Ramesh Thapa",
+          errors: null,
+          changes: [],
+        },
+      ],
+    })
+  }
+  if (config.url?.endsWith("/batches"))
+    return response({
+      count: 1,
+      results: [
+        {
+          id: 1,
+          year: 2080,
+          status: "RUNNING",
+          isActive: true,
+          studentCount: 0,
+          program: { id: 1, code: "CSIT", name: "Computer Science" },
+        },
+      ],
+    })
+  if (config.url?.endsWith("/students") || config.url?.endsWith("/programs"))
+    return response({ count: 0, results: [] })
   if (config.url?.endsWith("/private-test"))
     await new Promise((resolve) => {
       w.releasePrivate = resolve
@@ -89,9 +154,12 @@ const { default: PermissionGuard } =
   await import("/src/routes/permission-guard.tsx")
 const { loginRequest } = await import("/src/pages/auth/redux/auth.api.ts")
 const { rootAPI } = await import("/src/lib/redux/api-slice.ts")
+const { StudentsSection } =
+  await import("/src/pages/people/sections/students.tsx")
 await import("/src/lib/api/teaching.api.ts")
 let root
 let host
+let actionsHost
 function Workspace() {
   useEffect(() => {
     w.workspaceMounts++
@@ -101,38 +169,63 @@ function Workspace() {
 w.mount = async (path = "/workspace") => {
   root?.unmount()
   host?.remove()
+  actionsHost?.remove()
   store.dispatch(sessionInvalidated())
   w.workspaceMounts = 0
   w.requests = []
+  w.importRequests = []
   Cookies.set("refresh", "test-refresh")
   Cookies.remove("access")
   store.dispatch(
     setProfile({ ...profile, isSuperuser: true, permissions: ["view_user"] })
   )
   host = document.createElement("div")
+  actionsHost = document.createElement("div")
+  document.body.append(actionsHost)
   document.body.append(host)
   root = createRoot(host)
   root.render(
     <Provider store={store}>
-      <MemoryRouter initialEntries={[path]}>
-        <Routes>
-          <Route element={<AuthGuard />}>
-            <Route path="/workspace" element={<Workspace />} />
-            <Route
-              path="/admin"
-              element={
-                <PermissionGuard permission="view_user">
-                  <Workspace />
-                </PermissionGuard>
-              }
-            />
-          </Route>
-          <Route path="/401" element={<div>ACCESS DENIED</div>} />
-          <Route path="/login" element={<div>LOGIN</div>} />
-        </Routes>
-      </MemoryRouter>
+      <HeaderActionsSlotContext.Provider value={actionsHost}>
+        <MemoryRouter initialEntries={[path]}>
+          <Routes>
+            <Route element={<AuthGuard />}>
+              <Route path="/workspace" element={<Workspace />} />
+              <Route
+                path="/students"
+                element={
+                  <PermissionGuard permission="view_student">
+                    <StudentsSection />
+                  </PermissionGuard>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <PermissionGuard permission="view_user">
+                    <Workspace />
+                  </PermissionGuard>
+                }
+              />
+            </Route>
+            <Route path="/401" element={<div>ACCESS DENIED</div>} />
+            <Route path="/login" element={<div>LOGIN</div>} />
+          </Routes>
+        </MemoryRouter>
+      </HeaderActionsSlotContext.Provider>
     </Provider>
   )
+}
+w.chooseCsv = (name = "students.csv") => {
+  const files = new DataTransfer()
+  files.items.add(
+    new File(["roll_number,first_name,last_name\n042,Ramesh,Thapa\n"], name, {
+      type: "text/csv",
+    })
+  )
+  const input = document.querySelector('input[type="file"]')
+  input.files = files.files
+  input.dispatchEvent(new Event("change", { bubbles: true }))
 }
 w.loginFailure = () =>
   loginRequest({ persona: "bad", password: "bad" }).then(

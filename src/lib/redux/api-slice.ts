@@ -17,7 +17,7 @@ export interface QueryError {
   data?: unknown
 }
 
-const CACHE_TAGS = [
+export const CACHE_TAGS = [
   // Aggregates
   "Overview",
   "ClassSummary",

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Navigate, Outlet, useLocation } from "react-router-dom"
 
 import { auth } from "@/lib/redux/auth"
@@ -24,6 +24,7 @@ export default function AuthGuard() {
   )
   // Refresh tokens identify the session while access tokens rotate/expire.
   const sessionKey = auth.getRefresh() || auth.getAccess()
+  const validatedSessionKey = useRef<string | null>(null)
   const [validation, setValidation] = useState<{
     key: string
     failed: boolean
@@ -41,7 +42,11 @@ export default function AuthGuard() {
 
     let cancelled = false
 
-    dispatch(sessionCheckStarted())
+    // Returning from a native file picker fires focus. Recheck access without
+    // unmounting an already validated workspace and discarding its form state.
+    if (validatedSessionKey.current !== sessionKey) {
+      dispatch(sessionCheckStarted())
+    }
     if (!validationRequest || validationRequest.sessionKey !== sessionKey) {
       const promise = fetchMe().finally(() => {
         if (validationRequest?.promise === promise) validationRequest = null
@@ -56,6 +61,7 @@ export default function AuthGuard() {
           !cancelled &&
           (auth.getRefresh() || auth.getAccess()) === sessionKey
         ) {
+          validatedSessionKey.current = sessionKey
           dispatch(setProfile(profile))
           setValidation({ key: sessionKey, failed: false })
         }
@@ -69,8 +75,9 @@ export default function AuthGuard() {
             error.response?.status === 401 ||
             error.response?.status === 403
           ) {
+            validatedSessionKey.current = null
             dispatch(sessionInvalidated())
-          } else {
+          } else if (validatedSessionKey.current !== sessionKey) {
             setValidation({ key: sessionKey, failed: true })
           }
         }

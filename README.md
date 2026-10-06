@@ -52,6 +52,12 @@ knows about.
 
 Husky runs typecheck and lint-staged on commit, and a full build on push.
 
+`yarn test:session` runs synthetic Chrome checks for session validation, account
+isolation, revoked access, and student CSV import. It verifies that returning
+from the file picker preserves the pending preview, errors remain in the dialog,
+and only an explicit import writes rows. Run with Node 22+ and Chrome; set
+`CHROME_BIN` to override the browser executable.
+
 ## Calendar PDF downloads
 
 Open **Academic Calendar → Download calendar** and choose the months to include.
