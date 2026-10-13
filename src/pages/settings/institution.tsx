@@ -1,6 +1,5 @@
 import { useState } from "react"
-import { Pencil, Plus, Archive } from "lucide-react"
-import { ConfirmDialog } from "@/components/confirm-dialog"
+import { Pencil, Plus } from "lucide-react"
 import { Field, FormDialog } from "@/components/form-dialog"
 import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
@@ -12,7 +11,6 @@ import {
   useGetInstitutionsQuery,
   useCreateInstitutionMutation,
   useUpdateInstitutionMutation,
-  useArchiveInstitutionMutation,
 } from "@/lib/api/internal-evaluation.api"
 import { notifier } from "@/lib/utils/notifier"
 
@@ -20,8 +18,6 @@ export default function InstitutionSettings() {
   const query = useGetInstitutionsQuery()
   const institution = query.data?.results[0]
   const [editing, setEditing] = useState(false)
-  const [archiving, setArchiving] = useState(false)
-  const [archive, archiveState] = useArchiveInstitutionMutation()
   return (
     <div className="mx-auto max-w-4xl space-y-4 p-3 md:p-4">
       <PageHeader
@@ -66,14 +62,6 @@ export default function InstitutionSettings() {
                 </div>
               ))}
             </dl>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setArchiving(true)}
-            >
-              <Archive className="size-4" aria-hidden />
-              Archive details
-            </Button>
           </section>
         ) : (
           <p className="border bg-card p-6 text-sm text-muted-foreground">
@@ -88,24 +76,6 @@ export default function InstitutionSettings() {
           onClose={() => setEditing(false)}
         />
       )}
-      <ConfirmDialog
-        open={archiving}
-        onOpenChange={setArchiving}
-        title="Archive institution details?"
-        description="Sheet downloads will require new institution details. The previous details remain in the audit history."
-        error={archiveState.error}
-        isPending={archiveState.isLoading}
-        onConfirm={async () => {
-          if (!institution) return
-          try {
-            await archive(institution.id).unwrap()
-            setArchiving(false)
-            notifier.success("Institution details archived.")
-          } catch {
-            /* shown in dialog */
-          }
-        }}
-      />
     </div>
   )
 }

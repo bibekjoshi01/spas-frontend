@@ -217,12 +217,24 @@ try {
   )
   await click("Save")
   await waitText("Updated Campus")
-  await click("Archive details")
-  await waitText("Archive institution details?")
-  await click("Archive")
-  await waitText("Add institution")
+  assert(
+    await evaluate(
+      "!Array.from(document.querySelectorAll('button')).some(b=>b.textContent.includes('Archive'))"
+    ),
+    "Institution settings should only offer editing existing details"
+  )
+  assert(
+    await evaluate(
+      "!window.requests.some(r=>r.url.includes('/institutions') && r.method==='delete')"
+    ),
+    "Editing institution details should not archive them"
+  )
+  await evaluate("window.institution=null;window.mount('institution')")
+  await waitText(
+    "Add institution details before downloading internal evaluation"
+  )
   await click("Add institution")
-  await waitText("Add institution details")
+  await waitText("Institute (optional)")
   for (const [id, value] of [
     ["name", "New Campus"],
     ["universityName", "University"],
@@ -234,7 +246,7 @@ try {
   await click("Save")
   await waitText("New Campus")
   console.log(
-    "Passed: incomplete/setup states, permission gating, authenticated blank download, stale-final rejection, institution create/edit/archive, mobile and desktop overflow."
+    "Passed: incomplete/setup states, permission gating, authenticated blank download, stale-final rejection, institution create/edit without archive action, mobile and desktop overflow."
   )
 } finally {
   socket?.close()
