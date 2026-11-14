@@ -58,6 +58,14 @@ from the file picker preserves the pending preview, errors remain in the dialog,
 and only an explicit import writes rows. Run with Node 22+ and Chrome; set
 `CHROME_BIN` to override the browser executable.
 
+## AI assignment drafting
+
+Teachers can open **Assignments → Add assignment → Draft with AI** to generate
+instructions, practice questions and suggested evaluation criteria, preview the
+result and edit it before explicitly saving. The Gateway key stays on the backend.
+See [assignment drafting](docs/assignment-drafts.md) for configuration and the
+real frontend/Django/PostgreSQL browser check, `yarn test:assignment-drafts`.
+
 ## Calendar PDF downloads
 
 Open **Academic Calendar → Download calendar** and choose the months to include.

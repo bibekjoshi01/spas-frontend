@@ -23,6 +23,7 @@
     "test:student-portal": "node scripts/qa-student-portal-browser.mjs",
     "test:session": "node scripts/qa-session-browser.mjs",
     "test:assignments": "node scripts/qa-assignments-browser.mjs",
+    "test:assignment-drafts": "node scripts/qa-assignment-drafts-browser.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

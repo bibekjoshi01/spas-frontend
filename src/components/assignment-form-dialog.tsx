@@ -2,6 +2,8 @@ import { useState } from "react"
 import { Paperclip, X } from "lucide-react"
 
 import { AssignmentDescriptionEditor } from "@/components/assignment-description-editor"
+import { AssignmentDraftAssistant } from "@/components/assignment-draft-assistant"
+import { useHasPermission } from "@/hooks/use-has-permissions"
 import { EMPTY_ASSIGNMENT_DESCRIPTION } from "@/lib/utils/assignment"
 import { InlineSpinner, QueryState } from "@/components/query-state"
 import { Button } from "@/components/ui/button"
@@ -65,6 +67,7 @@ export function AssignmentFormDialog({
         >
           {(!assignmentId || query.currentData) && (
             <AssignmentForm
+              key={`${allocation}:${assignmentId ?? "new"}`}
               allocation={allocation}
               assignment={query.currentData}
               onClose={onClose}
@@ -89,6 +92,9 @@ function AssignmentForm({
   onSavingChange: (saving: boolean) => void
 }) {
   const [create, createState] = useCreateAssignmentMutation()
+  const canDraft = useHasPermission("add_assignment")
+  const [drafting, setDrafting] = useState(false)
+  const [descriptionRevision, setDescriptionRevision] = useState(0)
   const [update, updateState] = useUpdateAssignmentMutation()
   const saving = createState.isLoading || updateState.isLoading
   const [form, setForm] = useState<AssignmentWrite>({
@@ -105,6 +111,7 @@ function AssignmentForm({
   const prefix = assignment ? "edit-assignment" : "assignment"
   async function submit(event: React.FormEvent) {
     event.preventDefault()
+    if (drafting || saving) return
     setError(null)
     onSavingChange(true)
     try {
@@ -157,6 +164,25 @@ function AssignmentForm({
   return (
     <form onSubmit={submit} className="space-y-4">
       <fieldset disabled={saving} className="space-y-4">
+        {!assignment && canDraft && (
+          <AssignmentDraftAssistant
+            allocation={allocation}
+            hasContent={Boolean(
+              form.title.trim() ||
+              JSON.stringify(form.description).includes('"text":')
+            )}
+            onBusyChange={setDrafting}
+            onUse={(draft) => {
+              setForm((current) => ({
+                ...current,
+                title: draft.title,
+                description: draft.description,
+              }))
+              setDescriptionRevision((revision) => revision + 1)
+              setError(null)
+            }}
+          />
+        )}
         <div className="space-y-1">
           <Label htmlFor={`${prefix}-title`}>Title</Label>
           <Input
@@ -211,6 +237,7 @@ function AssignmentForm({
         <div className="space-y-1">
           <p className="text-sm font-medium">Task description</p>
           <AssignmentDescriptionEditor
+            key={descriptionRevision}
             value={form.description}
             onChange={(description) =>
               setForm((current) => ({ ...current, description }))
@@ -333,6 +360,7 @@ function AssignmentForm({
             !form.title.trim() ||
             !form.assignedDate ||
             Boolean(form.dueDate && form.dueDate < form.assignedDate) ||
+            drafting ||
             saving
           }
         >

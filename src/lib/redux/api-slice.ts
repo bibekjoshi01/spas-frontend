@@ -10,6 +10,9 @@ export interface QueryArgs {
   data?: unknown
   params?: Record<string, unknown>
   headers?: Record<string, string>
+  timeout?: number
+  /** Unsaved previews do not change server data. */
+  invalidateCache?: boolean
 }
 
 export interface QueryError {
@@ -65,6 +68,7 @@ const axiosBaseQuery =
     api: {
       dispatch: (action: unknown) => void
       type: "query" | "mutation"
+      signal: AbortSignal
     }
   ) => {
     const { url, method = "GET", data, params, headers } = args
@@ -76,6 +80,8 @@ const axiosBaseQuery =
         data,
         params,
         headers,
+        timeout: args.timeout,
+        signal: api.signal,
       })
 
       // A successful action can change embedded names, counts, eligibility,
@@ -84,7 +90,11 @@ const axiosBaseQuery =
       // on every mutation author to remember every downstream dependency.
       const isImportPreview =
         data instanceof FormData && data.get("commit") === "false"
-      if (api.type === "mutation" && !isImportPreview) {
+      if (
+        api.type === "mutation" &&
+        args.invalidateCache !== false &&
+        !isImportPreview
+      ) {
         api.dispatch(rootAPI.util.invalidateTags([...CACHE_TAGS]))
       }
 

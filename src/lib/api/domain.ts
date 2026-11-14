@@ -404,6 +404,19 @@ export interface AssignmentWrite {
   removeAttachments: number[]
 }
 
+export interface AssignmentDraftInput {
+  topic: string
+  learningObjective: string
+  difficulty: "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
+  questionCount: number
+}
+
+export interface AssignmentDraft {
+  message: string
+  title: string
+  description: AssignmentDocument
+}
+
 export interface Student {
   id: number
   uuid: string

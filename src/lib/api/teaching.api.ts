@@ -2,6 +2,8 @@ import { rootAPI } from "@/lib/redux/api-slice"
 
 import type {
   Assignment,
+  AssignmentDraft,
+  AssignmentDraftInput,
   AssignmentDetail,
   AssignmentWrite,
   AssignmentStatus,
@@ -370,6 +372,19 @@ export const teachingApi = rootAPI.injectEndpoints({
       providesTags: ["Assignment"],
     }),
 
+    generateAssignmentDraft: build.mutation<
+      AssignmentDraft,
+      { allocation: number; body: AssignmentDraftInput }
+    >({
+      query: ({ allocation, body }) => ({
+        url: `${PERFORMANCE}/allocations/${allocation}/assignment-draft`,
+        method: "POST",
+        data: body,
+        timeout: 45000,
+        invalidateCache: false,
+      }),
+    }),
+
     createAssignment: build.mutation<
       MessageWithIdResponse,
       AssignmentWrite & { allocation: number }
@@ -474,6 +489,7 @@ export const {
   useGetAssignmentsQuery,
   useGetAssignmentQuery,
   useCreateAssignmentMutation,
+  useGenerateAssignmentDraftMutation,
   useUpdateAssignmentMutation,
   useDeleteAssignmentMutation,
   useGetAssignmentSubmissionsQuery,
